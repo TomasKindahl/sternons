@@ -4,21 +4,21 @@
 #include "usio.h"
 
 utf8_file *u8fopen(char *fname) {
-	utf8_file *res = (utf8_file *)malloc(sizeof(utf8_file));
-	res->chfile = fopen(fname, "rt");
-	if (!res->chfile) { free(res); return 0; }
-	res->uchar_save = -1;
-	return res;
+    utf8_file *res = (utf8_file *)malloc(sizeof(utf8_file));
+    res->chfile = fopen(fname, "rt");
+    if (!res->chfile) { free(res); return 0; }
+    res->uchar_save = -1;
+    return res;
 }
 
 int u8fclose(utf8_file *file) {
-	FILE *inf = file->chfile;
-	free(file);
-	return fclose(inf);
+    FILE *inf = file->chfile;
+    free(file);
+    return fclose(inf);
 }
 
 int u8feof(utf8_file *file) {
-	return feof(file->chfile);
+    return feof(file->chfile);
 }
 
 uchar _fgetuc(FILE *stream) {
@@ -29,11 +29,11 @@ uchar _fgetuc(FILE *stream) {
     uchar mask[] = {0x7FF, 0xFFFF, 0x1FFFFF, 0x3FFFFFF, 0x7FFFFFFF};
 
     if (res<0x80) return res;
-    if (res<0xC0) return REPLACEMENT_CHAR;	/* DATA ERROR! */
+    if (res<0xC0) return REPLACEMENT_CHAR;    /* DATA ERROR! */
 
     for (ix = 0; ix < 5; ix++) {
         res <<= 6;
-		if (feof (stream)) return REPLACEMENT_CHAR; /* premature eof (ERROR) */
+        if (feof (stream)) return REPLACEMENT_CHAR; /* premature eof (ERROR) */
         res |= fgetc (stream)&0x3F;
         if (n<L[ix]) return mask[ix]&res;
     }
@@ -41,33 +41,33 @@ uchar _fgetuc(FILE *stream) {
 }
 
 uchar fgetuc(utf8_file *stream) {
-	int res;
+    int res;
 
-	if (stream->uchar_save == -1) {
-		return _fgetuc(stream->chfile);
-	}
-	res = stream->uchar_save;
-	stream->uchar_save = -1;
-	return res;
+    if (stream->uchar_save == -1) {
+        return _fgetuc(stream->chfile);
+    }
+    res = stream->uchar_save;
+    stream->uchar_save = -1;
+    return res;
 }
 
 uchar fungetuc(int uch, utf8_file *stream) {
-	stream->uchar_save = uch;
-	return uch;
+    stream->uchar_save = uch;
+    return uch;
 }
 
 uchar *fgetus(uchar *us, int size, utf8_file *stream) {
-	int ch;
-	if (u8feof(stream)) return 0;
-	ch = fgetuc(stream);
-	if (u8feof(stream)) return 0;
-	while (!u8feof(stream) && ch != L'\n') {
-		*us++ = ch;
-		ch = fgetuc(stream);
-	}
-	*us++ = ch;
-	*us = L'\0';
-	return us;
+    int ch;
+    if (u8feof(stream)) return 0;
+    ch = fgetuc(stream);
+    if (u8feof(stream)) return 0;
+    while (!u8feof(stream) && ch != L'\n') {
+        *us++ = ch;
+        ch = fgetuc(stream);
+    }
+    *us++ = ch;
+    *us = L'\0';
+    return us;
 }
 
 char *uctombs(char *dest, uchar src) {

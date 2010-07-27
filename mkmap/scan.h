@@ -2,19 +2,19 @@
 #define _SCAN_H
 
 typedef enum {
-	TOK_NONE, TOK_STR, TOK_KW, TOK_OP, TOK_LPAR, TOK_RPAR, TOK_NUM
+    TOK_NONE, TOK_STR, TOK_KW, TOK_OP, TOK_LPAR, TOK_RPAR, TOK_NUM
 } token_type;
 
 typedef struct _token_S {
-	token_type type;
-	uchar *ucs;
-	double num;
+    token_type type;
+    uchar *ucs;
+    double num;
 } token;
 
 typedef struct _token_file_S {
-	/* specialized token file allowing token get and unget */
-	utf8_file *tok_file;
-	token *tok_save;
+    /* specialized token file allowing token get and unget */
+    utf8_file *tok_file;
+    token *tok_save;
 } token_file;
 
 token_file *tokfopen(char *fname);
