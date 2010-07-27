@@ -16,29 +16,29 @@
    ==================================================================== */
 
 /* ================ LAMBERT CONFORMAL CONIC PROJECTION ================ |
-   (http://en.wikipedia.org/wiki/Lambert_conformal_conic_projection and	|
-    http://mathworld.wolfram.com/LambertConformalConicProjection.html)	|
-																		|
-| λ longitude, λ₀ reference longitude, (middle?)						|
-| φ latitude, φ₀ reference latitude, (middle?)							|
-| φ₁, φ₂ standard parallels	(chosen by map designer)					|
-																		|
-	n = ln(cos φ₁·sec φ₂)/ln(tan(¼π + ½φ₂)·cot(¼π + ½φ₁))				|
-	F = cos	φ₁·tanⁿ(¼π + ½φ₁)/n											|
-	ρ = F·cotⁿ(¼π + ½φ)													|
-	ρ₀ = F·cotⁿ(¼π + ½φ₀)												|
-																		|
-	x = ρ·sin(n(λ - λ₀))												|
-	y = ρ₀ - ρ·cos(n(λ - λ₀))											|
-																		|
-| where sec ν = 1/cos ν													|
-																		|
-| The inverse computation (Javascript or OpenGL implementation):		|
-	ρ = sign(n)√(x²+(ρ₀-y)²)											|
-	θ = tan⁻¹(x/(ρ₀-y))													|
-																		|
-	φ = 2·tan⁻¹((F/ρ) ^ (1/n))-½π										|
-	λ = λ₀ + θ/n														|
+   (http://en.wikipedia.org/wiki/Lambert_conformal_conic_projection and |
+    http://mathworld.wolfram.com/LambertConformalConicProjection.html)  |
+                                                                        |
+| λ longitude, λ₀ reference longitude, (middle?)                        |
+| φ latitude, φ₀ reference latitude, (middle?)                          |
+| φ₁, φ₂ standard parallels    (chosen by map designer)                 |
+                                                                        |
+    n = ln(cos φ₁·sec φ₂)/ln(tan(¼π + ½φ₂)·cot(¼π + ½φ₁))               |
+    F = cos    φ₁·tanⁿ(¼π + ½φ₁)/n                                      |
+    ρ = F·cotⁿ(¼π + ½φ)                                                 |
+    ρ₀ = F·cotⁿ(¼π + ½φ₀)                                               |
+                                                                        |
+    x = ρ·sin(n(λ - λ₀))                                                |
+    y = ρ₀ - ρ·cos(n(λ - λ₀))                                           |
+                                                                        |
+| where sec ν = 1/cos ν                                                 |
+                                                                        |
+| The inverse computation (Javascript or OpenGL implementation):        |
+    ρ = sign(n)√(x²+(ρ₀-y)²)                                            |
+    θ = tan⁻¹(x/(ρ₀-y))                                                 |
+                                                                        |
+    φ = 2·tan⁻¹((F/ρ) ^ (1/n))-½π                                       |
+    λ = λ₀ + θ/n                                                        |
 | ===================================================================== */
 
 double cot(double x) { return 1/tan(x); }
@@ -47,184 +47,184 @@ double deg2rad(double x) { return M_PI * x / 180.0; }
 double rad2deg(double x) { return 180.0 * x / M_PI; }
 
 typedef struct _proj_struct_S {
-	double F;
-	double lambda0;
-	double n;
-	/* double phi0, phi1, phi2; */
-	double rho0;
+    double F;
+    double lambda0;
+    double n;
+    /* double phi0, phi1, phi2; */
+    double rho0;
 } proj_struct;
 
 double pi_itv(double nu) {
-	int K = nu/M_PI;
-	return nu-K*M_PI*2;
+    int K = nu/M_PI;
+    return nu-K*M_PI*2;
 }
 
 proj_struct *init_Lambert(double lambda0, double phi0, double phi1, double phi2) {
-	proj_struct *res = (proj_struct *)malloc(sizeof(proj_struct));
-	res->lambda0 = lambda0;
-	/* res->phi0 = phi0; res->phi1 = phi1; res->phi2 = phi2; */
-	res->n = log(cos(phi1)*sec(phi2))/log(tan(M_PI_4+phi2/2)*cot(M_PI_4+phi1/2));
-	res->F = cos(phi1)*pow(tan(M_PI_4+phi1/2),res->n)/res->n;
-	res->rho0 = res->F*pow(cot(M_PI_4+phi0/2),res->n);
-	return res;
+    proj_struct *res = (proj_struct *)malloc(sizeof(proj_struct));
+    res->lambda0 = lambda0;
+    /* res->phi0 = phi0; res->phi1 = phi1; res->phi2 = phi2; */
+    res->n = log(cos(phi1)*sec(phi2))/log(tan(M_PI_4+phi2/2)*cot(M_PI_4+phi1/2));
+    res->F = cos(phi1)*pow(tan(M_PI_4+phi1/2),res->n)/res->n;
+    res->rho0 = res->F*pow(cot(M_PI_4+phi0/2),res->n);
+    return res;
 }
 
 proj_struct *init_Lambert_deg(double l0, double p0, double p1, double p2) {
-	return init_Lambert(deg2rad(l0), deg2rad(p0), deg2rad(p1), deg2rad(p2));
+    return init_Lambert(deg2rad(l0), deg2rad(p0), deg2rad(p1), deg2rad(p2));
 }
 
 void Lambert(double *x, double *y, double phi, double lambda, proj_struct *LCCP) {
-	double rho = LCCP->F*pow(cot(M_PI_4 + phi/2),LCCP->n);
-	double n_lambda_D = LCCP->n*(pi_itv(lambda - LCCP->lambda0));
-	*x = rho*sin(n_lambda_D);
-	*y = LCCP->rho0 - rho*cos(n_lambda_D);
+    double rho = LCCP->F*pow(cot(M_PI_4 + phi/2),LCCP->n);
+    double n_lambda_D = LCCP->n*(pi_itv(lambda - LCCP->lambda0));
+    *x = rho*sin(n_lambda_D);
+    *y = LCCP->rho0 - rho*cos(n_lambda_D);
 }
 
 typedef struct _image_struct_S {
-	int width, height, dim;
-	double aspect;
+    int width, height, dim;
+    double aspect;
 } image_struct;
 
 image_struct *new_image(int width, int height, double aspect) {
-	image_struct *res = (image_struct *)malloc(sizeof(image_struct));
-	res->width = width;
-	res->height = height;
-	if(width > height) res->dim = width; else res->dim = height;
-	res->aspect = aspect;
-	return res;
+    image_struct *res = (image_struct *)malloc(sizeof(image_struct));
+    res->width = width;
+    res->height = height;
+    if(width > height) res->dim = width; else res->dim = height;
+    res->aspect = aspect;
+    return res;
 }
 
 #define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
 
 int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
-	*x = frame->width/2-frame->dim*X*frame->aspect;
-	*y = frame->height/2-frame->dim*Y*frame->aspect;
-	return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
+    *x = frame->width/2-frame->dim*X*frame->aspect;
+    *y = frame->height/2-frame->dim*Y*frame->aspect;
+    return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
 
 void head(proj_struct *proj, image_struct *frame) {
-	int ix, iy, H, W, H2, W2, dim;
-	double ra, ras[24], de, des[17];
-	double X, Y, A;
-	int x, y;
+    int ix, iy, H, W, H2, W2, dim;
+    double ra, ras[24], de, des[17];
+    double X, Y, A;
+    int x, y;
 
-	W = frame->width; W2 = W/2;
-	H = frame->height; H2 = H/2;
-	dim = frame->dim;
-	A = frame->aspect;
-	printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-	printf("<svg width=\"%i\" height=\"%i\"\n"
-		   "     xmlns=\"http://www.w3.org/2000/svg\"\n"
-		   "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-		   "     >\n", W, H);
-	printf("<rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
-		   "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
-		   "stroke-dasharray:none;stroke-opacity:1\"\n"
-		   "      width=\"%i\" height=\"%i\"/>\n", W, H);
-	/* Helper lines, paper coordinates: */
-	/* vertical */
-	for (ix = 100; ix < 560; ix += 100) {
-		printf("<path style=\"stroke:#000000;stroke-width:1px\" "
-			   "d=\"M %i,0 L %i,%i\"/>\n", ix, ix, H);
-		printf("<path style=\"stroke:#080808;stroke-width:1px\" "
-			   "d=\"M %i,0 L %i,%i\"/>\n", ix-50, ix-50, H);
-	}
-	/* horizontal */
-	for (iy = 100; iy < 560; iy += 100) {
-		printf("<path style=\"stroke:#000000;stroke-width:1px\" "
-			   "d=\"M 0,%i L %i,%i\"/>\n", iy, W, iy);
-		printf("<path style=\"stroke:#080808;stroke-width:1px\" "
-			   "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
-	}
-	/* Declination lines: */
-	#define NUM_DE 17
+    W = frame->width; W2 = W/2;
+    H = frame->height; H2 = H/2;
+    dim = frame->dim;
+    A = frame->aspect;
+    printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+    printf("<svg width=\"%i\" height=\"%i\"\n"
+           "     xmlns=\"http://www.w3.org/2000/svg\"\n"
+           "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+           "     >\n", W, H);
+    printf("<rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
+           "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
+           "stroke-dasharray:none;stroke-opacity:1\"\n"
+           "      width=\"%i\" height=\"%i\"/>\n", W, H);
+    /* Helper lines, paper coordinates: */
+    /* vertical */
+    for (ix = 100; ix < 560; ix += 100) {
+        printf("<path style=\"stroke:#000000;stroke-width:1px\" "
+               "d=\"M %i,0 L %i,%i\"/>\n", ix, ix, H);
+        printf("<path style=\"stroke:#080808;stroke-width:1px\" "
+               "d=\"M %i,0 L %i,%i\"/>\n", ix-50, ix-50, H);
+    }
+    /* horizontal */
+    for (iy = 100; iy < 560; iy += 100) {
+        printf("<path style=\"stroke:#000000;stroke-width:1px\" "
+               "d=\"M 0,%i L %i,%i\"/>\n", iy, W, iy);
+        printf("<path style=\"stroke:#080808;stroke-width:1px\" "
+               "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
+    }
+    /* Declination lines: */
+    #define NUM_DE 17
 
-	for (iy = 0; iy < NUM_DE; iy++) {
-		des[iy] = deg2rad(iy*10-80);
-	}
-	for (ra = 0; ra < 360; ra+=0.5) {
-		for (ix = 0; ix < NUM_DE; ix++) {
-			Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
-			if (pos_in_frame(&x, &y, X, Y, frame)) {
-				printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
-				printf("            style=\"opacity:1;fill:#880088;");
-				printf("fill-opacity:1;\"/>\n");
-				/*	   W2-X*dim*A, H2-Y*dim*A); */
-			}
-		}
-	}
-	/* Right Ascension lines: */
-	#define NUM_RA 24
-	for (ix = 0; ix < NUM_RA; ix++) {
-		ras[ix] = deg2rad(ix*15);
-	}
-	for (de = -80; de <= 80; de+=0.5) {
-		for (iy = 0; iy < NUM_RA; iy++) {
-			Lambert(&X, &Y, deg2rad(de), ras[iy], proj);
-			if (pos_in_frame(&x, &y, X, Y, frame)) {
-				printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
-				printf("            style=\"opacity:1;fill:#880088;");
-				printf("fill-opacity:1;\"/>\n");
-			}
-		}
-	}
+    for (iy = 0; iy < NUM_DE; iy++) {
+        des[iy] = deg2rad(iy*10-80);
+    }
+    for (ra = 0; ra < 360; ra+=0.5) {
+        for (ix = 0; ix < NUM_DE; ix++) {
+            Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
+            if (pos_in_frame(&x, &y, X, Y, frame)) {
+                printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
+                printf("            style=\"opacity:1;fill:#880088;");
+                printf("fill-opacity:1;\"/>\n");
+                /*       W2-X*dim*A, H2-Y*dim*A); */
+            }
+        }
+    }
+    /* Right Ascension lines: */
+    #define NUM_RA 24
+    for (ix = 0; ix < NUM_RA; ix++) {
+        ras[ix] = deg2rad(ix*15);
+    }
+    for (de = -80; de <= 80; de+=0.5) {
+        for (iy = 0; iy < NUM_RA; iy++) {
+            Lambert(&X, &Y, deg2rad(de), ras[iy], proj);
+            if (pos_in_frame(&x, &y, X, Y, frame)) {
+                printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
+                printf("            style=\"opacity:1;fill:#880088;");
+                printf("fill-opacity:1;\"/>\n");
+            }
+        }
+    }
 }
 
 int draw_stars(char *fname, proj_struct *proj, image_struct *frame) {
-	int HIP;
-	double RA, DE, mag;
-	double X, Y, size;
-	int x, y;
-	uchar line[1024], *pos;
-	utf8_file *inf = u8fopen(fname);
+    int HIP;
+    double RA, DE, mag;
+    double X, Y, size;
+    int x, y;
+    uchar line[1024], *pos;
+    utf8_file *inf = u8fopen(fname);
 
-	if (!inf) return 0;
-	while (fgetus(line, 1023, inf)) {
-		line[ucslen(line)-1] = L'\0';
-		/*
-		DROP TABLE _cmap;
-		SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
-			   from _hipp where vmag < 6.5 order by vmag, ra, de;
-		*/
-		HIP = ucstoi(&line[0]);
-		pos = ucschr(line,'|')+1; RA = ucstof(pos);
-		pos = ucschr(pos,'|')+1; DE = ucstof(pos);
-		pos = ucschr(pos,'|')+1; mag = ucstof(pos);
-		/*
-		printf("%c HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f ⟨%s⟩\n",
-			   nl?'+':' ', HIP, RA, DE, mag, ucstombs(buf,line,1023));
-		*/
-		Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
-		if(pos_in_frame(&x, &y, X, Y, frame)) {
-			size = (6.8-mag)*0.8*frame->aspect;
-			printf("    <circle cx=\"%i\" cy=\"%i\" r=\"%g\"\n", x, y, size);
-			printf("            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
-				   "stroke:#666666;stroke-width:1px\"/>\n");
-		}
-	}
-	return 1;
+    if (!inf) return 0;
+    while (fgetus(line, 1023, inf)) {
+        line[ucslen(line)-1] = L'\0';
+        /*
+        DROP TABLE _cmap;
+        SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
+               from _hipp where vmag < 6.5 order by vmag, ra, de;
+        */
+        HIP = ucstoi(&line[0]);
+        pos = ucschr(line,'|')+1; RA = ucstof(pos);
+        pos = ucschr(pos,'|')+1; DE = ucstof(pos);
+        pos = ucschr(pos,'|')+1; mag = ucstof(pos);
+        /*
+        printf("%c HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f ⟨%s⟩\n",
+               nl?'+':' ', HIP, RA, DE, mag, ucstombs(buf,line,1023));
+        */
+        Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
+        if(pos_in_frame(&x, &y, X, Y, frame)) {
+            size = (6.8-mag)*0.8*frame->aspect;
+            printf("    <circle cx=\"%i\" cy=\"%i\" r=\"%g\"\n", x, y, size);
+            printf("            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
+                   "stroke:#666666;stroke-width:1px\"/>\n");
+        }
+    }
+    return 1;
 }
 
 void foot(void) {
     /* printf("    <image y=\"200\" x=\"200\" height=\"100\" width=\"100\"\n"); */
     /* printf("           xlink:href=\"neptune.png\" />\n"); */
-	printf("</svg>\n");
+    printf("</svg>\n");
 }
 
 int main (int argc, char **argv) {
-	image_struct *frame = new_image(500, 500, 1.4);
-	proj_struct *projection = init_Lambert_deg(80, 0, 10, 20);
+    image_struct *frame = new_image(500, 500, 1.4);
+    proj_struct *projection = init_Lambert_deg(80, 0, 10, 20);
 
-	head(projection, frame);
-	/*> Arg handling here! */
-	/*>   R₀: mkmap /stardb/              -- star db only                         */
-	/*>   R₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused               */
-	/*>   R₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting */
-	/*>   R₃: mkmap /prog/                -- prog also used for star db loading   */
-	/*>   R₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
-	/*>                                      file type                            */
-	draw_stars(argv[1], projection, frame);
-	foot();
+    head(projection, frame);
+    /*> Arg handling here! */
+    /*>   R₀: mkmap /stardb/              -- star db only                         */
+    /*>   R₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused               */
+    /*>   R₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting */
+    /*>   R₃: mkmap /prog/                -- prog also used for star db loading   */
+    /*>   R₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
+    /*>                                      file type                            */
+    draw_stars(argv[1], projection, frame);
+    foot();
 
-	return 0;
+    return 0;
 }
