@@ -17,9 +17,10 @@ whatever.
 
 == Mkmap ==
 
+<img src="http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/Ori.jpg"
+ style="float:right;">
+
 *Purpose:* a script for generating SVG and PostScript star maps from a
 configuration file. 
-
-http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/Ori.jpg
 
 *Purpose:* Prealpha code generating star maps such as for example
