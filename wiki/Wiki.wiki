@@ -1,5 +1,8 @@
 #summary Sternons astronomy tool set
 
+= Fast links =
+[http://code.google.com/p/support/wiki/WikiSyntax WikiSyntax for Google code]
+
 = Introduction =
 
 Sternons aims at being a loose tool set for astronomy, such as scripts and
@@ -19,7 +22,19 @@ whatever.
 
 http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/Ori.jpg
 
-*Purpose:* a script for generating SVG and PostScript star maps from a
+*Purpose:* a script for generating SVG and !PostScript star maps from a
 configuration file. 
 
-*Purpose:* Prealpha code generating star maps such as for example
+*Purpose:* Prealpha code generating star maps such as for example the one above
+(the easily recognized constellation of Orion), the command for generating any
+star map being:
+
+ ./mkmap star.db > cmap.svg
+
+For now the direction and scaling is hard coded in the source code in the 
+[http://code.google.com/p/sternons/source/browse/trunk/mkmap/mkmap.c?r=2 main program]
+as
+ image_struct *frame = new_image(500, 500, 1.4);
+and
+ proj_struct *projection = init_Lambert_deg(80, 0, 10, 20);
+but this is an atrocity and must ASAP be fixed by loading a config file.
