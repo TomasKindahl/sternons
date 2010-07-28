@@ -28,13 +28,17 @@ configuration file.
 *Purpose:* Prealpha code generating star maps such as for example the one above
 (the easily recognized constellation of Orion), the command for generating any
 star map being:
-
+{{{
  ./mkmap star.db > cmap.svg
-
+}}}
 For now the direction and scaling is hard coded in the source code in the 
 [http://code.google.com/p/sternons/source/browse/trunk/mkmap/mkmap.c?r=2 main program]
 as
+{{{
  image_struct *frame = new_image(500, 500, 1.4);
+}}}
 and
+{{{
  proj_struct *projection = init_Lambert_deg(80, 0, 10, 20);
+}}}
 but this is an atrocity and must ASAP be fixed by loading a config file.
