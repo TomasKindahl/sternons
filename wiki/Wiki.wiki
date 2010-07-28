@@ -22,12 +22,14 @@ whatever.
 
 http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/Ori.jpg
 
-*Purpose:* a script for generating SVG and !PostScript star maps from a
+*Purpose:* a script for generating [http://en.wikipedia.org/wiki/SVG SVG]
+and [http://en.wikipedia.org/wiki/PostScript !PostScript] star maps from a
 configuration file. 
 
 *Current state:* Prealpha code generating star maps such as for example the one
-above (the easily recognized constellation of Orion), the command for generating
-_any_ star map being:
+above (the easily recognized
+[http://en.wikipedia.org/wiki/Orion_(constellation) constellation of Orion]), 
+the command for generating _any_ star map being:
 {{{
  ./mkmap star.db > cmap.svg
 }}}
