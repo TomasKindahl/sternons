@@ -7,15 +7,19 @@ programs interfacing each other according to the
 [http://en.wikipedia.org/wiki/Unix_philosophy Unix philosophy]. Sternons is
 decidedly jealous on [http://pp3.sourceforge.net/ PP3] for it's professionality
 and nice and beautiful documentation. However PP3 has some very !unUnician
-dependencies: it requires !LaTeX and ghostscript. Also it generates PDF or
+dependencies: it requires LaTeX and ghostscript. Also it generates PDF or
 !PostScript, not an easy data format, such as SVG. Sternons aims at being
 composed of *very* losely knit tools, more like a Swiss army knife for
 generating this-or-that astronomy database, connection, interface, image or
 whatever.
 
-= Details =
+= Tools =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== Mkmap ==
+
+*Purpose:* a script for generating SVG and PostScript star maps from a
+configuration file. 
+
+http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/Ori.jpg
+
+*Purpose:* Prealpha code generating star maps such as for example
