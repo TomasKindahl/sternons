@@ -2,7 +2,16 @@
 
 = Introduction =
 
-Sternons aims at being a loose tool set for astronomy, such as scripts and programs interfacing each other according to the [http://en.wikipedia.org/wiki/Unix_philosophy Unix philosophy]. Sternons is decidedly jealous on [http://pp3.sourceforge.net/ PP3] for it's professionality and nice and beautiful documentation. However PP3 has some very !unUnician dependencies: it requires !LaTeX and ghostscript. Also it generates PDF or !PostScript, not an easy data format, such as SVG. Sternons aims at being composed of *very* losely knit tools, more like a Swiss army knife for generating this-or-that astronomy database, connection, interface, image or whatever.
+Sternons aims at being a loose tool set for astronomy, such as scripts and
+programs interfacing each other according to the
+[http://en.wikipedia.org/wiki/Unix_philosophy Unix philosophy]. Sternons is
+decidedly jealous on [http://pp3.sourceforge.net/ PP3] for it's professionality
+and nice and beautiful documentation. However PP3 has some very !unUnician
+dependencies: it requires !LaTeX and ghostscript. Also it generates PDF or
+!PostScript, not an easy data format, such as SVG. Sternons aims at being
+composed of *very* losely knit tools, more like a Swiss army knife for
+generating this-or-that astronomy database, connection, interface, image or
+whatever.
 
 = Details =
 
