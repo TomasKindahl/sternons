@@ -43,6 +43,7 @@ as
 but this is an atrocity and must ASAP be fixed by loading a config file.
 
 *Hack plan:*
+
 # _introduce mkmap language_: the language loads a program then runs it, the 
 program may contain setups of environment, then drawing stars and other objects,
 either by an object drawing command, or by a database load where a list of objects
