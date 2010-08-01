@@ -1,6 +1,6 @@
 #summary Sternons astronomy tool set
 
-http://code.google.com/p/sternons/source/wiki/img/logo.png
+http://code.google.com/p/sternons/source/img/logo.png
 
 = Fast links =
 [http://code.google.com/p/support/wiki/WikiSyntax WikiSyntax for Google code]
