@@ -11,8 +11,8 @@ cmap: cmap.c $(OBJS)
 .c.o:
 	$(CC) -c $<
 
-cmap.svg: mkmap $(MAPS)
-	./$< $(MAPS) > $@
+cmap.svg: mkmap prog.map $(MAPS)
+	./$< prog.map $(MAPS) > $@
 
 cmap.png: cmap.svg
 	inkscape --export-png=$@ $< 
