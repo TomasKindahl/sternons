@@ -24,7 +24,7 @@ http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/
 
 *Purpose:* a script for generating [http://en.wikipedia.org/wiki/SVG SVG]
 and [http://en.wikipedia.org/wiki/PostScript PostScript] star maps from a
-configuration file. 
+configuration file.
 
 *Current state:* Prealpha code generating star maps such as for example the one
 above (the easily recognized
