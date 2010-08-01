@@ -4,15 +4,16 @@
 #include <math.h>
 #include "usio.h"
 #include "ucstr.h"
+#include "scan.h"
 
-/* ====================================================================
-     Known bugs and features:
-       F1: a λ₀ outside [0,360[ generates black declination sections in
-           the map - avoid (in 2010-07-26)
-       F2: a φ₁ or φ₂ outside [-90,90] generates a black map
-       F3: the declination circle dots become too tight ±70° and
-           polewards (in 2010-07-26)
-       F4: 
+/* ==================================================================== |
+     Known bugs and features:                                           |
+       F1: a λ₀ outside [0,360[ generates black declination sections in |
+           the map - avoid (in 2010-07-26)                              |
+       F2: a φ₁ or φ₂ outside [-90,90] generates a black map            |
+       F3: the declination circle dots become too tight ±70° and        |
+           polewards (in 2010-07-26)                                    |
+       F4:                                                              |
    ==================================================================== */
 
 /* ================ LAMBERT CONFORMAL CONIC PROJECTION ================ |
@@ -46,21 +47,21 @@ double sec(double x) { return 1/cos(x); }
 double deg2rad(double x) { return M_PI * x / 180.0; }
 double rad2deg(double x) { return 180.0 * x / M_PI; }
 
-typedef struct _proj_struct_S {
+typedef struct _lambert_proj_S {
     double F;
     double lambda0;
     double n;
     /* double phi0, phi1, phi2; */
     double rho0;
-} proj_struct;
+} lambert_proj;
 
 double pi_itv(double nu) {
     int K = nu/M_PI;
     return nu-K*M_PI*2;
 }
 
-proj_struct *init_Lambert(double lambda0, double phi0, double phi1, double phi2) {
-    proj_struct *res = (proj_struct *)malloc(sizeof(proj_struct));
+lambert_proj *init_Lambert(double lambda0, double phi0, double phi1, double phi2) {
+    lambert_proj *res = (lambert_proj *)malloc(sizeof(lambert_proj));
     res->lambda0 = lambda0;
     /* res->phi0 = phi0; res->phi1 = phi1; res->phi2 = phi2; */
     res->n = log(cos(phi1)*sec(phi2))/log(tan(M_PI_4+phi2/2)*cot(M_PI_4+phi1/2));
@@ -69,11 +70,11 @@ proj_struct *init_Lambert(double lambda0, double phi0, double phi1, double phi2)
     return res;
 }
 
-proj_struct *init_Lambert_deg(double l0, double p0, double p1, double p2) {
+lambert_proj *init_Lambert_deg(double l0, double p0, double p1, double p2) {
     return init_Lambert(deg2rad(l0), deg2rad(p0), deg2rad(p1), deg2rad(p2));
 }
 
-void Lambert(double *x, double *y, double phi, double lambda, proj_struct *LCCP) {
+void Lambert(double *x, double *y, double phi, double lambda, lambert_proj *LCCP) {
     double rho = LCCP->F*pow(cot(M_PI_4 + phi/2),LCCP->n);
     double n_lambda_D = LCCP->n*(pi_itv(lambda - LCCP->lambda0));
     *x = rho*sin(n_lambda_D);
@@ -102,7 +103,7 @@ int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
 
-void head(proj_struct *proj, image_struct *frame) {
+void head(lambert_proj *proj, image_struct *frame) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y, A;
@@ -170,7 +171,7 @@ void head(proj_struct *proj, image_struct *frame) {
     }
 }
 
-int draw_stars(char *fname, proj_struct *proj, image_struct *frame) {
+int draw_stars(char *fname, lambert_proj *proj, image_struct *frame) {
     int HIP;
     double RA, DE, mag;
     double X, Y, size;
@@ -211,19 +212,38 @@ void foot(void) {
     printf("</svg>\n");
 }
 
+void usage(void) {
+    exit(-1);
+}
+
+int read_program(char *program) {
+    token_file *pfile;
+    if (!(pfile = tokfopen(program))) {
+        fprintf(stderr, "ERROR: program '%s' not found\n", program);
+        return 0;
+    }
+    tokfclose(pfile);
+    return 1;
+}
+
 int main (int argc, char **argv) {
     image_struct *frame = new_image(500, 500, 1.4);
-    proj_struct *projection = init_Lambert_deg(80, 0, 10, 20);
+    lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
 
-    head(projection, frame);
     /*> Arg handling here! */
-    /*>   R₀: mkmap /stardb/              -- star db only                         */
+    /*>  [R₀: mkmap /stardb/              -- star db only                        ]*/
     /*>   R₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused               */
     /*>   R₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting */
     /*>   R₃: mkmap /prog/                -- prog also used for star db loading   */
     /*>   R₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
     /*>                                      file type                            */
-    draw_stars(argv[1], projection, frame);
+
+    if (argc != 3) { usage(); }
+            
+    if (!read_program(argv[1])) { usage(); }
+
+    head(projection, frame);
+    draw_stars(argv[2], projection, frame);
     foot();
 
     return 0;
