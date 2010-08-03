@@ -48,11 +48,11 @@ but this is an atrocity and must ASAP be fixed by loading a config file.
 == How it works ==
 
 mkmap pipeline:
- # load map(s) settings
- # load/transform file rows into an object list (object refers to just any drawing thing)
- # add object overrides from the map program
- # for each object apply a function to determine where it is to be drawn, if on multiple maps duplicate it to each map
- # delete all objects that fall outside the map, truncate the parts of the grand objects that fall outside the map ...
- # determine how the object is to be drawn, what symbol, font, color dashing, label, label position etc.
+ # mkmap makes the map(s) settings according to map program
+ # mkmap loads/transforms file rows into an object list (object refers to just any drawing thing)
+ # mkmap adds object overrides from the map program
+ # for each object mkmap applies a function to determine where it is to be drawn, if on multiple maps duplicate it to each map
+ # mkmap deletes all objects that fall outside the map, truncate the parts of the grand objects that fall outside the map ...
+ # mkmap determines how the object is to be drawn, what symbol, font, color dashing, label, label position etc.
    (if creating a binary format, it should be saved here)
- # draw all objects into one or more maps.
+ # mkmap “draws” all objects into one or more maps by writing into an SVG file
