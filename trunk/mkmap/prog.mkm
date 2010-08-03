@@ -1,5 +1,6 @@
 orion() {
 	inherit sky;
 	image.{ width = 500px, height = 500px, scale = 1.4 };
-	projection.{ type = Lambert_conic, α = 80°, δ = 10°, Δδ = 10° };
+	projection.{ type = Lambert_conic,
+	    α = 80°, δ = 10°, Δδ = 10° };
 }
