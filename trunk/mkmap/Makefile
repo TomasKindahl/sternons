@@ -15,7 +15,7 @@ cmap.svg: mkmap prog.mkm $(MAPS)
 	./$< prog.mkm $(MAPS) > $@
 
 cmap.png: cmap.svg
-	inkscape --export-png=$@ $< 
+	inkscape --export-png=$@ $<
 
 #EXAMPLE FOR SEPARATING WIN AND LINUX OBJS:
 #win/xy.o: xy.c
@@ -29,5 +29,4 @@ distclean: clean
 
 hard: clean
 	$(MAKE) cmap
-
 
