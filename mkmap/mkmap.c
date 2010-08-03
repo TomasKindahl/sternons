@@ -212,7 +212,8 @@ void foot(void) {
     printf("</svg>\n");
 }
 
-void usage(void) {
+void usage_exit(void) {
+	/* Usage text here when stabilized */
     exit(-1);
 }
 
@@ -238,9 +239,9 @@ int main (int argc, char **argv) {
     /*>   R₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
     /*>                                      file type                            */
 
-    if (argc != 3) { usage(); }
-            
-    if (!read_program(argv[1])) { usage(); }
+    if (argc != 3) usage_exit();
+
+    if (!read_program(argv[1])) usage_exit();
 
     head(projection, frame);
     draw_stars(argv[2], projection, frame);
