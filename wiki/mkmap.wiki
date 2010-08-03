@@ -48,12 +48,12 @@ but this is an atrocity and must ASAP be fixed by loading a config file.
 == How it works ==
 
 === mkmap processing pipeline ===
- # mkmap makes the map(s) settings according to map program
- # mkmap loads/transforms file rows into an object list (object refers to just any drawing thing)
+ # _init:_ mkmap makes the map(s) settings according to map program
+ # _load:_ mkmap loads/transforms file rows into an object list (object refers to just any drawing thing)
  # mkmap adds object overrides from the map program
- # for each object mkmap applies a function to determine where it is to be drawn, if on multiple maps duplicate it to each map
+ # _position:_ for each object mkmap applies a function to determine where it is to be drawn, if on multiple maps duplicate it to each map
  # mkmap deletes all objects that fall outside the map, truncate the parts of the grand objects that fall outside the map ...
- # mkmap determines how the object is to be drawn, what symbol, font, color dashing, label, label position etc.
+ # _draw:_ mkmap determines how the object is to be drawn, what symbol, font, color dashing, label, label position etc.
    (if creating a binary format, it should be saved here)
  # mkmap “draws” all objects into one or more maps by writing into an SVG file
 
@@ -61,11 +61,20 @@ but this is an atrocity and must ASAP be fixed by loading a config file.
 *UNDEFINED!* The current theory is that mkmap programs are (going to be) objects
 like (in pseudocode):
 {{{
+ FILE “orion.mkm”:
+
  object orion() {
    inherit sky;
-   // image and projection inherited from the program “sky.mkm”;
-   image = { width = 500, height = 500 };
-   projection = { type = Lambert_conic, RA = 80, DE = 10, range = 10 };
-   sky.init;
+   init:
+     // image and projection inherited from the program “sky.mkm”, then overrides:
+     image = { width = 500, height = 500 };
+     projection = { type = Lambert_conic, RA = 80, DE = 10, range = 10 };
+   load:
+   position:
+   draw:
+     // everything from “sky.mkm” plus “orion.mkm” drawn here
  }
 }}}
+The reason for this *elaborate* thinking is that the mkmap “programmer” should be
+given full control over the processing, and also that mkmap should be generalizable
+to other kind of maps.
