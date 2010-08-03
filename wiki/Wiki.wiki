@@ -43,7 +43,7 @@ _Development:_ *[mkmap]* is going to generate a star map in SVG format
 
 *Purpose:* a script for generating [http://en.wikipedia.org/wiki/SVG SVG]
 and [http://en.wikipedia.org/wiki/PostScript PostScript] star maps from a
-configuration file.
+mkmap program file.
 
 *Current state:* Prealpha code generating star maps such as for example the one
 above (the easily recognized
