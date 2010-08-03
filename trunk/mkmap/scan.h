@@ -21,6 +21,7 @@ token_file *tokfopen(char *fname);
 int tokfclose(token_file *tok_stream);
 token *scan(token_file *tok_stream);
 int unscan(token *value, token_file *tok_stream);
+int tokfeof(token_file *tok_stream);
 
 int is_item(token *tok, uchar *op, token_type type);
 int is_op(token *tok, uchar *op);
@@ -28,6 +29,9 @@ int is_kw(token *tok, uchar *op);
 int is_lpar(token *tok, uchar *op);
 int is_rpar(token *tok, uchar *op);
 int is_num(token *tok);
-char *tok_name(int type);
+char *tok_type_str(token *tok);
+uchar *tok_ustr(token *tok);
+char *tok_str(char *buf, token *tok, int size);
+void tok_free(token *tok);
 
 #endif /* _SCAN_H */

@@ -18,7 +18,7 @@ int u8fclose(utf8_file *file) {
 }
 
 int u8feof(utf8_file *file) {
-    return feof(file->chfile);
+    return feof(file->chfile) && file->uchar_save == -1;
 }
 
 uchar _fgetuc(FILE *stream) {

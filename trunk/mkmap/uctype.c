@@ -8,9 +8,11 @@ int isuws(uchar uch) {
 
     /* uchar is alphabetic char? (only Latin considered yet) */
 int isualpha(uchar uch) {
+    if (L'_' == uch) return 1;
     if (L'A' <= uch && uch <= L'Z') return 1;
     if (L'a' <= uch && uch <= L'z') return 1;
     if (L'À' <= uch && uch <= L'ʯ' && uch != L'×' && uch != L'÷') return 1;
+    if (L'Ά' <= uch && uch <= L'Ͽ' && uch != L'·') return 1;
     return 0;
 }
     /* uchar is digit? (only Latin considered yet) */

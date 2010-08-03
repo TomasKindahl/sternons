@@ -219,10 +219,21 @@ void usage_exit(void) {
 
 int read_program(char *program) {
     token_file *pfile;
+    token *tok;
+    char buf[1023];
+
     if (!(pfile = tokfopen(program))) {
         fprintf(stderr, "ERROR: program '%s' not found\n", program);
         return 0;
     }
+    fprintf(stderr, "INFO: program '%s' opened\n", program);
+    tok = scan(pfile);
+    while (!tokfeof(pfile)) {
+    	fprintf(stderr, "⟨%s⟩%s\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+    	tok_free(tok);
+    	tok = scan(pfile);
+    }
+    fprintf(stderr, "INFO: program '%s' read\n", program);
     tokfclose(pfile);
     return 1;
 }
@@ -231,14 +242,14 @@ int main (int argc, char **argv) {
     image_struct *frame = new_image(500, 500, 1.4);
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
 
-    /*> Arg handling here! */
-    /*>  [A₀: mkmap /stardb/              -- star db only                        ]*/
-    /*>   A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused               */
-    /*>   A₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting */
-    /*>   A₃: mkmap /prog/                -- prog also used for star db loading   */
-    /*>   A₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
-    /*>                                      file type                            */
-    /*>   A₅: mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments      */
+    /*>Arg handling here! */
+    /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
+    /*>   A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused                 */
+    /*>   A₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting   */
+    /*>   A₃: mkmap /prog/                -- prog also used for star db loading     */
+    /*>   A₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2      */
+    /*>                                      file type                              */
+    /*>   A₅: mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments        */
 
     if (argc != 3) usage_exit();
 

@@ -89,9 +89,9 @@ token *_scan(utf8_file *stream) {
         token_type T;
         ures[0] = uch;
         ures[1] = L'\0';
-        if (ures[0] == L'{' || ures[0] == L'[')
+        if (ures[0] == L'{' || ures[0] == L'[' || ures[0] == L'(')
             T = TOK_LPAR;
-        else if (ures[0] == L'}' || ures[0] == L']')
+        else if (ures[0] == L'}' || ures[0] == L']' || ures[0] == L')')
             T = TOK_RPAR;
         else
             T = TOK_OP;
@@ -115,6 +115,10 @@ int unscan(token *value, token_file *tok_stream) {
     return 1;
 }
 
+int tokfeof(token_file *tok_stream) {
+	return u8feof(tok_stream->tok_file) && tok_stream->tok_save == 0;
+}
+
 int is_item(token *tok, uchar *op, token_type type) {
     if (tok->type != type) return 0;
     if (0 != ucscmp(tok->ucs, op)) return 0;
@@ -127,8 +131,8 @@ int is_lpar(token *tok, uchar *op) { return is_item(tok, op, TOK_LPAR); }
 int is_rpar(token *tok, uchar *op) { return is_item(tok, op, TOK_RPAR); }
 int is_num(token *tok) { return tok->type == TOK_NUM; }
 
-char *tok_name(int type) {
-    switch(type) {
+char *tok_type_str(token *tok) {
+    switch(tok->type) {
         case TOK_NONE:
             return "ERR";
         case TOK_STR:
@@ -149,3 +153,15 @@ char *tok_name(int type) {
     return "unknown";
 }
 
+uchar *tok_ustr(token *tok) {
+	return tok->ucs;
+}
+
+char *tok_str(char *buf, token *tok, int size) {
+	return ucstombs(buf, tok->ucs, size);
+}
+
+void tok_free(token *tok) {
+	free(tok->ucs);
+	free(tok);
+}
