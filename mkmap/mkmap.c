@@ -239,6 +239,7 @@ int read_program(char *program) {
 }
 
 int main (int argc, char **argv) {
+	/* dummy setup: */
     image_struct *frame = new_image(500, 500, 1.4);
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
 
@@ -253,8 +254,10 @@ int main (int argc, char **argv) {
 
     if (argc != 3) usage_exit();
 
+    /* init: */
     if (!read_program(argv[1])) usage_exit();
 
+    /*  */
     head(projection, frame);
     draw_stars(argv[2], projection, frame);
     foot();
