@@ -1,3 +1,3 @@
-* [Wiki]
- * [mkmap]
+* [Wiki Sternons development wiki]
+ * [mkmap] development
 
