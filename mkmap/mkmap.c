@@ -232,12 +232,13 @@ int main (int argc, char **argv) {
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
 
     /*> Arg handling here! */
-    /*>  [R₀: mkmap /stardb/              -- star db only                        ]*/
-    /*>   R₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused               */
-    /*>   R₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting */
-    /*>   R₃: mkmap /prog/                -- prog also used for star db loading   */
-    /*>   R₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
+    /*>  [A₀: mkmap /stardb/              -- star db only                        ]*/
+    /*>   A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused               */
+    /*>   A₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting */
+    /*>   A₃: mkmap /prog/                -- prog also used for star db loading   */
+    /*>   A₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2    */ 
     /*>                                      file type                            */
+    /*>   A₅: mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments      */
 
     if (argc != 3) usage_exit();
 
