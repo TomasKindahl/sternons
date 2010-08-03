@@ -20,7 +20,11 @@ whatever.
 
 == Mkmap ==
 
-http://1.bp.blogspot.com/_PmQ2u6BVaus/TE6u61Mx4OI/AAAAAAAAACw/ilwNePTAsOs/s1600/Ori.jpg
+http://sternons.googlecode.com/svn/wiki/img/Ori-small.png
+
+_User manual:_ 
+
+_Development:_ *[mkmap]* is going to generate a star map in SVG format
 
 *Purpose:* a script for generating [http://en.wikipedia.org/wiki/SVG SVG]
 and [http://en.wikipedia.org/wiki/PostScript PostScript] star maps from a
