@@ -1,0 +1,11 @@
+	ASCII mode			UTF-8 mode
+--------------------------------------------------------------------------------
+Hexadecimal hours:
+	[[NNh]NNm]NN[.I]s	[[NNʰ]NNᵐ]NN[.I]ˢ
+	[NNh]NN[.I]m		[NNʰ]NN[.I]ᵐ
+	NN.Ih				NN[.I]ʰ
+Hexadecimal degrees:
+	[[NNN°]NN']NN[.I]"	[[NNN°]NN']NN[.I]"
+	[NNN°]NN[.I]'		[NNN°]NN[.I]'
+	NNN.I°				NNN.I°
+
