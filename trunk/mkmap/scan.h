@@ -8,6 +8,7 @@ typedef enum {
 typedef struct _token_S {
     token_type type;
     uchar *ucs;
+    uchar *unit;
     double num;
 } token;
 
@@ -32,6 +33,7 @@ int is_num(token *tok);
 char *tok_type_str(token *tok);
 uchar *tok_ustr(token *tok);
 char *tok_str(char *buf, token *tok, int size);
+char *tok_unit(char *buf, token *tok, int size);
 void tok_free(token *tok);
 
 #endif /* _SCAN_H */

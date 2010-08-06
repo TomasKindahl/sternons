@@ -217,10 +217,10 @@ void usage_exit(void) {
     exit(-1);
 }
 
-int read_program(char *program) {
+int read_program(char *program, lambert_proj *projection, image_struct *frame) {
     token_file *pfile;
     token *tok;
-    char buf[1023];
+    char buf[1024], buf2[1024];
 
     if (!(pfile = tokfopen(program))) {
         fprintf(stderr, "ERROR: program '%s' not found\n", program);
@@ -229,7 +229,17 @@ int read_program(char *program) {
     fprintf(stderr, "INFO: program '%s' opened\n", program);
     tok = scan(pfile);
     while (!tokfeof(pfile)) {
-    	fprintf(stderr, "⟨%s⟩%s\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+    	switch (tok->type) {
+    	  case TOK_STR:
+    	  	fprintf(stderr, "⟨%s⟩“%s”\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+    	  	break;
+    	  case TOK_NUM:
+    	  	fprintf(stderr, "⟨%s⟩%s(%s)\n", tok_type_str(tok),
+    	  			tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
+    	  	break;
+    	  default:    	  		  
+    	  	fprintf(stderr, "⟨%s⟩%s\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+    	}
     	tok_free(tok);
     	tok = scan(pfile);
     }
@@ -255,7 +265,7 @@ int main (int argc, char **argv) {
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!read_program(argv[1])) usage_exit();
+    if (!read_program(argv[1], projection, frame)) usage_exit();
 
     /*  */
     head(projection, frame);

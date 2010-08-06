@@ -25,22 +25,39 @@ token *_new_token(token_type type, uchar *ucs) {
     res = (token *)malloc(sizeof(token));
     res->type = type;
     res->ucs = ucsdup(ucs);
+    res->unit = 0;
     if (type == TOK_NUM) res->num = ucstof(ucs);
     return res;
 }
 
+token *_new_token_num(token_type type, uchar *ucs, uchar *unit) {
+    token *res;
+    res = (token *)malloc(sizeof(token));
+    res->type = type;
+    res->ucs = ucsdup(ucs);
+    res->unit = ucsdup(unit);
+    res->num = ucstof(ucs);
+    return res;
+}
+
+
 token *_scan(utf8_file *stream) {
-    uchar ustr[1024];
+    uchar ustr[256], uunit[256];
     uchar uch;
-    int ix;
+    int ix, jx;
 
     while (isuws(uch = fgetuc(stream)));
     if (uch == L'“') {
+    	int slev = 1;
         ix = 0;
-        while (uch != L'”') {
+        while (slev > 0) {
             uch = fgetuc(stream);
             ustr[ix] = uch;
             ix ++;
+            switch (uch) {
+              case L'“': slev++; break;
+              case L'”': slev--; break;
+            }
         }
         ustr[ix-1] = L'\0';
         return _new_token(TOK_STR, ustr);
@@ -68,9 +85,25 @@ token *_scan(utf8_file *stream) {
             uch = fgetuc(stream);
             ustr[ix] = uch;
         }
+        /*! insert exp handling here! */
+        /* unit handling: */
+       	jx = 0;
+        if (isualpha(uch)) {
+        	while (isualpha(uch)) {
+        		uunit[jx] = uch;
+        		uch = fgetuc(stream);
+        		jx++;
+        	}
+        }
+        else if (uch == L'°') {
+        	uunit[jx] = uch;
+       		uch = fgetuc(stream);
+       		jx++;
+        }
+       	uunit[jx] = L'\0';
         fungetuc(uch, stream);
         ustr[ix] = L'\0';
-        return _new_token(TOK_NUM, ustr);
+        return _new_token_num(TOK_NUM, ustr, uunit);
     }
     else if (isualpha(uch)) {
         ustr[0] = uch;
@@ -159,6 +192,11 @@ uchar *tok_ustr(token *tok) {
 
 char *tok_str(char *buf, token *tok, int size) {
 	return ucstombs(buf, tok->ucs, size);
+}
+
+char *tok_unit(char *buf, token *tok, int size) {
+	if (tok->type != TOK_NUM) return "";
+	return ucstombs(buf, tok->unit, size);
 }
 
 void tok_free(token *tok) {
