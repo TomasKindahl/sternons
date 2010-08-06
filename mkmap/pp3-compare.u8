@@ -1,0 +1,110 @@
+Image:					size X×Y, scaling S									
+Projections:			north polar circular ⊻ south pole circular ⊻		
+						⊻ cylindric ⊻ conic ⊻ auto							
+						center α, δ											
+Coorsys:				equatorial ⊻ ecliptical ⊻ galactic ⊻ altazimutal	
+	Grid:				ra freq α, de freq δ, style							
+	Bows and poles:		equatorial ⊻ ecliptical ⊻ galactic ⊻ ⋯				
+Symbolics:																	
+	painting visu:		Bayer ⊻ Hevelius ⊻ Bode ⊻ Jamieson ⊻ ⋯ ⊻ mkmap		
+	lines:				Tirion ⊻ IAU/S&T ⊻ H. A. Rey ⋯						
+		lines+:			dashed ⊻ ⋯											
+	borders:			old style(map) ⊻ IAU								
+Highlight:																	
+	form: 				ellipse ⊻ square ⊻ polytrain ∥ arrow				
+Object symbolics:		Bode ⊻ Tirion ⊻ Bečvář ⊻ Proctor ⊻					
+	size formula:		S(mag,size)											
+Naming:																		
+	label:				position X, Y (rel object), font size S				
+	names:				constellations ∥ asterisms ∥ object names			
+	designation:		Bayer ∥ Flamsteed ∥ YBS/HR ∥ HD ∥ ⋯					
+		designation+:	highlighted name									
+Object selection:		stars ∥ NGC-objs. ∥ galaxies ∥ large forms ∥ ⋯		
+	for each:			⌊mag												
+Background:				Milky Way ∥ LMC ∥ SMC								
+
+-----------------------------------------------------------------------------
+PP3 pipeline:
+	1. settings,
+	2. extra stars settings
+mkmap pipeline:
+	1. map(s) settings
+	2. load/transform file rows into an object list (object refers to
+	   just any drawing thing)
+	3. add object overrides from the map program
+	4. for each object apply a function to determine where it is to be
+	   drawn, if on multiple maps duplicate it to each map
+	5. delete all objects that fall outside the map, truncate the
+	   parts of the grand objects that fall outside the map ...
+	6. determine how the object is to be drawn, what symbol, font, color
+	   dashing, label, label position etc.
+	   (if creating a binary format, it should be saved here)
+	7. draw all objects into one or more maps
+
+-----------------------------------------------------------------------------
+filename output orion.tex					??
+filename stars stars.dat					??
+filename nebulae nebulae.dat				??
+filename label_dimensions labeldimens.dat	??
+filename constellation_lines lines.dat		??
+filename boundaries boundaries.dat			??
+filename milky_way milkyway.dat				??
+filename latex_preamble mypreamble.tex		-- no such --
+filename include myproject.pp3				load program file
+set center_rectascension 5.8				projections
+set center_declination 0					projections
+[set projection_type Lambert_conic]			projections
+set box_width 15							image
+set box_height 15							image
+set grad_per_cm 4							image
+set constellation ORI						load program file
+set shortest_constellation_line 0.1			symbolics > lines
+set label_skip 0.06							naming > label
+set minimal_nebula_radius 0.1				obj_symb > size_formula
+set faintest_cluster_magnitude 4.0			obj_symb > size_formula
+set faintest_diffuse_nebula_magnitude 8.0	obj_symb > size_formula
+set faintest_star_magnitude 7.0				obj_symb > size_formula
+set faintest_star_with_label_magnitude 3.7	obj_symb > size_formula
+set faintest_star_disk_magnitude 4.5		obj_symb > size_formula
+set minimal_star_radius 0.015				obj_symb > size_formula
+set star_scaling 2.0						obj_symb > size_formula
+set fontsize 12								naming > label > font_size
+switch milky_way off						background
+switch nebulae on							obj_symb > size_formula
+switch grid on								coorsys > grid
+switch ecliptic on							coorsys > bow
+switch boundaries on						symbolics > borders
+switch constellation_lines on				symbolics > lines
+switch labels on							
+switch eps_output on						
+switch pdf_output on						
+switch colored_stars off					
+color background 0 0 0.4					
+color grid 0 0.298 0.447					
+color ecliptic 1 0 0						
+color boundaries 0.5 0.5 0					
+color highlighted_boundaries 1 1 0			
+color constellation_lines 0 1 0				
+color milky_way 0 0 1						
+color nebulae 1 1 1							
+color stars 1 1 1							
+color labels 0 1 1							
+color text_labels 1 1 0						
+line_width grid 0.025						
+line_width ecliptic 0.018					
+line_width boundaries 0.035					
+line_width highlighted_boundaries 0.035		
+line_width nebulae 0.018					
+line_width constellation_lines 0.035		
+line_style grid solid						
+line_style ecliptic dashed					
+line_style boundaries dashed				
+line_style highlighted_boundaries dashed	
+line_style nebulae solid					
+line_style constellation_lines solid		
+add IC 5070 NGC 7000;						
+delete LEO 63 HD 97605;						
+reposition LEO 32 SE;						
+add_labels M 66 LEO 24;						
+delete_labels M 43;							
+
