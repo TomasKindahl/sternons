@@ -6,6 +6,24 @@
 #include "ucstr.h"
 #include "scan.h"
 
+/************************************************************************
+ *  This file is part of mkmap                                          *
+ *                                                                      *
+ *  mkmap is free software: you can redistribute it and/or modify it    *
+ *  under the terms of the GNU Lesser General Public License as         *
+ *  published by the Free Software Foundation, either version 3 of the  *
+ *  License, or (at your option) any later version.                     *
+ *                                                                      *
+ *  mkmap is distributed in the hope that it will be useful,            *
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of      *
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       *
+ *  GNU Lesser General Public License for more details.                 *
+ *                                                                      *
+ *  You should have received a copy of the GNU Lesser General Public    *
+ *  License along with mkmap. If not, see                               *
+ *  <http://www.gnu.org/licenses/>.                                     *
+ ********************************************************************** */
+
 /* ==================================================================== |
      Known bugs and features:                                           |
        F1: a λ₀ outside [0,360[ generates black declination sections in |
@@ -25,7 +43,7 @@
 | φ₁, φ₂ standard parallels    (chosen by map designer)                 |
                                                                         |
     n = ln(cos φ₁·sec φ₂)/ln(tan(¼π + ½φ₂)·cot(¼π + ½φ₁))               |
-    F = cos    φ₁·tanⁿ(¼π + ½φ₁)/n                                      |
+    F = cos φ₁·tanⁿ(¼π + ½φ₁)/n                                         |
     ρ = F·cotⁿ(¼π + ½φ)                                                 |
     ρ₀ = F·cotⁿ(¼π + ½φ₀)                                               |
                                                                         |
@@ -148,7 +166,7 @@ void head(lambert_proj *proj, image_struct *frame) {
             Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
             if (pos_in_frame(&x, &y, X, Y, frame)) {
                 printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
-                printf("            style=\"opacity:1;fill:#880088;");
+                printf("            style=\"opacity:1;fill:#880088;");äööö
                 printf("fill-opacity:1;\"/>\n");
                 /*       W2-X*dim*A, H2-Y*dim*A); */
             }
