@@ -1,11 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include "usio.h"
-#include "ucstr.h"
-#include "scan.h"
-
 /************************************************************************
  *  This file is part of mkmap                                          *
  *                                                                      *
@@ -22,7 +14,15 @@
  *  You should have received a copy of the GNU Lesser General Public    *
  *  License along with mkmap. If not, see                               *
  *  <http://www.gnu.org/licenses/>.                                     *
- ********************************************************************** */
+ ************************************************************************/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include "usio.h"
+#include "ucstr.h"
+#include "scan.h"
 
 /* ==================================================================== |
      Known bugs and features:                                           |
@@ -166,7 +166,7 @@ void head(lambert_proj *proj, image_struct *frame) {
             Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
             if (pos_in_frame(&x, &y, X, Y, frame)) {
                 printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
-                printf("            style=\"opacity:1;fill:#880088;");äööö
+                printf("            style=\"opacity:1;fill:#880088;");
                 printf("fill-opacity:1;\"/>\n");
                 /*       W2-X*dim*A, H2-Y*dim*A); */
             }
