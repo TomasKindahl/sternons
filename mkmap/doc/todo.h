@@ -1,0 +1,20 @@
+#ifndef _TODO_H
+#define _TODO_H
+
+/*[
+
+1. TODO, 2. ONGOING, 3. DID, 4. REJECTED AND ABORTED
+
+TODO:
+	ITEM: 1.
+		TITLE: 
+		STATUS: 
+		EXTRAS: 
+		DESCR: 
+ONGOING:
+DID:
+REJECTED AND ABORTED:
+
+]*/
+
+#endif /* _TODO_H */

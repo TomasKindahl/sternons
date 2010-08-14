@@ -6,3 +6,4 @@ orion() {
     projection.{ type = Lambert_conic,
         α = 80ʰ00ᵐ00ˢ, δ = 10°00'00", Δδ = 10° };
 }
+
