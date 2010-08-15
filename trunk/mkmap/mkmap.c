@@ -67,6 +67,19 @@ double sec(double x) { return 1/cos(x); }
 double deg2rad(double x) { return M_PI * x / 180.0; }
 double rad2deg(double x) { return 180.0 * x / M_PI; }
 
+#define NO_DEBUG 0
+#define DEBUG 1
+
+typedef struct _program_state_S {
+    int debug;
+} program_state;
+
+program_state *new_program_state(int debug) {
+    program_state *res = (program_state *)malloc(sizeof(program_state));
+    res->debug = debug;
+    return res;
+}
+
 typedef struct _lambert_proj_S {
     double F;
     double lambda0;
@@ -123,7 +136,7 @@ int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
 
-void head(lambert_proj *proj, image_struct *frame) {
+void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y, A;
@@ -142,20 +155,22 @@ void head(lambert_proj *proj, image_struct *frame) {
            "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
            "stroke-dasharray:none;stroke-opacity:1\"\n"
            "      width=\"%i\" height=\"%i\"/>\n", W, H);
-    /* Helper lines, paper coordinates: */
-    /* vertical */
-    for (ix = 100; ix < 560; ix += 100) {
-        printf("<path style=\"stroke:#000000;stroke-width:1px\" "
-               "d=\"M %i,0 L %i,%i\"/>\n", ix, ix, H);
-        printf("<path style=\"stroke:#080808;stroke-width:1px\" "
-               "d=\"M %i,0 L %i,%i\"/>\n", ix-50, ix-50, H);
-    }
-    /* horizontal */
-    for (iy = 100; iy < 560; iy += 100) {
-        printf("<path style=\"stroke:#000000;stroke-width:1px\" "
-               "d=\"M 0,%i L %i,%i\"/>\n", iy, W, iy);
-        printf("<path style=\"stroke:#080808;stroke-width:1px\" "
-               "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
+    if (progstate->debug == DEBUG) {
+        /* Helper lines, paper coordinates: */
+        /* vertical */
+        for (ix = 100; ix < 560; ix += 100) {
+            printf("<path style=\"stroke:#000000;stroke-width:1px\" "
+                   "d=\"M %i,0 L %i,%i\"/>\n", ix, ix, H);
+            printf("<path style=\"stroke:#080808;stroke-width:1px\" "
+                   "d=\"M %i,0 L %i,%i\"/>\n", ix-50, ix-50, H);
+        }
+        /* horizontal */
+        for (iy = 100; iy < 560; iy += 100) {
+            printf("<path style=\"stroke:#000000;stroke-width:1px\" "
+                   "d=\"M 0,%i L %i,%i\"/>\n", iy, W, iy);
+            printf("<path style=\"stroke:#080808;stroke-width:1px\" "
+                   "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
+        }
     }
     /* Declination lines: */
     #define NUM_DE 17
@@ -233,11 +248,15 @@ void foot(void) {
 }
 
 void usage_exit(void) {
-	/* Usage text here when stabilized */
+    /* Usage text here when stabilized */
     exit(-1);
 }
 
-int read_program(char *program, lambert_proj *projection, image_struct *frame) {
+int read_program( char *program, 
+                  lambert_proj *projection,
+                  image_struct *frame,
+                  program_state *progstate )
+{
     token_file *pfile;
     token *tok;
     char buf[1024], buf2[1024];
@@ -247,29 +266,33 @@ int read_program(char *program, lambert_proj *projection, image_struct *frame) {
         return 0;
     }
     fprintf(stderr, "INFO: program '%s' opened\n", program);
-    tok = scan(pfile);
-    while (!tokfeof(pfile)) {
-    	switch (tok->type) {
-    	  case TOK_STR:
-    	  	fprintf(stderr, "⟨%s⟩“%s”\n", tok_type_str(tok), tok_str(buf, tok, 1023));
-    	  	break;
-    	  case TOK_NUM:
-    	  	fprintf(stderr, "⟨%s⟩%s(%s)\n", tok_type_str(tok),
-    	  			tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
-    	  	break;
-    	  default:    	  		  
-    	  	fprintf(stderr, "⟨%s⟩%s\n", tok_type_str(tok), tok_str(buf, tok, 1023));
-    	}
-    	tok_free(tok);
-    	tok = scan(pfile);
+    if (progstate->debug == DEBUG) {
+        tok = scan(pfile);
+        while (!tokfeof(pfile)) {
+            switch (tok->type) {
+              case TOK_STR:
+                  fprintf(stderr, "⟨%s⟩“%s”\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+                  break;
+                case TOK_NUM:
+                  fprintf(stderr, "⟨%s⟩%s(%s)\n", tok_type_str(tok),
+                          tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
+                  break;
+              default:                    
+                  fprintf(stderr, "⟨%s⟩%s\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+            }
+            tok_free(tok);
+            tok = scan(pfile);
+        }
     }
+
     fprintf(stderr, "INFO: program '%s' read\n", program);
     tokfclose(pfile);
     return 1;
 }
 
 int main (int argc, char **argv) {
-	/* dummy setup: */
+    /* dummy setup: */
+    program_state *progstate = new_program_state(DEBUG);
     image_struct *frame = new_image(500, 500, 1.4);
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
 
@@ -285,10 +308,10 @@ int main (int argc, char **argv) {
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!read_program(argv[1], projection, frame)) usage_exit();
+    if (!read_program(argv[1], projection, frame, progstate)) usage_exit();
 
     /*  */
-    head(projection, frame);
+    head(projection, frame, progstate);
     draw_stars(argv[2], projection, frame);
     foot();
 

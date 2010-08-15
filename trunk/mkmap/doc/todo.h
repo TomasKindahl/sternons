@@ -21,16 +21,24 @@
 #ifndef _TODO_H
 #define _TODO_H
 
-/*[
-
-1. TODO, 2. ONGOING, 3. DID, 4. REJECTED AND ABORTED
-
-TODO:               
-	ITEM: 1.
-		TITLE: 
-		STATUS: 
-		EXTRAS: 
-		DESCR: 
+/*[                                                                             
+                                                                                
+1. TODO, 2. ONGOING, 3. DID, 4. REJECTED AND ABORTED                            
+                                                                                
+TODO:                                                                           
+    ITEM: 1                                                                     
+        TITLE: Scan Sexagesimal                                                 
+        FILE: 1-Scan60                                                          
+        STATUS: vapor, not evaluated                                            
+        DESCR: Scan sexagesimal notation for floating point numbers meaning     
+          that 00h23m45.67s equals 0 + 23/60 + 45.67/3600.                      
+        CAVEATS: this is not a unit, it is a way to express a different number  
+          system and scale analogous to degrees vs. radians and decimal vs.     
+          hexadecimal. How these are to be differentiated is unclear since      
+          degrees can be expressed sexagesimally while radians cannot, and      
+          00h23m45.67s implies a different scaling than 00°23'45.67", so that   
+          there is a partial conceptual overlap between sexagesimal and scaling 
+          (units).
 ONGOING:
 DID:
 REJECTED AND ABORTED:
