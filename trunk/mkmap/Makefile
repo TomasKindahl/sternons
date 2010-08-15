@@ -25,16 +25,16 @@ OBJS	= scan.o ucstr.o uctype.o usio.o
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
 
-cmap: cmap.c $(OBJS)
-	$(CC) -o $@ $< $(OBJS)
+#cmap: cmap.c $(OBJS)
+#	$(CC) -o $@ $< $(OBJS)
 
 .c.o:
 	$(CC) -c $<
 
-cmap.svg: mkmap prog.mkm $(MAPS)
+testmap.svg: mkmap prog.mkm $(MAPS)
 	./$< prog.mkm $(MAPS) > $@
 
-cmap.png: cmap.svg
+testmap.png: testmap.svg
 	inkscape --export-png=$@ $<
 
 #EXAMPLE FOR SEPARATING WIN AND LINUX OBJS:
