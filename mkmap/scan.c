@@ -51,8 +51,7 @@ token *_new_token(token_type type, uchar *ucs) {
 }
 
 token *_new_token_num(token_type type, uchar *ucs, uchar *unit) {
-    token *res;
-    res = (token *)malloc(sizeof(token));
+    token *res = (token *)malloc(sizeof(token));
     res->type = type;
     res->ucs = ucsdup(ucs);
     res->unit = ucsdup(unit);
@@ -60,6 +59,14 @@ token *_new_token_num(token_type type, uchar *ucs, uchar *unit) {
     return res;
 }
 
+token *_new_token_uchar(token_type type, uchar uc) {
+    token *res = (token *)malloc(sizeof(token));
+    res->type = type;
+    res->ucs = (uchar *)malloc(sizeof(uchar)*2);
+    res->ucs[0] = uc; res->ucs[1] = L'\0';
+    res->unit = 0;
+    return res;
+}
 
 token *_scan(utf8_file *stream) {
     uchar ustr[256], uunit[256];
@@ -67,6 +74,10 @@ token *_scan(utf8_file *stream) {
     int ix, jx;
 
     while (isuws(uch = fgetuc(stream)));
+    while (uch == L'#') {
+    	while ((uch = fgetuc(stream)) != L'\n');
+    	while (isuws(uch = fgetuc(stream)));
+    }
     if (uch == L'“') {
     	int slev = 1;
         ix = 0;
@@ -138,17 +149,14 @@ token *_scan(utf8_file *stream) {
         return _new_token(TOK_KW, ustr);
     }
     else if (!isualpha(uch)) {
-        uchar *ures = (uchar *)malloc(sizeof(uchar)*2);
         token_type T;
-        ures[0] = uch;
-        ures[1] = L'\0';
-        if (ures[0] == L'{' || ures[0] == L'[' || ures[0] == L'(')
+        if (uch == L'{' || uch == L'[' || uch == L'(')
             T = TOK_LPAR;
-        else if (ures[0] == L'}' || ures[0] == L']' || ures[0] == L')')
+        else if (uch == L'}' || uch == L']' || uch == L')')
             T = TOK_RPAR;
         else
             T = TOK_OP;
-        return _new_token(T, ures);
+        return _new_token_uchar(T, uch);
     }
     return _new_token(TOK_NONE, 0);
 }
