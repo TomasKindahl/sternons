@@ -3,12 +3,12 @@ afn					GPL		C, IDL and Python		n-body simulations, plotting, data analisys
 aida-deconvolution	nBSD	Numerical Python		image deconvolution
 apes-nbody			??		C						contains NASA/JPL LGPL code in svn/trunk/ephemeris/tools/nasa/
 asterope			GPL		Java					planetarium
-astroalgo			GPL		C, C#, JavaScript		Meeus (to be replaced by own LGPL code)
+astroalgo			GPL		C, C#, !JavaScript		Meeus (to be replaced by own LGPL code)
 astrogui			GPL		Python					FITS
 astronomex			GPL		Python					datasets manipulation
 astronomyworks		nBSD	Python					data calibration and analysis
 casacore			GPL		C++						?? - full of code
-computus			MIT		ActionScript			digital horology
+computus			MIT		!ActionScript			digital horology
 delphimoon			LGPL	Delphi Pascal			Moon computations, oriented towards X ←
 gaostars			Apache	PHP, Ruby				processing/analysing .proclog files
 hattrick-nbody		GPL		C++						N-Body “integrator”
@@ -26,4 +26,3 @@ spectclean			nBSD	Perl, C++				spectral analysis
 transformapplier	MIT		C++						amateur var obs transformer algorithm
 tops				MIT		Python					Telescope Operations Software
 wcs2kml				Apache	C++, Python				FITS-to-PNG/JPEG converter ←
-
