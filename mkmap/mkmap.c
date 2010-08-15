@@ -80,6 +80,22 @@ program_state *new_program_state(int debug) {
     return res;
 }
 
+typedef struct _image_struct_S {
+	uchar *name;
+    int width, height, dim;
+    double aspect;
+} image_struct;
+
+image_struct *new_image(uchar *name, int width, int height, double aspect) {
+    image_struct *res = (image_struct *)malloc(sizeof(image_struct));
+    res->name = ucsdup(name);
+    res->width = width;
+    res->height = height;
+    if(width > height) res->dim = width; else res->dim = height;
+    res->aspect = aspect;
+    return res;
+}
+
 typedef struct _lambert_proj_S {
     double F;
     double lambda0;
@@ -114,20 +130,6 @@ void Lambert(double *x, double *y, double phi, double lambda, lambert_proj *LCCP
     *y = LCCP->rho0 - rho*cos(n_lambda_D);
 }
 
-typedef struct _image_struct_S {
-    int width, height, dim;
-    double aspect;
-} image_struct;
-
-image_struct *new_image(int width, int height, double aspect) {
-    image_struct *res = (image_struct *)malloc(sizeof(image_struct));
-    res->width = width;
-    res->height = height;
-    if(width > height) res->dim = width; else res->dim = height;
-    res->aspect = aspect;
-    return res;
-}
-
 #define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
 
 int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
@@ -139,13 +141,12 @@ int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
 void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
-    double X, Y, A;
+    double X, Y;
     int x, y;
 
     W = frame->width; W2 = W/2;
     H = frame->height; H2 = H/2;
     dim = frame->dim;
-    A = frame->aspect;
     printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
     printf("<svg width=\"%i\" height=\"%i\"\n"
            "     xmlns=\"http://www.w3.org/2000/svg\"\n"
@@ -185,7 +186,6 @@ void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
                 printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
                 printf("            style=\"opacity:1;fill:#880088;");
                 printf("fill-opacity:1;\"/>\n");
-                /*       W2-X*dim*A, H2-Y*dim*A); */
             }
         }
     }
@@ -260,6 +260,7 @@ int read_program( char *program,
     token_file *pfile;
     token *tok;
     char buf[1024], buf2[1024];
+    int NL;
 
     if (!(pfile = tokfopen(program))) {
         fprintf(stderr, "ERROR: program '%s' not found\n", program);
@@ -268,17 +269,24 @@ int read_program( char *program,
     fprintf(stderr, "INFO: program '%s' opened\n", program);
     if (progstate->debug == DEBUG) {
         tok = scan(pfile);
+        NL = 0;
         while (!tokfeof(pfile)) {
             switch (tok->type) {
               case TOK_STR:
-                  fprintf(stderr, "⟨%s⟩“%s”\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+                  fprintf(stderr, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
                   break;
                 case TOK_NUM:
-                  fprintf(stderr, "⟨%s⟩%s(%s)\n", tok_type_str(tok),
+                  fprintf(stderr, "⟨%s⟩%s(%s)", tok_type_str(tok),
                           tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
                   break;
               default:                    
-                  fprintf(stderr, "⟨%s⟩%s\n", tok_type_str(tok), tok_str(buf, tok, 1023));
+                  fprintf(stderr, "⟨%s⟩%s", tok_type_str(tok), tok_str(buf, tok, 1023));
+            }
+            if (NL == 8) {
+            	fprintf(stderr, "\n"); NL = 0;
+            }
+            else {
+            	fprintf(stderr, " "); NL++;
             }
             tok_free(tok);
             tok = scan(pfile);
@@ -293,7 +301,7 @@ int read_program( char *program,
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *progstate = new_program_state(DEBUG);
-    image_struct *frame = new_image(500, 500, 1.4);
+    image_struct *frame = new_image(L"", 500, 500, 1.4);
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
 
     /*>Arg handling here! */
