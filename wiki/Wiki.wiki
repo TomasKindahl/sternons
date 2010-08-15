@@ -31,6 +31,9 @@ the display the further conversion to PNG. This will make mkmap portable, while
 independent scripted applications have to do smart things that guide the user
 through the creation process of map specification to a PNG file.
 
+= Related projects =
+[other]
+
 = Tools =
 
 == Mkmap ==

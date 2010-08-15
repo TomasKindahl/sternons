@@ -1,0 +1,29 @@
+||[https://code.google.com/p/aaplus/ aaplus]||MIT||C#, .NET||Meeus
+||[https://code.google.com/p/afn/ afn]||GPL||C, IDL and Python||n-body simulations, plotting, data analisys
+||[https://code.google.com/p/aida-deconvolution/ aida-deconvolution]||nBSD||Numerical Python||image deconvolution
+||[https://code.google.com/p/apes-nbody/ apes-nbody]||??||C||contains NASA/JPL LGPL code in svn/trunk/ephemeris/tools/nasa/
+||[https://code.google.com/p/asterope/ asterope]||GPL||Java||planetarium
+||[https://code.google.com/p/astroalgo/ astroalgo]||GPL||C, C#, JavaScript||Meeus (to be replaced by own LGPL code)
+||[https://code.google.com/p/astrogui/ astrogui]||GPL||Python||FITS
+||[https://code.google.com/p/astronomex/ astronomex]||GPL||Python||datasets manipulation
+||[https://code.google.com/p/astronomyworks/ astronomyworks]||nBSD||Python||data calibration and analysis
+||[https://code.google.com/p/casacore/ casacore]||GPL||C++||?? - full of code
+||[https://code.google.com/p/computus/ computus]||MIT||ActionScript||digital horology
+||[https://code.google.com/p/delphimoon/ delphimoon]||LGPL||Delphi Pascal||Moon computations, oriented towards X ←
+||[https://code.google.com/p/gaostars/ gaostars]||Apache||PHP, Ruby||processing/analysing .proclog files
+||[https://code.google.com/p/hattrick-nbody/ hattrick-nbody]||GPL||C++||N-Body “integrator”
+||[https://code.google.com/p/javalens/ javalens]||GPL||Java||grav microlesing
+||[https://code.google.com/p/multifit/ multifit]||GPL||C++||grav microlesing
+||[https://code.google.com/p/nmod/ nmod]||GPL||C++||n-Body Modelling Toolkit
+||[https://code.google.com/p/ntv/ ntv]||nBSD||python||visualize FITS files
+||[https://code.google.com/p/opencoeli/ opencoeli]||GPL||Java||planetarium, most similar to my project - to assist??
+||[https://code.google.com/p/pygalkin/ pygalkin]||GPL||Python||3D Data
+||[https://code.google.com/p/qview-Python/ qview-Python]||GPL||Python||lightcurve plotter
+||[https://code.google.com/p/sdssidl/ sdssidl]||GPL||IDL, C/C++, Postgres||general data analysis
+||[https://code.google.com/p/skua/ skua]||Apache||SOA||Semantic Knowledge Underpinning Astronomy
+||[https://code.google.com/p/skygazer/ skygazer]||GPL||Java||networked telescope control and observation
+||[https://code.google.com/p/spectclean/ spectclean]||nBSD||Perl, C++||spectral analysis
+||[https://code.google.com/p/transformapplier/ transformapplier]||MIT||C++||amateur var obs transformer algorithm
+||[https://code.google.com/p/tops/ tops]||MIT||Python||Telescope Operations Software
+||[https://code.google.com/p/wcs2kml/ wcs2kml]||Apache||C++, Python||FITS-to-PNG/JPEG converter ←
+
