@@ -18,16 +18,17 @@
 #  <http://www.gnu.org/licenses/>.                                     #
 ########################################################################
 
-inherit sky;                         # load data from sky.mkm: stars, nebulae, etc.
+load sky;                            # load data from sky.mkm: stars, nebulae, etc.
 
-image = {                            # create a main image with the name orion
+image {                              # create a main image
     name = “orion”;                  # set name to “orion”
     width = 500px;                   # width parameter of image structure
     height = 500px;                  # height parameter of image structure
     scale = 1.4;                     # scale parameter of image structure
-    projection.type = Lambert_conic; 
-    projection.α = 80ʰ;              
-    projection.δ = 10°;              
-    projection.Δδ = 10°;             
+    projection.type = Lambert_conic; # image to contain a LCC projection
+    projection.α = 5ʰ20ᵐ;            # centered at 5 hours
+    projection.δ = 10°;              # centered at 10 degrees north
+    projection.Δδ = 10°;             # with a width of plus-minus 10 degrees 
 }
 
+draw image “orion”;
