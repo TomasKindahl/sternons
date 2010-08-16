@@ -70,22 +70,6 @@ double rad2deg(double x) { return 180.0 * x / M_PI; }
 #define NO_DEBUG 0
 #define DEBUG 1
 
-typedef struct _image_struct_S {
-	uchar *name;
-    int width, height, dim;
-    double aspect;
-} image_struct;
-
-image_struct *new_image(uchar *name, int width, int height, double aspect) {
-    image_struct *res = (image_struct *)malloc(sizeof(image_struct));
-    res->name = ucsdup(name);
-    res->width = width;
-    res->height = height;
-    if(width > height) res->dim = width; else res->dim = height;
-    res->aspect = aspect;
-    return res;
-}
-
 typedef struct _lambert_proj_S {
     double F;
     double lambda0;
@@ -120,6 +104,28 @@ void Lambert(double *x, double *y, double phi, double lambda, lambert_proj *LCCP
     *y = LCCP->rho0 - rho*cos(n_lambda_D);
 }
 
+typedef struct _image_struct_S {
+	uchar *name;
+    int width, height, dim;
+    double aspect;
+    lambert_proj *projection;
+} image_struct;
+
+image_struct *new_image(uchar *name, int width, int height, double aspect) {
+    image_struct *res = (image_struct *)malloc(sizeof(image_struct));
+    res->name = ucsdup(name);
+    res->width = width;
+    res->height = height;
+    if(width > height) res->dim = width; else res->dim = height;
+    res->aspect = aspect;
+    return res;
+}
+
+image_struct *set_image_projection(image_struct *image, lambert_proj *projection) {
+	image->projection = projection;
+	return image;
+}
+
 typedef struct _program_state_S {
     int debug;
     image_struct *image;
@@ -144,12 +150,13 @@ int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
 
-void head(lambert_proj *proj, program_state *progstate) {
+void head(program_state *progstate) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y;
     int x, y;
-    image_struct *image;
+    image_struct *image = progstate->image;
+    lambert_proj *proj = image->projection;
 
     W = image->width; W2 = W/2;
     H = image->height; H2 = H/2;
@@ -213,14 +220,15 @@ void head(lambert_proj *proj, program_state *progstate) {
     }
 }
 
-int draw_stars(char *fname, lambert_proj *proj) {
+int draw_stars(char *fname, program_state *progstate) {
     int HIP;
     double RA, DE, mag;
     double X, Y, size;
     int x, y;
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
-    image_struct *image;
+    image_struct *image = progstate->image;
+    lambert_proj *proj = image->projection;
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
@@ -277,7 +285,6 @@ void tok_dump(int debug, token *tok) {
 }
 
 int read_program( char *program, 
-                  lambert_proj *projection,
                   program_state *progstate )
 {
     token_file *pfile;
@@ -311,10 +318,11 @@ int read_program( char *program,
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *progstate = new_program_state(DEBUG);
-    lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
+    /* lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20); */
     image_struct *image = new_image(L"Orion", 500, 500, 1.4);
 
     set_program_image(progstate, image);
+    set_image_projection(image, init_Lambert_deg(80, 0, 10, 20));
 
     /*>Arg handling here! */
     /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
@@ -328,12 +336,12 @@ int main (int argc, char **argv) {
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!read_program(argv[1], projection, progstate))
+    if (!read_program(argv[1], progstate))
     	usage_exit();
 
     /*  */
-    head(projection, progstate);
-    draw_stars(argv[2], projection);
+    head(progstate);
+    draw_stars(argv[2], progstate);
     foot();
 
     return 0;
