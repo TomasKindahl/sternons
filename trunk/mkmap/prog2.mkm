@@ -18,16 +18,17 @@
 #  <http://www.gnu.org/licenses/>.                                     #
 ########################################################################
 
-inherit sky;                         # load data from sky.mkm: stars, nebulae, etc.
+inherit sky;                    # load data from sky: stars, nebulae, etc.
 
-image = {                            # create a main image with the name orion
-    name = “orion”;                  # set name to “orion”
-    width = 500px;                   # width parameter of image structure
-    height = 500px;                  # height parameter of image structure
-    scale = 1.4;                     # scale parameter of image structure
-    projection.type = Lambert_conic; 
-    projection.α = 80ʰ;              
-    projection.δ = 10°;              
-    projection.Δδ = 10°;             
+image = {                       # create a main image with the name orion
+    name = “orion”;             # set name to “orion”
+    width = 500px;              # width parameter of image structure
+    height = 500px;             # height parameter of image structure
+    scale = 1.4;                # scale parameter of image structure
+    projection = {              
+        type = Lambert_conic,   
+        α = 80ʰ00ᵐ00ˢ,          
+        δ = 10°00'00",          
+        Δδ = 10° };             
 }
 
