@@ -1,1 +1,1 @@
-Started to cluster the 'frames' to a hierarchical structure under 'program' (misnomer!)
+More refactoring for componentializing program/image structures
