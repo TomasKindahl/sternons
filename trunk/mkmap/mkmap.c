@@ -318,11 +318,11 @@ int read_program( char *program,
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *progstate = new_program_state(DEBUG);
-    /* lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20); */
+    lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
     image_struct *image = new_image(L"Orion", 500, 500, 1.4);
 
     set_program_image(progstate, image);
-    set_image_projection(image, init_Lambert_deg(80, 0, 10, 20));
+    set_image_projection(image, projection);
 
     /*>Arg handling here! */
     /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
