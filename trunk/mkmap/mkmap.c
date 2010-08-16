@@ -284,7 +284,44 @@ void tok_dump(int debug, token *tok) {
     }
 }
 
-int read_program( char *program, program_state *progstate ) {
+void parse_program_head(token_file *pfile, program_state *progstate) {
+	token *tok;
+	int NL = 0;
+
+	tok = scan(pfile);
+	fprintf(stderr, "INFO: head reading {\n    ");
+	while (!is_kw(tok, L"image")) {
+		tok_dump(progstate->debug, tok);
+		tok = scan(pfile);
+        if (NL == 8)
+            { fprintf(stderr, "\n    "); NL = 0; }
+        else
+            { fprintf(stderr, " "); NL++; }
+	}
+	fprintf(stderr, "\n}\n");
+	unscan(tok, pfile);
+	return;
+}
+
+void parse_program_image(token_file *pfile, program_state *progstate) {
+	token *tok;
+	int NL = 0;
+
+	tok = scan(pfile);
+	fprintf(stderr, "INFO: image reading {\n    ");
+	while (!is_rpar(tok, L"}")) {
+		tok_dump(progstate->debug, tok);
+		tok = scan(pfile);
+        if (NL == 8)
+            { fprintf(stderr, "\n    "); NL = 0; }
+        else
+            { fprintf(stderr, " "); NL++; }
+	}
+	fprintf(stderr, "\n}\n");
+	return;
+}
+
+int parse_program(char *program, program_state *progstate) {
     token_file *pfile;
     token *tok;
     int NL;
@@ -294,15 +331,17 @@ int read_program( char *program, program_state *progstate ) {
         return 0;
     }
     fprintf(stderr, "INFO: program '%s' opened\n", program);
+    parse_program_head(pfile, progstate);
+    parse_program_image(pfile, progstate);
     if (progstate->debug == DEBUG) {
         tok = scan(pfile);
         NL = 0;
         while (!tokfeof(pfile)) {
         	tok_dump(progstate->debug, tok);
             if (NL == 8)
-            	{ fprintf(stderr, "\n"); NL = 0; }
+                { fprintf(stderr, "\n"); NL = 0; }
             else
-            	{ fprintf(stderr, " "); NL++; }
+                { fprintf(stderr, " "); NL++; }
             tok_free(tok);
             tok = scan(pfile);
         }
@@ -334,7 +373,7 @@ int main (int argc, char **argv) {
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!read_program(argv[1], progstate))
+    if (!parse_program(argv[1], progstate))
     	usage_exit();
 
     /*  */

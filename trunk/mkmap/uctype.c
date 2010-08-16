@@ -29,12 +29,18 @@ int isuws(uchar uch) {
     /* uchar is alphabetic char? (only Latin considered yet) */
 int isualpha(uchar uch) {
     if (L'_' == uch) return 1;
+    /* ASCII */
     if (L'A' <= uch && uch <= L'Z') return 1;
     if (L'a' <= uch && uch <= L'z') return 1;
+    /* Latin-1, -A, -B and IPA */
     if (L'À' <= uch && uch <= L'ʯ' && uch != L'×' && uch != L'÷') return 1;
+    /* Spacing modifier letters */
+    if (L'ʰ' <= uch && uch <= L'˿') return 1;
+    /* Greek */
     if (L'Ά' <= uch && uch <= L'Ͽ' && uch != L'·') return 1;
     return 0;
 }
+
     /* uchar is digit? (only Latin considered yet) */
 int isunum(uchar uch) {
     if (L'0' <= uch && uch <= L'9') return 1;
