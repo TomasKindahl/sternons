@@ -43,6 +43,7 @@ testmap.png: testmap.svg
 
 clean:
 	rm -f *.o
+	rm -f *~*
 
 distclean: clean
 	rm -f cmap cmp dump mkmap
