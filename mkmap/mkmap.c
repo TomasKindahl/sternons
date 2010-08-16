@@ -284,9 +284,7 @@ void tok_dump(int debug, token *tok) {
     }
 }
 
-int read_program( char *program, 
-                  program_state *progstate )
-{
+int read_program( char *program, program_state *progstate ) {
     token_file *pfile;
     token *tok;
     int NL;
