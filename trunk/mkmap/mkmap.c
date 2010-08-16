@@ -70,16 +70,6 @@ double rad2deg(double x) { return 180.0 * x / M_PI; }
 #define NO_DEBUG 0
 #define DEBUG 1
 
-typedef struct _program_state_S {
-    int debug;
-} program_state;
-
-program_state *new_program_state(int debug) {
-    program_state *res = (program_state *)malloc(sizeof(program_state));
-    res->debug = debug;
-    return res;
-}
-
 typedef struct _image_struct_S {
 	uchar *name;
     int width, height, dim;
@@ -130,6 +120,22 @@ void Lambert(double *x, double *y, double phi, double lambda, lambert_proj *LCCP
     *y = LCCP->rho0 - rho*cos(n_lambda_D);
 }
 
+typedef struct _program_state_S {
+    int debug;
+    image_struct *image;
+} program_state;
+
+program_state *new_program_state(int debug) {
+    program_state *res = (program_state *)malloc(sizeof(program_state));
+    res->debug = debug;
+    return res;
+}
+
+image_struct *set_program_image(program_state *prog, image_struct *image) {
+	prog->image = image;
+	return image;
+}
+
 #define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
 
 int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
@@ -138,15 +144,16 @@ int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
 
-void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
+void head(lambert_proj *proj, program_state *progstate) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y;
     int x, y;
+    image_struct *image;
 
-    W = frame->width; W2 = W/2;
-    H = frame->height; H2 = H/2;
-    dim = frame->dim;
+    W = image->width; W2 = W/2;
+    H = image->height; H2 = H/2;
+    dim = image->dim;
     printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
     printf("<svg width=\"%i\" height=\"%i\"\n"
            "     xmlns=\"http://www.w3.org/2000/svg\"\n"
@@ -182,7 +189,7 @@ void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
     for (ra = 0; ra < 360; ra+=0.5) {
         for (ix = 0; ix < NUM_DE; ix++) {
             Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
-            if (pos_in_frame(&x, &y, X, Y, frame)) {
+            if (pos_in_frame(&x, &y, X, Y, image)) {
                 printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
                 printf("            style=\"opacity:1;fill:#880088;");
                 printf("fill-opacity:1;\"/>\n");
@@ -197,7 +204,7 @@ void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
     for (de = -80; de <= 80; de+=0.5) {
         for (iy = 0; iy < NUM_RA; iy++) {
             Lambert(&X, &Y, deg2rad(de), ras[iy], proj);
-            if (pos_in_frame(&x, &y, X, Y, frame)) {
+            if (pos_in_frame(&x, &y, X, Y, image)) {
                 printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
                 printf("            style=\"opacity:1;fill:#880088;");
                 printf("fill-opacity:1;\"/>\n");
@@ -206,13 +213,14 @@ void head(lambert_proj *proj, image_struct *frame, program_state *progstate) {
     }
 }
 
-int draw_stars(char *fname, lambert_proj *proj, image_struct *frame) {
+int draw_stars(char *fname, lambert_proj *proj) {
     int HIP;
     double RA, DE, mag;
     double X, Y, size;
     int x, y;
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
+    image_struct *image;
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
@@ -231,8 +239,8 @@ int draw_stars(char *fname, lambert_proj *proj, image_struct *frame) {
                nl?'+':' ', HIP, RA, DE, mag, ucstombs(buf,line,1023));
         */
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
-        if(pos_in_frame(&x, &y, X, Y, frame)) {
-            size = (6.8-mag)*0.8*frame->aspect;
+        if(pos_in_frame(&x, &y, X, Y, image)) {
+            size = (6.8-mag)*0.8*image->aspect;
             printf("    <circle cx=\"%i\" cy=\"%i\" r=\"%g\"\n", x, y, size);
             printf("            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
                    "stroke:#666666;stroke-width:1px\"/>\n");
@@ -252,14 +260,28 @@ void usage_exit(void) {
     exit(-1);
 }
 
+void tok_dump(int debug, token *tok) {
+    char buf[1024], buf2[1024];
+
+    switch (tok->type) {
+      case TOK_STR:
+        fprintf(stderr, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
+        break;
+      case TOK_NUM:
+        fprintf(stderr, "⟨%s⟩%s(%s)", tok_type_str(tok),
+                tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
+        break;
+      default:                    
+        fprintf(stderr, "⟨%s⟩%s", tok_type_str(tok), tok_str(buf, tok, 1023));
+    }
+}
+
 int read_program( char *program, 
                   lambert_proj *projection,
-                  image_struct *frame,
                   program_state *progstate )
 {
     token_file *pfile;
     token *tok;
-    char buf[1024], buf2[1024];
     int NL;
 
     if (!(pfile = tokfopen(program))) {
@@ -271,29 +293,17 @@ int read_program( char *program,
         tok = scan(pfile);
         NL = 0;
         while (!tokfeof(pfile)) {
-            switch (tok->type) {
-              case TOK_STR:
-                  fprintf(stderr, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
-                  break;
-                case TOK_NUM:
-                  fprintf(stderr, "⟨%s⟩%s(%s)", tok_type_str(tok),
-                          tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
-                  break;
-              default:                    
-                  fprintf(stderr, "⟨%s⟩%s", tok_type_str(tok), tok_str(buf, tok, 1023));
-            }
-            if (NL == 8) {
-            	fprintf(stderr, "\n"); NL = 0;
-            }
-            else {
-            	fprintf(stderr, " "); NL++;
-            }
+        	tok_dump(progstate->debug, tok);
+            if (NL == 8)
+            	{ fprintf(stderr, "\n"); NL = 0; }
+            else
+            	{ fprintf(stderr, " "); NL++; }
             tok_free(tok);
             tok = scan(pfile);
         }
     }
 
-    fprintf(stderr, "INFO: program '%s' read\n", program);
+    fprintf(stderr, "\nINFO: program '%s' parsed\n", program);
     tokfclose(pfile);
     return 1;
 }
@@ -301,8 +311,10 @@ int read_program( char *program,
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *progstate = new_program_state(DEBUG);
-    image_struct *frame = new_image(L"", 500, 500, 1.4);
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
+    image_struct *image = new_image(L"Orion", 500, 500, 1.4);
+
+    set_program_image(progstate, image);
 
     /*>Arg handling here! */
     /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
@@ -316,11 +328,12 @@ int main (int argc, char **argv) {
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!read_program(argv[1], projection, frame, progstate)) usage_exit();
+    if (!read_program(argv[1], projection, progstate))
+    	usage_exit();
 
     /*  */
-    head(projection, frame, progstate);
-    draw_stars(argv[2], projection, frame);
+    head(projection, progstate);
+    draw_stars(argv[2], projection);
     foot();
 
     return 0;

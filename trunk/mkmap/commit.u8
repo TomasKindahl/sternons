@@ -1,1 +1,1 @@
-mkmap.c: added a name to image|prog.mkm: added comments|added commit.u8 for commit msg
+Started to cluster the 'frames' to a hierarchical structure under 'program' (misnomer!)
