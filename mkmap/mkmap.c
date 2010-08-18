@@ -366,8 +366,7 @@ int main (int argc, char **argv) {
     /*>   A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused                 */
     /*>   A₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting   */
     /*>   A₃: mkmap /prog/                -- prog also used for star db loading     */
-    /*>   A₄: mkmap /prog/ /out/          -- output spec'd and generated acc'2      */
-    /*>                                      file type                              */
+    /*>   A₄:   dismissed                                                           */
     /*>   A₅: mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments        */
 
     if (argc != 3) usage_exit();
