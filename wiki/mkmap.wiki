@@ -4,7 +4,7 @@ http://sternons.googlecode.com/svn/wiki/img/Ori-small.png
 
 == Description == 
 
-*mkmap* is going to generate a star map in SVG format
+*mkmap* generates a star map in SVG format
 
 *Purpose:* a script for generating [http://en.wikipedia.org/wiki/SVG SVG]
 and [http://en.wikipedia.org/wiki/PostScript PostScript] star maps from a
@@ -12,7 +12,8 @@ configuration file.
 
 == Current state ==
 
-*User manual:* _nonexistent_
+*User manual:* [http://sternons.blogspot.com/p/mkmap.html User Manual]
+_(nonexistent, currently just a placeholder web page)_
 
 *Technical manual:* See [#How_it_works How it works] below!
 
@@ -43,7 +44,7 @@ but this is an atrocity and must ASAP be fixed by loading a map program file.
   * A,,1,,: next is that a settings file that does nothing is loaded
   * A,,2,,: thereafter the settings file that only changes the chosen projection and frame is loaded, the map must still be supplied as an argument
   * A,,3,,: the map is loaded by the settings file
-  * A,,4,,: an extra output file is supplied as an argument
+  * _(dismissed)_ ~~A,,4,,: an extra output file is supplied as an argument~~
   * A,,5,,: stepwise make the “settings file” a program and the extra arguments real arguments read by the program
 
 == How it works ==
