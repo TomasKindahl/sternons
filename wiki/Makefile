@@ -5,3 +5,6 @@ tab2wiki: tab2wiki.c
 
 other.wiki: other.tab tab2wiki
 	cat other.tab | ./tab2wiki > other.wiki
+
+clean:
+	rm -f *~*

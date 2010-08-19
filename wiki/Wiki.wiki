@@ -42,7 +42,7 @@ through the creation process of map specification to a PNG file.
 
 http://sternons.googlecode.com/svn/wiki/img/Ori-small.png
 
-_User manual:_ 
+_User manual:_ [http://sternons.blogspot.com/p/mkmap.html User Manual]
 
 _Development:_ *[mkmap]* generates a star map in SVG format
 
