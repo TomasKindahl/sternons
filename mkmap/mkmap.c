@@ -427,7 +427,8 @@ int main (int argc, char **argv) {
 
     /*>Arg handling here! */
     /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
-    /*>   A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused                 */
+    /*>---A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused              ---*/
+    /*>  A₁,₅: mkmap /dummyprog/ /stardb/ -- prog loaded partially used          ---*/
     /*>   A₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting   */
     /*>   A₃: mkmap /prog/                -- prog also used for star db loading     */
     /*>   A₄:   dismissed                                                           */
