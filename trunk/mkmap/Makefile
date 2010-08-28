@@ -31,10 +31,10 @@ mkmap: mkmap.c $(OBJS)
 .c.o:
 	$(CC) -c $<
 
-testmap.svg: mkmap prog.mkm $(MAPS)
-	./$< prog.mkm $(MAPS) > $@
+orion.svg: mkmap maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm $(MAPS) > $@
 
-testmap.png: testmap.svg 
+orion.png: orion.svg 
 	inkscape --export-png=$@ $<
 
 #EXAMPLE FOR SEPARATING WIN AND LINUX OBJS:
@@ -51,5 +51,5 @@ distclean: clean
 hard: clean
 	$(MAKE) cmap
 
-view: testmap.svg
+view: orion.svg
 	epiphany $< &
