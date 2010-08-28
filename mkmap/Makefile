@@ -18,7 +18,7 @@
 #  <http://www.gnu.org/licenses/>.                                     #
 ########################################################################
 
-CC		= gcc -Wall --pedantic-error
+CC		= gcc -g -Wall --pedantic-error
 MAPS	= star.db
 OBJS	= scan.o ucstr.o uctype.o usio.o
 
@@ -34,7 +34,7 @@ mkmap: mkmap.c $(OBJS)
 testmap.svg: mkmap prog.mkm $(MAPS)
 	./$< prog.mkm $(MAPS) > $@
 
-testmap.png: testmap.svg
+testmap.png: testmap.svg 
 	inkscape --export-png=$@ $<
 
 #EXAMPLE FOR SEPARATING WIN AND LINUX OBJS:
@@ -51,3 +51,5 @@ distclean: clean
 hard: clean
 	$(MAKE) cmap
 
+view: testmap.svg
+	epiphany $< &
