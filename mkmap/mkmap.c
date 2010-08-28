@@ -309,12 +309,14 @@ void set_program_attr(token *var, token *attr, token *value, program_state *prog
 void set_program_var(token *var, token *value, program_state *progstate) {
     char buf[1024], buf2[1024];
     if (is_kw(var, L"name")) {
+        /* CHECK that value is TOK_STR HERE! */
         progstate->image->name = ucsdup(tok_ustr(value));
         fprintf(stderr, " [name = “%s”]", ucstombs(buf, progstate->image->name, 1023));
         return;
     }
     if (is_kw(var, L"width")) {
         int w, h, d;
+        /* CHECK that value is TOK_NUM HERE! */
         progstate->image->width = ucstoi(tok_ustr(value));
         w = progstate->image->width; h = progstate->image->height;
         if(w > h) d = w; else d = h; progstate->image->dim = d;
@@ -323,6 +325,7 @@ void set_program_var(token *var, token *value, program_state *progstate) {
     }
     if (is_kw(var, L"height")) {
         int w, h, d;
+        /* CHECK that value is TOK_NUM HERE! */
         progstate->image->height = ucstoi(tok_ustr(value));
         w = progstate->image->width; h = progstate->image->height;
         if(w > h) d = w; else d = h; progstate->image->dim = d;
@@ -330,6 +333,7 @@ void set_program_var(token *var, token *value, program_state *progstate) {
         return;
     }
     if (is_kw(var, L"scale")) {
+        /* CHECK that value is TOK_NUM HERE! */
         progstate->image->scale = ucstof(tok_ustr(value));
         fprintf(stderr, " [scale = %f]", progstate->image->scale);
         return;
@@ -350,6 +354,7 @@ void parse_program_assignment(token_file *pfile, program_state *progstate) {
     if (is_op(tok,L".")) { /* Attribute assignment: */
         attr  = scan(pfile); tok_dump(progstate->debug, attr);  /* attrib */
         tok   = scan(pfile); tok_dump(progstate->debug, tok);   /* =      */
+        /* CHECK that tok = '=' HERE! */
         value = scan(pfile); tok_dump(progstate->debug, value); /* value  */
         set_program_attr(var, attr, value, progstate);
         if (progstate->debug) fprintf(stderr, " (attrib)\n");
