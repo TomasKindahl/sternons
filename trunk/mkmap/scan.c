@@ -40,30 +40,30 @@ int tokfclose(token_file *tok_stream) {
     return u8fclose(tok_file);
 }
 
-token *_new_token(token_type type, uchar *ucs) {
+token *_new_token(token_type type, uchar *ustr) {
     token *res;
     res = (token *)malloc(sizeof(token));
     res->type = type;
-    res->ucs = ucsdup(ucs);
+    res->ustr = ucsdup(ustr);
     res->unit = 0;
-    if (type == TOK_NUM) res->num = ucstof(ucs);
+    if (type == TOK_NUM) res->num = ucstof(ustr);
     return res;
 }
 
-token *_new_token_num(token_type type, uchar *ucs, uchar *unit) {
+token *_new_token_num(token_type type, uchar *ustr, uchar *unit) {
     token *res = (token *)malloc(sizeof(token));
     res->type = type;
-    res->ucs = ucsdup(ucs);
+    res->ustr = ucsdup(ustr);
     res->unit = ucsdup(unit);
-    res->num = ucstof(ucs);
+    res->num = ucstof(ustr);
     return res;
 }
 
 token *_new_token_uchar(token_type type, uchar uc) {
     token *res = (token *)malloc(sizeof(token));
     res->type = type;
-    res->ucs = (uchar *)malloc(sizeof(uchar)*2);
-    res->ucs[0] = uc; res->ucs[1] = L'\0';
+    res->ustr = (uchar *)malloc(sizeof(uchar)*2);
+    res->ustr[0] = uc; res->ustr[1] = L'\0';
     res->unit = 0;
     return res;
 }
@@ -186,7 +186,7 @@ int is_type(token *tok, token_type type) {
 }
 
 int is_str(token *tok, uchar *op) {
-    if (0 != ucscmp(tok->ucs, op)) return 0;
+    if (0 != ucscmp(tok->ustr, op)) return 0;
     return 1;
 }
 
@@ -223,11 +223,11 @@ char *tok_type_str(token *tok) {
 }
 
 uchar *tok_ustr(token *tok) {
-	return tok->ucs;
+	return tok->ustr;
 }
 
 char *tok_str(char *buf, token *tok, int size) {
-	return ucstombs(buf, tok->ucs, size);
+	return ucstombs(buf, tok->ustr, size);
 }
 
 char *tok_unit(char *buf, token *tok, int size) {
@@ -236,6 +236,7 @@ char *tok_unit(char *buf, token *tok, int size) {
 }
 
 void tok_free(token *tok) {
-	free(tok->ucs);
+	free(tok->ustr);
+	free(tok->unit);
 	free(tok);
 }
