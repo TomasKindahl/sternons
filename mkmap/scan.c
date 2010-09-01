@@ -180,17 +180,25 @@ int tokfeof(token_file *tok_stream) {
 	return u8feof(tok_stream->tok_file) && tok_stream->tok_save == 0;
 }
 
-int is_item(token *tok, uchar *op, token_type type) {
+int is_type(token *tok, token_type type) {
     if (tok->type != type) return 0;
+    return 1;
+}
+
+int is_str(token *tok, uchar *op) {
     if (0 != ucscmp(tok->ucs, op)) return 0;
     return 1;
 }
 
-int is_op(token *tok, uchar *op) {     return is_item(tok, op, TOK_OP); }
-int is_kw(token *tok, uchar *op) {     return is_item(tok, op, TOK_KW); }
+int is_item(token *tok, uchar *op, token_type type) {
+    return is_str(tok,op) && is_type(tok, type);
+}
+
+int is_op(token *tok, uchar *op)   { return is_item(tok, op, TOK_OP);   }
+int is_kw(token *tok, uchar *op)   { return is_item(tok, op, TOK_KW);   }
 int is_lpar(token *tok, uchar *op) { return is_item(tok, op, TOK_LPAR); }
 int is_rpar(token *tok, uchar *op) { return is_item(tok, op, TOK_RPAR); }
-int is_num(token *tok) { return tok->type == TOK_NUM; }
+int is_num(token *tok) { return is_type(tok, TOK_NUM); }
 
 char *tok_type_str(token *tok) {
     switch(tok->type) {
