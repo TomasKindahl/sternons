@@ -25,6 +25,7 @@ image {                              # create a main image
     width = 500px;                   # width parameter of image structure
     height = 500px;                  # height parameter of image structure
     scale = 1.6;                     # scale parameter of image structure
+    flärpa = 99.97;                  # NONEXISTENT! ==> Warning
     projection.type = Lambert_conic; # image to contain a LCC projection
     projection.α = 5ʰ20ᵐ;            # centered at 5 hours
     projection.δ = 10°;              # centered at 10 degrees north

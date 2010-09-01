@@ -150,12 +150,12 @@ int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
 
-void head(program_state *progstate) {
+void head(program_state *pstat) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y;
     int x, y;
-    image_struct *image = progstate->image;
+    image_struct *image = pstat->image;
     lambert_proj *proj = image->projection;
 
     W = image->width; W2 = W/2;
@@ -170,7 +170,7 @@ void head(program_state *progstate) {
            "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
            "stroke-dasharray:none;stroke-opacity:1\"\n"
            "      width=\"%i\" height=\"%i\"/>\n", W, H);
-    if (progstate->debug == DEBUG) {
+    if (pstat->debug == DEBUG) {
         /* Helper lines, paper coordinates: */
         /* vertical */
         for (ix = 100; ix < 560; ix += 100) {
@@ -220,14 +220,14 @@ void head(program_state *progstate) {
     }
 }
 
-int draw_stars(char *fname, program_state *progstate) {
+int draw_stars(char *fname, program_state *pstat) {
     int HIP;
     double RA, DE, mag;
     double X, Y, size;
     int x, y;
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
-    image_struct *image = progstate->image;
+    image_struct *image = pstat->image;
     lambert_proj *proj = image->projection;
 
     if (!inf) return 0;
@@ -284,14 +284,14 @@ void tok_dump(int debug, token *tok) {
     }
 }
 
-void parse_program_head(token_file *pfile, program_state *progstate) {
+void parse_program_head(token_file *pfile, program_state *pstat) {
     token *tok;
     int NL = 0;
 
     tok = scan(pfile);
     fprintf(stderr, "INFO: head reading {\n    ");
     while (!is_kw(tok, L"image")) {
-        tok_dump(progstate->debug, tok);
+        tok_dump(pstat->debug, tok);
         tok = scan(pfile);
         if (NL == 8)
             { fprintf(stderr, "\n    "); NL = 0; }
@@ -303,39 +303,40 @@ void parse_program_head(token_file *pfile, program_state *progstate) {
     return;
 }
 
-void set_program_attr(token *var, token *attr, token *value, program_state *progstate) {
+void set_program_attr(token *var, token *attr, token *value, program_state *pstat) {
     return;
 }
-void set_program_var(token *var, token *value, program_state *progstate) {
+
+void set_program_var(token *var, token *value, program_state *pstat) {
     char buf[1024], buf2[1024];
     if (is_kw(var, L"name")) {
         /* CHECK that value is TOK_STR HERE! */
-        progstate->image->name = ucsdup(tok_ustr(value));
-        fprintf(stderr, " [name = “%s”]", ucstombs(buf, progstate->image->name, 1023));
+        pstat->image->name = ucsdup(tok_ustr(value));
+        fprintf(stderr, " [name = “%s”]", ucstombs(buf, pstat->image->name, 1023));
         return;
     }
     if (is_kw(var, L"width")) {
         int w, h, d;
         /* CHECK that value is TOK_NUM HERE! */
-        progstate->image->width = ucstoi(tok_ustr(value));
-        w = progstate->image->width; h = progstate->image->height;
-        if(w > h) d = w; else d = h; progstate->image->dim = d;
-        fprintf(stderr, " [width = %i]", progstate->image->width);
+        pstat->image->width = ucstoi(tok_ustr(value));
+        w = pstat->image->width; h = pstat->image->height;
+        if(w > h) d = w; else d = h; pstat->image->dim = d;
+        fprintf(stderr, " [width = %i]", pstat->image->width);
         return;
     }
     if (is_kw(var, L"height")) {
         int w, h, d;
         /* CHECK that value is TOK_NUM HERE! */
-        progstate->image->height = ucstoi(tok_ustr(value));
-        w = progstate->image->width; h = progstate->image->height;
-        if(w > h) d = w; else d = h; progstate->image->dim = d;
-        fprintf(stderr, " [height = %i]", progstate->image->height);
+        pstat->image->height = ucstoi(tok_ustr(value));
+        w = pstat->image->width; h = pstat->image->height;
+        if(w > h) d = w; else d = h; pstat->image->dim = d;
+        fprintf(stderr, " [height = %i]", pstat->image->height);
         return;
     }
     if (is_kw(var, L"scale")) {
         /* CHECK that value is TOK_NUM HERE! */
-        progstate->image->scale = ucstof(tok_ustr(value));
-        fprintf(stderr, " [scale = %f]", progstate->image->scale);
+        pstat->image->scale = ucstof(tok_ustr(value));
+        fprintf(stderr, " [scale = %f]", pstat->image->scale);
         return;
     }
     fprintf(stderr, " [WARNING: unused assignment %s = “%s”]",
@@ -344,25 +345,55 @@ void set_program_var(token *var, token *value, program_state *progstate) {
     return;
 }
 
-void parse_program_assignment(token_file *pfile, program_state *progstate) {
+token *scan_value(token_file *pfile, program_state *PS) {
+    token *tok;
+    if (tokfeof(pfile)) return 0;
+    tok = scan(pfile);
+    tok_dump(PS->debug, tok);
+    return tok;
+}
+
+token *scan_item(token_file *pfile, token_type type, program_state *PS) {
+    token *tok;
+    if (tokfeof(pfile)) return 0;
+    tok = scan(pfile);
+    if (!is_type(tok, type)) {
+        unscan(tok, pfile);
+        return 0;
+    }
+    tok_dump(PS->debug, tok);
+    return tok;
+}
+
+token *scan_exact(token_file *pfile, token_type type, uchar *val, program_state *PS) {
+    token *tok = scan_item(pfile, type, PS);
+    if (!tok) return 0;
+    if (!is_str(tok, val)) {
+        unscan(tok, pfile);
+        return 0;
+    }
+    return tok;
+}
+
+void parse_program_assignment(token_file *pfile, program_state *pstat) {
     token *tok, *var, *attr, *value;
 
-    if(progstate->debug) fprintf(stderr, "  INFO: assignment {\n      ");
-    var = scan(pfile); tok_dump(progstate->debug, var);
+    if(pstat->debug) fprintf(stderr, "  INFO: assignment {\n      ");
+    var = scan(pfile); tok_dump(pstat->debug, var);
     if (is_rpar(var, L"}")) { unscan(var, pfile); return; }
-    tok = scan(pfile); tok_dump(progstate->debug, tok);
+    tok = scan(pfile); tok_dump(pstat->debug, tok);
     if (is_op(tok,L".")) { /* Attribute assignment: */
-        attr  = scan(pfile); tok_dump(progstate->debug, attr);  /* attrib */
-        tok   = scan(pfile); tok_dump(progstate->debug, tok);   /* =      */
-        /* CHECK that tok = '=' HERE! */
-        value = scan(pfile); tok_dump(progstate->debug, value); /* value  */
-        set_program_attr(var, attr, value, progstate);
-        if (progstate->debug) fprintf(stderr, " (attrib)\n");
+        attr  = scan_item(pfile, TOK_KW, pstat);
+        tok   = scan_exact(pfile, TOK_OP, L"=", pstat);
+        value = scan_value(pfile, pstat);
+        set_program_attr(var, attr, value, pstat);
+        
+        if (pstat->debug) fprintf(stderr, " (attrib)\n");
     }
     else if (is_op(tok,L"=")) { /* Variable assignment: */
-        value = scan(pfile); tok_dump(progstate->debug, value); /* value */
-        set_program_var(var, value, progstate);
-        if (progstate->debug) fprintf(stderr, " (variable)\n");
+        value = scan(pfile); tok_dump(pstat->debug, value); /* value */
+        set_program_var(var, value, pstat);
+        if (pstat->debug) fprintf(stderr, " (variable)\n");
     }
     else { /* Shouldn't occur here! */
         fprintf(stderr, "  ERROR: error in assignment\n");
@@ -371,21 +402,21 @@ void parse_program_assignment(token_file *pfile, program_state *progstate) {
     fprintf(stderr, "  }\n");
 }
 
-void parse_program_image(token_file *pfile, program_state *progstate) {
+void parse_program_image(token_file *pfile, program_state *pstat) {
     token *tok;
 
-    tok = scan(pfile); tok_dump(progstate->debug, tok);     /* image */
-    tok = scan(pfile); tok_dump(progstate->debug, tok);     /* { */
-    fprintf(stderr, "\nINFO: image reading {   \n");
+    tok = scan(pfile); tok_dump(pstat->debug, tok);     /* image */
+    tok = scan(pfile); tok_dump(pstat->debug, tok);     /* { */
+    fprintf(stderr, "\nINFO: image reading {\n");
     while (!is_rpar(tok, L"}")) {
-        parse_program_assignment(pfile, progstate);
+        parse_program_assignment(pfile, pstat);
         tok = scan(pfile);
     }
     fprintf(stderr, "\n}\n");
     return;
 }
 
-int parse_program(char *program, program_state *progstate) {
+int parse_program(char *program, program_state *pstat) {
     token_file *pfile;
     token *tok;
     int NL;
@@ -395,13 +426,13 @@ int parse_program(char *program, program_state *progstate) {
         return 0;
     }
     fprintf(stderr, "INFO: program '%s' opened\n", program);
-    parse_program_head(pfile, progstate);
-    parse_program_image(pfile, progstate);
-    if (progstate->debug == DEBUG) {
+    parse_program_head(pfile, pstat);
+    parse_program_image(pfile, pstat);
+    if (pstat->debug == DEBUG) {
         tok = scan(pfile);
         NL = 0;
         while (!tokfeof(pfile)) {
-            tok_dump(progstate->debug, tok);
+            tok_dump(pstat->debug, tok);
             if (NL == 8)
                 { fprintf(stderr, "\n"); NL = 0; }
             else
@@ -418,11 +449,11 @@ int parse_program(char *program, program_state *progstate) {
 
 int main (int argc, char **argv) {
     /* dummy setup: */
-    program_state *progstate = new_program_state(DEBUG);
+    program_state *pstat = new_program_state(DEBUG);
     lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
     image_struct *image = new_image(L"Orion", 500, 500, 1.4);
 
-    set_program_image(progstate, image);
+    set_program_image(pstat, image);
     set_image_projection(image, projection);
 
     /*>Arg handling here! */
@@ -437,12 +468,12 @@ int main (int argc, char **argv) {
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!parse_program(argv[1], progstate))
+    if (!parse_program(argv[1], pstat))
         usage_exit();
 
     /*  */
-    head(progstate);
-    draw_stars(argv[2], progstate);
+    head(pstat);
+    draw_stars(argv[2], pstat);
     foot();
 
     return 0;

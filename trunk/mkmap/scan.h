@@ -44,6 +44,8 @@ token *scan(token_file *tok_stream);
 int unscan(token *value, token_file *tok_stream);
 int tokfeof(token_file *tok_stream);
 
+int is_type(token *tok, token_type type);
+int is_str(token *tok, uchar *op);
 int is_item(token *tok, uchar *op, token_type type);
 int is_op(token *tok, uchar *op);
 int is_kw(token *tok, uchar *op);
