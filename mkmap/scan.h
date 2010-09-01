@@ -27,7 +27,7 @@ typedef enum {
 
 typedef struct _token_S {
     token_type type;
-    uchar *ucs;
+    uchar *ustr;
     uchar *unit;
     double num;
 } token;

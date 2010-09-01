@@ -284,24 +284,9 @@ void tok_dump(int debug, token *tok) {
     }
 }
 
-void parse_program_head(token_file *pfile, program_state *pstat) {
-    token *tok;
-    int NL = 0;
-
-    tok = scan(pfile);
-    fprintf(stderr, "INFO: head reading {\n    ");
-    while (!is_kw(tok, L"image")) {
-        tok_dump(pstat->debug, tok);
-        tok = scan(pfile);
-        if (NL == 8)
-            { fprintf(stderr, "\n    "); NL = 0; }
-        else
-            { fprintf(stderr, " "); NL++; }
-    }
-    fprintf(stderr, "\n}\n");
-    unscan(tok, pfile);
-    return;
-}
+/*************************************************************/
+/**                    PROGRAM SETTINGS                     **/
+/*************************************************************/
 
 void set_program_attr(token *var, token *attr, token *value, program_state *pstat) {
     return;
@@ -345,6 +330,12 @@ void set_program_var(token *var, token *value, program_state *pstat) {
     return;
 }
 
+/*************************************************************/
+/**                    PROGRAM PARSING                      **/
+/*************************************************************/
+
+/** SCANINGS **/
+
 token *scan_value(token_file *pfile, program_state *PS) {
     token *tok;
     if (tokfeof(pfile)) return 0;
@@ -375,6 +366,27 @@ token *scan_exact(token_file *pfile, token_type type, uchar *val, program_state 
     return tok;
 }
 
+/** PARSINGS **/
+
+void parse_program_head(token_file *pfile, program_state *pstat) {
+    token *tok;
+    int NL = 0;
+
+    tok = scan(pfile);
+    fprintf(stderr, "INFO: head reading {\n    ");
+    while (!is_kw(tok, L"image")) {
+        tok_dump(pstat->debug, tok);
+        tok = scan(pfile);
+        if (NL == 8)
+            { fprintf(stderr, "\n    "); NL = 0; }
+        else
+            { fprintf(stderr, " "); NL++; }
+    }
+    fprintf(stderr, "\n}\n");
+    unscan(tok, pfile);
+    return;
+}
+
 void parse_program_assignment(token_file *pfile, program_state *pstat) {
     token *tok, *var, *attr, *value;
 
@@ -391,7 +403,7 @@ void parse_program_assignment(token_file *pfile, program_state *pstat) {
         if (pstat->debug) fprintf(stderr, " (attrib)\n");
     }
     else if (is_op(tok,L"=")) { /* Variable assignment: */
-        value = scan(pfile); tok_dump(pstat->debug, value); /* value */
+        value = scan_value(pfile, pstat);
         set_program_var(var, value, pstat);
         if (pstat->debug) fprintf(stderr, " (variable)\n");
     }
@@ -471,7 +483,7 @@ int main (int argc, char **argv) {
     if (!parse_program(argv[1], pstat))
         usage_exit();
 
-    /*  */
+    /* generate the output map: */
     head(pstat);
     draw_stars(argv[2], pstat);
     foot();
