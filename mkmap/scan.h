@@ -30,6 +30,7 @@ typedef struct _token_S {
     uchar *ustr;
     uchar *unit;
     double num;
+    int line_num;
 } token;
 
 typedef struct _token_file_S {

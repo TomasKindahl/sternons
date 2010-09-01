@@ -40,46 +40,52 @@ int tokfclose(token_file *tok_stream) {
     return u8fclose(tok_file);
 }
 
-token *_new_token(token_type type, uchar *ustr) {
+token *_new_token(token_type type, uchar *ustr, int line_num) {
     token *res;
     res = (token *)malloc(sizeof(token));
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = 0;
     if (type == TOK_NUM) res->num = ucstof(ustr);
+    res->line_num = line_num;
     return res;
 }
 
-token *_new_token_num(token_type type, uchar *ustr, uchar *unit) {
+token *_new_token_num(token_type type, uchar *ustr, uchar *unit, int line_num) {
     token *res = (token *)malloc(sizeof(token));
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = ucsdup(unit);
     res->num = ucstof(ustr);
+    res->line_num = line_num;
     return res;
 }
 
-token *_new_token_uchar(token_type type, uchar uc) {
+token *_new_token_uchar(token_type type, uchar uc, int line_num) {
     token *res = (token *)malloc(sizeof(token));
     res->type = type;
     res->ustr = (uchar *)malloc(sizeof(uchar)*2);
     res->ustr[0] = uc; res->ustr[1] = L'\0';
     res->unit = 0;
+    res->line_num = line_num;
     return res;
 }
 
 token *_scan(utf8_file *stream) {
     uchar ustr[256], uunit[256];
     uchar uch;
-    int ix, jx;
+    int ix, jx, lno;
 
     while (isuws(uch = fgetuc(stream)));
     while (uch == L'#') {
-    	while ((uch = fgetuc(stream)) != L'\n');
-    	while (isuws(uch = fgetuc(stream)));
+        while ((uch = fgetuc(stream)) != L'\n');
+        while (isuws(uch = fgetuc(stream)));
     }
+
+       lno = u8flineno(stream);
     if (uch == L'“') {
-    	int slev = 1;
+        int slev = 1;
+
         ix = 0;
         while (slev > 0) {
             uch = fgetuc(stream);
@@ -91,7 +97,7 @@ token *_scan(utf8_file *stream) {
             }
         }
         ustr[ix-1] = L'\0';
-        return _new_token(TOK_STR, ustr);
+        return _new_token(TOK_STR, ustr, lno);
     }
     else if (isunum(uch) || uch == L'-') {
         ustr[0] = uch;
@@ -118,23 +124,23 @@ token *_scan(utf8_file *stream) {
         }
         /*! insert exp handling here! */
         /* unit handling: */
-       	jx = 0;
+           jx = 0;
         if (isualpha(uch)) {
-        	while (isualpha(uch)) {
-        		uunit[jx] = uch;
-        		uch = fgetuc(stream);
-        		jx++;
-        	}
+            while (isualpha(uch)) {
+                uunit[jx] = uch;
+                uch = fgetuc(stream);
+                jx++;
+            }
         }
         else if (uch == L'°') {
-        	uunit[jx] = uch;
-       		uch = fgetuc(stream);
-       		jx++;
+            uunit[jx] = uch;
+               uch = fgetuc(stream);
+               jx++;
         }
-       	uunit[jx] = L'\0';
+           uunit[jx] = L'\0';
         fungetuc(uch, stream);
         ustr[ix] = L'\0';
-        return _new_token_num(TOK_NUM, ustr, uunit);
+        return _new_token_num(TOK_NUM, ustr, uunit, lno);
     }
     else if (isualpha(uch)) {
         ustr[0] = uch;
@@ -146,7 +152,7 @@ token *_scan(utf8_file *stream) {
         }
         fungetuc(uch, stream);
         ustr[ix] = L'\0';
-        return _new_token(TOK_KW, ustr);
+        return _new_token(TOK_KW, ustr, lno);
     }
     else if (!isualpha(uch)) {
         token_type T;
@@ -156,9 +162,9 @@ token *_scan(utf8_file *stream) {
             T = TOK_RPAR;
         else
             T = TOK_OP;
-        return _new_token_uchar(T, uch);
+        return _new_token_uchar(T, uch, lno);
     }
-    return _new_token(TOK_NONE, 0);
+    return _new_token(TOK_NONE, 0, lno);
 }
 
 token *scan(token_file *tok_stream) {
@@ -177,7 +183,7 @@ int unscan(token *value, token_file *tok_stream) {
 }
 
 int tokfeof(token_file *tok_stream) {
-	return u8feof(tok_stream->tok_file) && tok_stream->tok_save == 0;
+    return u8feof(tok_stream->tok_file) && tok_stream->tok_save == 0;
 }
 
 int is_type(token *tok, token_type type) {
@@ -223,20 +229,20 @@ char *tok_type_str(token *tok) {
 }
 
 uchar *tok_ustr(token *tok) {
-	return tok->ustr;
+    return tok->ustr;
 }
 
 char *tok_str(char *buf, token *tok, int size) {
-	return ucstombs(buf, tok->ustr, size);
+    return ucstombs(buf, tok->ustr, size);
 }
 
 char *tok_unit(char *buf, token *tok, int size) {
-	if (tok->type != TOK_NUM) return "";
-	return ucstombs(buf, tok->unit, size);
+    if (tok->type != TOK_NUM) return "";
+    return ucstombs(buf, tok->unit, size);
 }
 
 void tok_free(token *tok) {
-	free(tok->ustr);
-	free(tok->unit);
-	free(tok);
+    free(tok->ustr);
+    free(tok->unit);
+    free(tok);
 }
