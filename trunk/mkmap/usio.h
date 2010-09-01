@@ -29,6 +29,7 @@ typedef struct _utf8_file_S {
     /* specialized token file allowing token get and unget */
     FILE *chfile;
     uchar uchar_save;
+    int line_num;
 } utf8_file;
 
 utf8_file *u8fopen(char *fname);        /* DO: "rt", "wt" */
@@ -37,6 +38,7 @@ int u8feof(utf8_file *file);
 uchar fgetuc(utf8_file *stream);
 uchar fungetuc(int uch, utf8_file *stream);
 uchar *fgetus(uchar *us, int size, utf8_file *stream);
+int u8flineno(utf8_file *file);
 
 /* DO: fputuc, fputus */
 char *uctombs(char *dest, uchar src);

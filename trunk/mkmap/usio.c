@@ -28,6 +28,7 @@ utf8_file *u8fopen(char *fname) {
     res->chfile = fopen(fname, "rt");
     if (!res->chfile) { free(res); return 0; }
     res->uchar_save = -1;
+    res->line_num = 1;
     return res;
 }
 
@@ -64,15 +65,19 @@ uchar fgetuc(utf8_file *stream) {
     int res;
 
     if (stream->uchar_save == -1) {
-        return _fgetuc(stream->chfile);
+        res = _fgetuc(stream->chfile);
+        if (res == 0xD) stream->line_num++;
+        return res;
     }
     res = stream->uchar_save;
+    if (res == 0xD) stream->line_num++;
     stream->uchar_save = -1;
     return res;
 }
 
 uchar fungetuc(int uch, utf8_file *stream) {
     stream->uchar_save = uch;
+    if (uch == 0xD) stream->line_num--;
     return uch;
 }
 
@@ -88,6 +93,10 @@ uchar *fgetus(uchar *us, int size, utf8_file *stream) {
     *us++ = ch;
     *us = L'\0';
     return us;
+}
+
+int u8flineno(utf8_file *file) {
+    return file->line_num;
 }
 
 char *uctombs(char *dest, uchar src) {
