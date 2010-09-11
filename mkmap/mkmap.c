@@ -220,6 +220,11 @@ void head(program_state *pstat) {
     }
 }
 
+double next_dfield(uchar **pos) {
+	*pos = ucschr(*pos,'|')+1;
+	return ucstof(*pos);
+}
+
 int draw_stars(char *fname, program_state *pstat) {
     int HIP;
     double RA, DE, mag;
@@ -241,9 +246,10 @@ int draw_stars(char *fname, program_state *pstat) {
         	 DELIMITER '|';
         */
         HIP = ucstoi(&line[0]);
-        pos = ucschr(line,'|')+1; RA = ucstof(pos);
-        pos = ucschr(pos,'|')+1; DE = ucstof(pos);
-        pos = ucschr(pos,'|')+1; mag = ucstof(pos);
+        pos = line;
+        RA = next_dfield(&pos);
+        DE = next_dfield(&pos);
+        mag = next_dfield(&pos);
         /*
         printf("%c HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f ⟨%s⟩\n",
                nl?'+':' ', HIP, RA, DE, mag, ucstombs(buf,line,1023));
