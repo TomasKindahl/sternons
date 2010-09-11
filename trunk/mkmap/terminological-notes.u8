@@ -2,18 +2,18 @@
                                    LOADING
 ================================================================================
 
-    map = load_star_map("sky");               // load data from sky.mkm: stars, nebulae, etc.
-    image = new_image();                      // image
-    image_list = append(image_list, image);   // {
-    image->name = ucsdup("orion");            // name = “orion”;
-    image->width = size_value(500,UNIT_PX);   // width = 500px;
-    image->height = size_value(500,UNIT_PX);  // height = 500px;
-    image->scale = 1.6;                       // scale = 1.6;
-    image->projection = new_projection();     // ...
-    image->projection->type = Lambert_conic;  // projection.type = Lambert_conic;
-    image->projection->alpha = HHMM(5,20);    // projection.α = 5ʰ20ᵐ;
-    image->projection->delta = DD(10);        // projection.δ = 10°;
-    image->projection->diff_delta = DD(10);   // projection.Δδ = 10°;
+    map = load_star_map("sky");               # load data from sky.mkm: stars, nebulae, etc.
+    image = new_image();                      # image
+    image_list = append(image_list, image);   # {
+    image->name = ucsdup("orion");            # name = “orion”;
+    image->width = size_value(500,UNIT_PX);   # width = 500px;
+    image->height = size_value(500,UNIT_PX);  # height = 500px;
+    image->scale = 1.6;                       # scale = 1.6;
+    image->projection = new_projection();     # ...
+    image->projection->type = Lambert_conic;  # projection.type = Lambert_conic;
+    image->projection->alpha = HHMM(5,20);    # projection.α = 5ʰ20ᵐ;
+    image->projection->delta = DD(10);        # projection.δ = 10°;
+    image->projection->diff_delta = DD(10);   # projection.Δδ = 10°;
 
     image->projection = 
         new projection {
@@ -48,20 +48,36 @@ alt-tolkning:
 ================================================================================
                           THE PRINCIPLE OF STREAMING
 ================================================================================
-
-starDB     = database(“star.DB”);
-stars      = starDB -> select(ID, RA, DE, vmag) -> less(vmag,6.5);
-starnames  = starDB -> select(ID, name);
-stardesgs  = starDB -> select(ID, desg);
-galaxies   = database(“galaxy.DB”) -> select(RA, DE, vmag, size) -> less(vmag,10.0);
-orionSky   =  (stars, galaxies)        // from stars and then galaxies
-           -> symbology(Tirion);       // add Will Tirion style symbols
-orionFrame = projection(Lambert_conformal,5ʰ20ᵐ,10°,10°) -> frame(500px,500px);
-image      =  (background,                 // 1st: draw a background
-               constellationBorders,       // 2nd: draw constellationBorders
-               declinationGrid(10°),       // 3rd: declination grid
-               rectascentionGrid(1ʰ),      // 4th: rectascention grid
-               orionSky)                   // 5th: the sky as per above
-           -> orionFrame                   // position in orionFrame
-           -> SVGconverter;                // F.ex.
+                                in principle
+--------------------------------------------------------------------------------
+starDB     =  datafile(“star.DB”);
+stars      =  starDB -> select(ID, RA, DE, vmag) -> less(vmag,6.5);
+starnames  =  starDB -> select(ID, name);
+stardesgs  =  starDB -> select(ID, desg);
+galaxies   =  datafile(“galaxy.DB”)
+           -> select(RA, DE, vmag, size)
+           -> less(vmag,10.0);
+orionSky   =  (stars, galaxies)             # from stars and then galaxies,
+           -> symbology(Tirion);            # add Will Tirion style symbols
+orionFrame =  projection(Lambert_conformal,5ʰ20ᵐ,10°,10°) -> frame(500px,500px);
+orionMap   =  (constellationBorders,        # 1st: draw constellationBorders
+               declinationGrid(10°),        # 2nd: declination grid
+               rectascentionGrid(1ʰ),       # 3rd: rectascention grid
+               orionSky)                    # 4th: the sky as per above
+           -> orionFrame;                   # F.ex.
+image      =  (background + orionMap)
+           -> SVGconverter;
+--------------------------------------------------------------------------------
+                           what is currently hardcoded
+--------------------------------------------------------------------------------
+stars      =  datafile(“star.DB”)           # datafile
+           -> select(HIP, RA, DE, vmag);    # for this purpose use just these four
+orionFrame =  projection(Lambert_conformal,5ʰ20ᵐ,10°,10°)
+                                            # one of the projections planned
+           -> frame(500px,500px);           # select those within 500×500px frame
+orionMap   =  (declinationGrid(10°),        # draw declination bows
+               rectascensionGrid(1ʰ),       # draw rectascension lines
+               stars)                       # then stars
+           -> orionFrame                    # compute orionFrame position
+           -> SVGconverter;                 # then push everything through the SVG filter
 
