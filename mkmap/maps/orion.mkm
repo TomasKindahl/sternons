@@ -32,3 +32,4 @@ image {                              # create a main image
 }
 
 draw image “orion”;
+

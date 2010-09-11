@@ -237,6 +237,8 @@ int draw_stars(char *fname, program_state *pstat) {
         DROP TABLE _cmap;
         SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
                from _hipp where vmag < 6.5 order by vmag, ra, de;
+        COPY _cmap TO '/home/rursus/Desktop/dumps/sternons/trunk/star.db'
+        	 DELIMITER '|';
         */
         HIP = ucstoi(&line[0]);
         pos = ucschr(line,'|')+1; RA = ucstof(pos);
@@ -249,7 +251,8 @@ int draw_stars(char *fname, program_state *pstat) {
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
             size = (6.8-mag)*0.8*image->scale;
-            printf("    <circle cx=\"%i\" cy=\"%i\" r=\"%g\"\n", x, y, size);
+            printf("    <circle title=\"HIP %i\" cx=\"%i\" cy=\"%i\" r=\"%g\"\n",
+            	   HIP, x, y, size);
             printf("            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
                    "stroke:#666666;stroke-width:1px\"/>\n");
         }
