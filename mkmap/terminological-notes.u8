@@ -70,14 +70,22 @@ image      =  (background + orionMap)
 --------------------------------------------------------------------------------
                            what is currently hardcoded
 --------------------------------------------------------------------------------
+head       = (xygrid(100px,100px),          # helper grid, then
+              declinationGrid(10°),         # draw declination bows, then
+              rectascensionGrid(1ʰ))        # draw rectascension lines
 stars      =  datafile(“star.DB”)           # datafile
            -> select(HIP, RA, DE, vmag);    # for this purpose use just these four
 orionFrame =  projection(Lambert_conformal,5ʰ20ᵐ,10°,10°)
                                             # one of the projections planned
            -> frame(500px,500px);           # select those within 500×500px frame
-orionMap   =  (declinationGrid(10°),        # draw declination bows
-               rectascensionGrid(1ʰ),       # draw rectascension lines
+orionMap   =  (head,
                stars)                       # then stars
            -> orionFrame                    # compute orionFrame position
            -> SVGconverter;                 # then push everything through the SVG filter
 
+================================================================================
+Hack plan:
+	1. encapsulate current code in above direction - make the objects look like
+	   above,
+	2. insert the current streams as filters in the scheme
+	3. soften filter per filter, depending on 

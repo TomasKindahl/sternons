@@ -20,7 +20,7 @@
 
 CC		= gcc -g -Wall --pedantic-error
 MAPS	= star.db
-OBJS	= scan.o ucstr.o uctype.o usio.o
+OBJS	= token.o ucstr.o uctype.o usio.o
 
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
