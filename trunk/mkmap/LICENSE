@@ -1,0 +1,12 @@
+All files in the directory of this LICENSE file are covered by the GNU Lesser
+General Public License, except the files whose file extensions are ".db" (for
+database). The database files are public domain and not covered by any license.
+
+The license conditions of GNU Lesser General Public License can be found in the
+accompanying file
+	COPYING and COPYING.LESSER
+COPYING contains the conditions for GNU General Public License; when the extra
+conditions contained in COPYING.LESSER are added to those in COPYING we get the
+GNU Lesser General Public License under which the files in this directory are
+governed. In other words COPYING plus COPYING.LESSER provide us with all the
+rules of GNU Lesser General Public License.
