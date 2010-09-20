@@ -1,0 +1,48 @@
+generic_db_file		→	db_segment generic_db_file
+db_segment			→	'item' row_separator unique_item
+					|	'table' row_separator table_item
+	==== UNIQUE ITEMS ====
+unique_item			→	unique_row row_separator
+					|	unique_row row_separator unique_item
+unique_row			→	full_cell_item
+					|	full_cell_item cell_separator unique_row
+full_cell_item		→	cell_label label_separator cell_value
+cell_label			→	NAME										// term-sym
+label_separator		→	':'											// default
+cell_value			→	LITERAL | LITERAL unit_separator UNIT		// term-syms
+unit_separator		→	'!'											// default
+cell_separator		→	'|'											// default
+row_separator		→	'\n'										// default
+	==== TABLES ====
+table_item			→	format_row row_separator table_body
+		===== FORMAT ROW =====
+format_row			→	format_cell_item
+					|	format_cell_item cell_separator format_row
+format_cell_item	→	cell_label label_separator cell_descriptor
+cell_descriptor		→	ε | format_descriptor
+					|	unit_separator UNIT
+					|	format_descriptor unit_separator UNIT
+format_descriptor	→	datatype_name
+					|	datatype_name format_extra
+datatype_name		→	'integer' | 'real' | 'fixed' | 'string'
+format_extra		→	',' precision_format
+					|	',' precision_format interval
+					|	',' interval
+precision_format	→	number_precision
+					|	string_precision
+number_precision	→	mantissa_part
+					|	mantissa_part exponential_separator exponential_part
+exponential_separator
+					→	ε | 'e' | 'E'								// default
+mantissa_part		→	integer_part								// MISSING MINUS!!
+					|	integer_part decimal_separator decimal_part
+decimal_separator	→	ε | '.'										// default
+integer_part		→	'N' | 'N' integer_part
+decimal_part		→	'D' | 'D' decimal_part
+exponential_part	→	'Z' | 'Z' exponential_part					// MISSING MINUS!!
+string_precision	→	'S' | 'S' string_precision
+interval			→	'[' lower_bound ',' upper_bound ']'
+lower_bound			→	LITERAL										// term-sym
+upper_bound			→	LITERAL										// term-sym
+		===== TABLE BODY =====
+
