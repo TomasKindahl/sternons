@@ -18,9 +18,12 @@
 #  <http://www.gnu.org/licenses/>.                                     #
 ########################################################################
 
+.SUFFIXES: .obj
+
 CC		= gcc -g -Wall --pedantic-error
-MAPS	= star.db
-OBJS	= token.o ucstr.o uctype.o usio.o
+MAPS		= star.db
+OBJS		= token.o ucstr.o uctype.o usio.o
+WOBJS	= token.obj ucstr.obj uctype.obj usio.obj
 
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
@@ -31,7 +34,13 @@ mkmap: mkmap.c $(OBJS)
 .c.o:
 	$(CC) -c $<
 
+.c.obj:
+	$(CC) -o $@ -c $<
+
 orion.svg: mkmap maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm $(MAPS) > $@
+
+orionw.svg: mkmap.exe maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS) > $@
 
 orion.png: orion.svg 
@@ -53,3 +62,8 @@ hard: clean
 
 view: orion.svg
 	epiphany $< &
+
+mkmap.exe: mkmap.c $(WOBJS)
+	$(CC) -o $@ $< $(WOBJS) -lm
+
+
