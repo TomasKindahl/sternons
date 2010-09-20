@@ -24,7 +24,7 @@
 #include <math.h>
 #include "usio.h"
 #include "ucstr.h"
-#include "scan.h"
+#include "token.h"
 
 /* ==================================================================== |
      Known bugs and features:                                           |
@@ -108,7 +108,7 @@ typedef struct _image_struct_S {
     uchar *name;
     int width, height, dim;
     double scale;
-    lambert_proj *projection;
+    lambert_proj *proj;
 } image_struct;
 
 image_struct *new_image(uchar *name, int width, int height, double scale) {
@@ -121,8 +121,8 @@ image_struct *new_image(uchar *name, int width, int height, double scale) {
     return res;
 }
 
-image_struct *set_image_projection(image_struct *image, lambert_proj *projection) {
-    image->projection = projection;
+image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
+    image->proj = proj;
     return image;
 }
 
@@ -137,7 +137,7 @@ program_state *new_program_state(int debug) {
     return res;
 }
 
-image_struct *set_program_image(program_state *prog, image_struct *image) {
+image_struct *program_set_image(program_state *prog, image_struct *image) {
     prog->image = image;
     return image;
 }
@@ -156,7 +156,7 @@ void head(program_state *pstat) {
     double X, Y;
     int x, y;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->projection;
+    lambert_proj *proj = image->proj;
 
     W = image->width; W2 = W/2;
     H = image->height; H2 = H/2;
@@ -226,6 +226,13 @@ double next_dfield(uchar **pos) {
 }
 
 int draw_stars(char *fname, program_state *pstat) {
+    /*
+    DROP TABLE _cmap;
+    SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
+           from _hipp where vmag < 6.5 order by vmag, ra, de;
+    COPY _cmap TO '/home/rursus/Desktop/dumps/sternons/trunk/star.db'
+         DELIMITER '|';
+    */
     int HIP;
     double RA, DE, mag;
     double X, Y, size;
@@ -233,22 +240,15 @@ int draw_stars(char *fname, program_state *pstat) {
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->projection;
+    lambert_proj *proj = image->proj;
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
         line[ucslen(line)-1] = L'\0';
-        /*
-        DROP TABLE _cmap;
-        SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
-               from _hipp where vmag < 6.5 order by vmag, ra, de;
-        COPY _cmap TO '/home/rursus/Desktop/dumps/sternons/trunk/star.db'
-        	 DELIMITER '|';
-        */
         HIP = ucstoi(&line[0]);
         pos = line;
-        RA = next_dfield(&pos);
-        DE = next_dfield(&pos);
+        RA =  next_dfield(&pos);
+        DE =  next_dfield(&pos);
         mag = next_dfield(&pos);
         /*
         printf("%c HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f ⟨%s⟩\n",
@@ -343,7 +343,7 @@ void set_program_var(token *var, token *value, program_state *pstat) {
 /**                    PROGRAM PARSING                      **/
 /*************************************************************/
 
-/** SCANINGS **/
+/** SCANNING **/
 
 token *scan_value(token_file *pfile, program_state *PS) {
     token *tok;
@@ -375,7 +375,7 @@ token *scan_exact(token_file *pfile, token_type type, uchar *val, program_state 
     return tok;
 }
 
-/** PARSINGS **/
+/** PARSING **/
 
 void parse_program_head(token_file *pfile, program_state *pstat) {
     token *tok;
@@ -471,11 +471,11 @@ int parse_program(char *program, program_state *pstat) {
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat = new_program_state(DEBUG);
-    lambert_proj *projection = init_Lambert_deg(80, 0, 10, 20);
+    lambert_proj *proj = init_Lambert_deg(80, 0, 10, 20);
     image_struct *image = new_image(L"Orion", 500, 500, 1.4);
 
-    set_program_image(pstat, image);
-    set_image_projection(image, projection);
+    program_set_image(pstat, image);
+    image_set_projection(image, proj);
 
     /*>Arg handling here! */
     /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
