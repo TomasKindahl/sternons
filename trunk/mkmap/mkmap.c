@@ -142,6 +142,22 @@ image_struct *program_set_image(program_state *prog, image_struct *image) {
     return image;
 }
 
+typedef struct _star_T {
+	int HIP;
+	double RA, DE, vmag;
+} star;
+
+star *new_star(int HIP, double RA, double DE, double vmag) {
+	star *res = (star *)malloc(sizeof(star));
+	res->HIP = HIP; res->RA = RA; res->DE = DE; res->vmag = vmag;
+	return res;
+}
+
+void print_star(FILE *stream, star *S) {
+    fprintf(stream, "(star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
+            S->HIP, S->RA, S->DE, S->vmag);
+}
+
 #define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
 
 int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
@@ -234,13 +250,14 @@ int draw_stars(char *fname, program_state *pstat) {
          DELIMITER '|';
     */
     int HIP;
-    double RA, DE, mag;
+    double RA, DE, vmag;
     double X, Y, size;
     int x, y;
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
     image_struct *image = pstat->image;
     lambert_proj *proj = image->proj;
+	star *S = 0;
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
@@ -249,14 +266,12 @@ int draw_stars(char *fname, program_state *pstat) {
         pos = line;
         RA =  next_dfield(&pos);
         DE =  next_dfield(&pos);
-        mag = next_dfield(&pos);
-        /*
-        printf("%c HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f ⟨%s⟩\n",
-               nl?'+':' ', HIP, RA, DE, mag, ucstombs(buf,line,1023));
-        */
+        vmag = next_dfield(&pos);
+		S = new_star(HIP, RA, DE, vmag);
+        /* print_star(stderr, S); */
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
-            size = (6.8-mag)*0.8*image->scale;
+            size = (6.8-vmag)*0.8*image->scale;
             printf("    <circle title=\"HIP %i\" cx=\"%i\" cy=\"%i\" r=\"%g\"\n",
             	   HIP, x, y, size);
             printf("            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
@@ -303,13 +318,18 @@ void set_program_attr(token *var, token *attr, token *value, program_state *psta
 
 void set_program_var(token *var, token *value, program_state *pstat) {
     char buf[1024], buf2[1024];
-    if (is_kw(var, L"name")) {
+	uchar _L_name[] = {'n','a','m','e',0};
+	uchar _L_width[] = {'w','i','d','t','h',0};
+	uchar _L_height[] = {'h','e','i','g','h','t',0};
+	uchar _L_scale[] = {'s','c','a','l','e',0};
+	
+    if (is_kw(var, _L_name)) {
         /* CHECK that value is TOK_STR HERE! */
         pstat->image->name = ucsdup(tok_ustr(value));
         fprintf(stderr, " [name = “%s”]", ucstombs(buf, pstat->image->name, 1023));
         return;
     }
-    if (is_kw(var, L"width")) {
+    if (is_kw(var, _L_width)) {
         int w, h, d;
         /* CHECK that value is TOK_NUM HERE! */
         pstat->image->width = ucstoi(tok_ustr(value));
@@ -318,7 +338,7 @@ void set_program_var(token *var, token *value, program_state *pstat) {
         fprintf(stderr, " [width = %i]", pstat->image->width);
         return;
     }
-    if (is_kw(var, L"height")) {
+    if (is_kw(var, _L_height)) {
         int w, h, d;
         /* CHECK that value is TOK_NUM HERE! */
         pstat->image->height = ucstoi(tok_ustr(value));
@@ -327,7 +347,7 @@ void set_program_var(token *var, token *value, program_state *pstat) {
         fprintf(stderr, " [height = %i]", pstat->image->height);
         return;
     }
-    if (is_kw(var, L"scale")) {
+    if (is_kw(var, _L_scale)) {
         /* CHECK that value is TOK_NUM HERE! */
         pstat->image->scale = ucstof(tok_ustr(value));
         fprintf(stderr, " [scale = %f]", pstat->image->scale);
@@ -343,7 +363,9 @@ void set_program_var(token *var, token *value, program_state *pstat) {
 /**                    PROGRAM PARSING                      **/
 /*************************************************************/
 
+/**************/
 /** SCANNING **/
+/**************/
 
 token *scan_value(token_file *pfile, program_state *PS) {
     token *tok;
@@ -375,15 +397,18 @@ token *scan_exact(token_file *pfile, token_type type, uchar *val, program_state 
     return tok;
 }
 
+/*************/
 /** PARSING **/
+/*************/
 
 void parse_program_head(token_file *pfile, program_state *pstat) {
     token *tok;
     int NL = 0;
+	uchar _L_image[] = {'i','m','a','g','e', 0}; 
 
     tok = scan(pfile);
     fprintf(stderr, "INFO: head reading {\n    ");
-    while (!is_kw(tok, L"image")) {
+    while (!is_kw(tok, _L_image)) {
         tok_dump(pstat->debug, tok);
         tok = scan(pfile);
         if (NL == 8)
@@ -398,20 +423,23 @@ void parse_program_head(token_file *pfile, program_state *pstat) {
 
 void parse_program_assignment(token_file *pfile, program_state *pstat) {
     token *tok, *var, *attr, *value;
+	uchar _L_0x7D[] = {'}',0};
+	uchar _L_0x2E[] = {'.',0};
+	uchar _L_0x3D[] = {'=',0};
 
     if(pstat->debug) fprintf(stderr, "  INFO: assignment {\n      ");
     var = scan(pfile); tok_dump(pstat->debug, var);
-    if (is_rpar(var, L"}")) { unscan(var, pfile); return; }
+    if (is_rpar(var, _L_0x7D)) { unscan(var, pfile); return; }
     tok = scan(pfile); tok_dump(pstat->debug, tok);
-    if (is_op(tok,L".")) { /* Attribute assignment: */
+    if (is_op(tok,_L_0x2E)) { /* Attribute assignment: */
         attr  = scan_item(pfile, TOK_KW, pstat);
-        tok   = scan_exact(pfile, TOK_OP, L"=", pstat);
+        tok   = scan_exact(pfile, TOK_OP, _L_0x3D, pstat);
         value = scan_value(pfile, pstat);
         set_program_attr(var, attr, value, pstat);
         
         if (pstat->debug) fprintf(stderr, " (attrib)\n");
     }
-    else if (is_op(tok,L"=")) { /* Variable assignment: */
+    else if (is_op(tok,_L_0x3D)) { /* Variable assignment: */
         value = scan_value(pfile, pstat);
         set_program_var(var, value, pstat);
         if (pstat->debug) fprintf(stderr, " (variable)\n");
@@ -425,11 +453,12 @@ void parse_program_assignment(token_file *pfile, program_state *pstat) {
 
 void parse_program_image(token_file *pfile, program_state *pstat) {
     token *tok;
+	uchar _L_0x7B[] = {'}',0};
 
     tok = scan(pfile); tok_dump(pstat->debug, tok);     /* image */
     tok = scan(pfile); tok_dump(pstat->debug, tok);     /* { */
     fprintf(stderr, "\nINFO: image reading {\n");
-    while (!is_rpar(tok, L"}")) {
+    while (!is_rpar(tok, _L_0x7B)) {
         parse_program_assignment(pfile, pstat);
         tok = scan(pfile);
     }
@@ -472,7 +501,8 @@ int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat = new_program_state(DEBUG);
     lambert_proj *proj = init_Lambert_deg(80, 0, 10, 20);
-    image_struct *image = new_image(L"Orion", 500, 500, 1.4);
+	uchar _L_Orion[] = {'O','r','i','o','n',0};
+    image_struct *image = new_image(_L_Orion, 500, 500, 1.4);
 
     program_set_image(pstat, image);
     image_set_projection(image, proj);
