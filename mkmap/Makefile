@@ -21,34 +21,25 @@
 .SUFFIXES: .obj
 
 CC		= gcc -g -Wall --pedantic-error
-MAPS		= star.db
-OBJS		= token.o ucstr.o uctype.o usio.o
-WOBJS	= token.obj ucstr.obj uctype.obj usio.obj
+MAPS	= star.db
+OBJS	= token.o ucstr.o uctype.o usio.o
+OBJSP	= $(OBJS) parse.o
+WOBJS	= token.obj ucstr.obj uctype.obj usio.obj parse.obj
 
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
 
-#cmap: cmap.c $(OBJS)
-#	$(CC) -o $@ $< $(OBJS)
+parse_program: parse_program.c $(OBJSP)
+	$(CC) -o $@ $< $(OBJSP) -lm
 
 .c.o:
 	$(CC) -c $<
 
-.c.obj:
-	$(CC) -o $@ -c $<
-
 orion.svg: mkmap maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm $(MAPS) > $@
-
-orionw.svg: mkmap.exe maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS) > $@
 
 orion.png: orion.svg 
 	inkscape --export-png=$@ $<
-
-#EXAMPLE FOR SEPARATING WIN AND LINUX OBJS:
-#win/xy.o: xy.c
-#	cd win; $(CC) -c ../xy.c
 
 clean:
 	rm -f *.o
@@ -63,7 +54,13 @@ hard: clean
 view: orion.svg
 	epiphany $< &
 
+# For Windows:
 mkmap.exe: mkmap.c $(WOBJS)
 	$(CC) -o $@ $< $(WOBJS) -lm
 
+.c.obj:
+	$(CC) -o $@ -c $<
+
+orionw.svg: mkmap.exe maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm $(MAPS) > $@
 

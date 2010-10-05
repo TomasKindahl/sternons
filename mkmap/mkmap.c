@@ -25,6 +25,7 @@
 #include "usio.h"
 #include "ucstr.h"
 #include "token.h"
+/*#include "parse.h"*/
 
 /* ==================================================================== |
      Known bugs and features:                                           |
@@ -127,11 +128,11 @@ image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
 }
 
 typedef struct _program_state_S {
+	image_struct *image;
     int debug;
-    image_struct *image;
 } program_state;
 
-program_state *new_program_state(int debug) {
+program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
     res->debug = debug;
     return res;
@@ -308,199 +309,11 @@ void tok_dump(int debug, token *tok) {
     }
 }
 
-/*************************************************************/
-/**                    PROGRAM SETTINGS                     **/
-/*************************************************************/
-
-void set_program_attr(token *var, token *attr, token *value, program_state *pstat) {
-    return;
-}
-
-void set_program_var(token *var, token *value, program_state *pstat) {
-    char buf[1024], buf2[1024];
-	uchar _L_name[] = {'n','a','m','e',0};
-	uchar _L_width[] = {'w','i','d','t','h',0};
-	uchar _L_height[] = {'h','e','i','g','h','t',0};
-	uchar _L_scale[] = {'s','c','a','l','e',0};
-	
-    if (is_kw(var, _L_name)) {
-        /* CHECK that value is TOK_STR HERE! */
-        pstat->image->name = ucsdup(tok_ustr(value));
-        fprintf(stderr, " [name = “%s”]", ucstombs(buf, pstat->image->name, 1023));
-        return;
-    }
-    if (is_kw(var, _L_width)) {
-        int w, h, d;
-        /* CHECK that value is TOK_NUM HERE! */
-        pstat->image->width = ucstoi(tok_ustr(value));
-        w = pstat->image->width; h = pstat->image->height;
-        if(w > h) d = w; else d = h; pstat->image->dim = d;
-        fprintf(stderr, " [width = %i]", pstat->image->width);
-        return;
-    }
-    if (is_kw(var, _L_height)) {
-        int w, h, d;
-        /* CHECK that value is TOK_NUM HERE! */
-        pstat->image->height = ucstoi(tok_ustr(value));
-        w = pstat->image->width; h = pstat->image->height;
-        if(w > h) d = w; else d = h; pstat->image->dim = d;
-        fprintf(stderr, " [height = %i]", pstat->image->height);
-        return;
-    }
-    if (is_kw(var, _L_scale)) {
-        /* CHECK that value is TOK_NUM HERE! */
-        pstat->image->scale = ucstof(tok_ustr(value));
-        fprintf(stderr, " [scale = %f]", pstat->image->scale);
-        return;
-    }
-    fprintf(stderr, " [WARNING: unused assignment %s = “%s”]",
-            ucstombs(buf, tok_ustr(var), 1023),
-            ucstombs(buf2, tok_ustr(value), 1023));
-    return;
-}
-
-/*************************************************************/
-/**                    PROGRAM PARSING                      **/
-/*************************************************************/
-
-/**************/
-/** SCANNING **/
-/**************/
-
-token *scan_value(token_file *pfile, program_state *PS) {
-    token *tok;
-    if (tokfeof(pfile)) return 0;
-    tok = scan(pfile);
-    tok_dump(PS->debug, tok);
-    return tok;
-}
-
-token *scan_item(token_file *pfile, token_type type, program_state *PS) {
-    token *tok;
-    if (tokfeof(pfile)) return 0;
-    tok = scan(pfile);
-    if (!is_type(tok, type)) {
-        unscan(tok, pfile);
-        return 0;
-    }
-    tok_dump(PS->debug, tok);
-    return tok;
-}
-
-token *scan_exact(token_file *pfile, token_type type, uchar *val, program_state *PS) {
-    token *tok = scan_item(pfile, type, PS);
-    if (!tok) return 0;
-    if (!is_str(tok, val)) {
-        unscan(tok, pfile);
-        return 0;
-    }
-    return tok;
-}
-
-/*************/
-/** PARSING **/
-/*************/
-
-void parse_program_head(token_file *pfile, program_state *pstat) {
-    token *tok;
-    int NL = 0;
-	uchar _L_image[] = {'i','m','a','g','e', 0}; 
-
-    tok = scan(pfile);
-    fprintf(stderr, "INFO: head reading {\n    ");
-    while (!is_kw(tok, _L_image)) {
-        tok_dump(pstat->debug, tok);
-        tok = scan(pfile);
-        if (NL == 8)
-            { fprintf(stderr, "\n    "); NL = 0; }
-        else
-            { fprintf(stderr, " "); NL++; }
-    }
-    fprintf(stderr, "\n}\n");
-    unscan(tok, pfile);
-    return;
-}
-
-void parse_program_assignment(token_file *pfile, program_state *pstat) {
-    token *tok, *var, *attr, *value;
-	uchar _L_0x7D[] = {'}',0};
-	uchar _L_0x2E[] = {'.',0};
-	uchar _L_0x3D[] = {'=',0};
-
-    if(pstat->debug) fprintf(stderr, "  INFO: assignment {\n      ");
-    var = scan(pfile); tok_dump(pstat->debug, var);
-    if (is_rpar(var, _L_0x7D)) { unscan(var, pfile); return; }
-    tok = scan(pfile); tok_dump(pstat->debug, tok);
-    if (is_op(tok,_L_0x2E)) { /* Attribute assignment: */
-        attr  = scan_item(pfile, TOK_KW, pstat);
-        tok   = scan_exact(pfile, TOK_OP, _L_0x3D, pstat);
-        value = scan_value(pfile, pstat);
-        set_program_attr(var, attr, value, pstat);
-        
-        if (pstat->debug) fprintf(stderr, " (attrib)\n");
-    }
-    else if (is_op(tok,_L_0x3D)) { /* Variable assignment: */
-        value = scan_value(pfile, pstat);
-        set_program_var(var, value, pstat);
-        if (pstat->debug) fprintf(stderr, " (variable)\n");
-    }
-    else { /* Shouldn't occur here! */
-        fprintf(stderr, "  ERROR: error in assignment\n");
-        unscan(tok, pfile); return;
-    }
-    fprintf(stderr, "  }\n");
-}
-
-void parse_program_image(token_file *pfile, program_state *pstat) {
-    token *tok;
-	uchar _L_0x7B[] = {'}',0};
-
-    tok = scan(pfile); tok_dump(pstat->debug, tok);     /* image */
-    tok = scan(pfile); tok_dump(pstat->debug, tok);     /* { */
-    fprintf(stderr, "\nINFO: image reading {\n");
-    while (!is_rpar(tok, _L_0x7B)) {
-        parse_program_assignment(pfile, pstat);
-        tok = scan(pfile);
-    }
-    fprintf(stderr, "\n}\n");
-    return;
-}
-
-int parse_program(char *program, program_state *pstat) {
-    token_file *pfile;
-    token *tok;
-    int NL;
-
-    if (!(pfile = tokfopen(program))) {
-        fprintf(stderr, "ERROR: program '%s' not found\n", program);
-        return 0;
-    }
-    fprintf(stderr, "INFO: program '%s' opened\n", program);
-    parse_program_head(pfile, pstat);
-    parse_program_image(pfile, pstat);
-    if (pstat->debug == DEBUG) {
-        tok = scan(pfile);
-        NL = 0;
-        while (!tokfeof(pfile)) {
-            tok_dump(pstat->debug, tok);
-            if (NL == 8)
-                { fprintf(stderr, "\n"); NL = 0; }
-            else
-                { fprintf(stderr, " "); NL++; }
-            tok_free(tok);
-            tok = scan(pfile);
-        }
-    }
-
-    fprintf(stderr, "\nINFO: program '%s' parsed\n", program);
-    tokfclose(pfile);
-    return 1;
-}
-
 int main (int argc, char **argv) {
     /* dummy setup: */
-    program_state *pstat = new_program_state(DEBUG);
+    program_state *pstat = new_program_state(DEBUG, stderr);
     lambert_proj *proj = init_Lambert_deg(80, 0, 10, 20);
+    /*lambert_proj *proj = init_Lambert_deg(107.5, 0, 10, 20); Monoceros hack*/
 	uchar _L_Orion[] = {'O','r','i','o','n',0};
     image_struct *image = new_image(_L_Orion, 500, 500, 1.4);
 
@@ -508,19 +321,19 @@ int main (int argc, char **argv) {
     image_set_projection(image, proj);
 
     /*>Arg handling here! */
-    /*>---A₀: mkmap /stardb/              -- star db only                        ---*/
-    /*>---A₁: mkmap /dummyprog/ /stardb/  -- prog loaded but unused              ---*/
-    /*>  A₁,₅: mkmap /dummyprog/ /stardb/ -- prog loaded partially used          ---*/
-    /*>   A₂: mkmap /prog/ /stardb/       -- prog loaded and used for std setting   */
-    /*>   A₃: mkmap /prog/                -- prog also used for star db loading     */
-    /*>   A₄:   dismissed                                                           */
-    /*>   A₅: mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments        */
+    /*>---A₀:   mkmap /stardb/              -- star db only                         ---*/
+    /*>---A₁:   mkmap /dummyprog/ /stardb/  -- prog loaded but unused               ---*/
+    /*>   A₁,₅: mkmap /dummyprog/ /stardb/ -- prog loaded partially used            ---*/
+    /*>   A₂:   mkmap /prog/ /stardb/       -- prog loaded and used for std setting    */
+    /*>   A₃:   mkmap /prog/                -- prog also used for star db loading      */
+    /*>   A₄:     /dismissed/                                                          */
+    /*>   A₅:   mkmap /prog/ö /arg₁/ ...     -- make the 2++ arg real arguments         */
 
     if (argc != 3) usage_exit();
 
     /* init: */
-    if (!parse_program(argv[1], pstat))
-        usage_exit();
+    /*if (!parse_program(argv[1], pstat))
+        usage_exit();*/
 
     /* generate the output map: */
     head(pstat);

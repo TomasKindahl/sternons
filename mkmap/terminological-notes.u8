@@ -82,10 +82,43 @@ orionMap   =  (head,
                stars)                       # then stars
            -> orionFrame                    # compute orionFrame position
            -> SVGconverter;                 # then push everything through the SVG filter
+--------------------------------------------------------------------------------
+                               alternate syntax
+--------------------------------------------------------------------------------
+   // Items added:
+item: xygrid { Δx = 100px, Δy = 100px }
+item: declinationgrid { Δδ = 10° }
+item: rectascentiongrid { Δα = 1ʰ }
+item: data { DBfile = “star.DB” }
+   -> select { HIP, α, δ, vmag }
+   -> compute { ∅ = (6.8-vmag)*0.8 }
+
+   // Projection:
+proj: projection { type = Lambert_conformal, α₀ = 5ʰ20ᵐ, δ₀ = 10°, Δδ = 10° }
 
 ================================================================================
-Hack plan:
+                                  Hack plan
+================================================================================
 	1. encapsulate current code in above direction - make the objects look like
 	   above,
 	2. insert the current streams as filters in the scheme
 	3. soften filter per filter, depending on 
+
+================================================================================
+                        Procedure for image generation
+================================================================================
+
+1. put up objects (each in its layer)
+for each image:
+	2. coordinate transformations
+    3. image frame/texts
+    4. projection/scaling
+    5. symbol choice
+    6. position/draw
+    7. position/draw help text
+
+α. fix parsing/orion.mkm
+    i.   5ʰ20ᵐ
+    ii.  separate projection (1) and img info (2) — the star “streams” from
+         coordinate transformations to projection to image filter
+
