@@ -66,18 +66,18 @@ uchar fgetuc(utf8_file *stream) {
 
     if (stream->uchar_save == -1) {
         res = _fgetuc(stream->chfile);
-        if (res == 0xD) stream->line_num++;
+        if (res == L'\n') stream->line_num++;
         return res;
     }
     res = stream->uchar_save;
-    if (res == 0xD) stream->line_num++;
+    if (res == L'\n') stream->line_num++;
     stream->uchar_save = -1;
     return res;
 }
 
 uchar fungetuc(int uch, utf8_file *stream) {
     stream->uchar_save = uch;
-    if (uch == 0xD) stream->line_num--;
+    if (uch == L'\n') stream->line_num--;
     return uch;
 }
 
