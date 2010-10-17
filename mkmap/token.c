@@ -26,6 +26,14 @@
 #include "usio.h"
 #include "token.h"
 
+struct _token_S {
+    token_type type;
+    uchar *ustr;
+    int line_num;
+	/* for numbers only: */
+    uchar *unit;
+};
+
 token_file *tokfopen(char *fname) {
     token_file *res = (token_file *)malloc(sizeof(token_file));
     res->tok_file = u8fopen(fname);
@@ -46,7 +54,6 @@ token *_new_token(token_type type, uchar *ustr, int line_num) {
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = 0;
-    if (type == TOK_NUM) res->num = ucstof(ustr);
     res->line_num = line_num;
     return res;
 }
@@ -56,7 +63,6 @@ token *_new_token_num(token_type type, uchar *ustr, uchar *unit, int line_num) {
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = ucsdup(unit);
-    res->num = ucstof(ustr);
     res->line_num = line_num;
     return res;
 }
@@ -69,6 +75,14 @@ token *_new_token_uchar(token_type type, uchar uc, int line_num) {
     res->unit = 0;
     res->line_num = line_num;
     return res;
+}
+
+int ishms(uch) {
+	return uch == L'ʰ' || uch == L'ᵐ' || uch == L'ˢ';
+}
+
+int isdms(uch) {
+	return uch == L'°' || uch == L'\'' || uch == L'"';
 }
 
 token *_scan(utf8_file *stream) {
@@ -99,35 +113,23 @@ token *_scan(utf8_file *stream) {
         ustr[ix-1] = L'\0';
         return _new_token(TOK_STR, ustr, lno);
     }
-    else if (isunum(uch) || uch == L'-') {
+    else if (isunum(uch)) {
         ustr[0] = uch;
         ix = 0;
-        if (uch == L'-') {
+		while (isunum(uch) || isualpha(uch) || ishms(uch) || isdms(uch)) {
             ix ++; uch = fgetuc(stream); ustr[ix] = uch;
         }
-        while (isunum(uch)) {
-            ix ++; uch = fgetuc(stream); ustr[ix] = uch;
-        }
-        if (uch == L'.') {
-            ix ++; uch = fgetuc(stream); ustr[ix] = uch;
-        }
-        while (isunum(uch)) {
-            ix ++; uch = fgetuc(stream); ustr[ix] = uch;
-        }
-        /*! insert exp handling here! */
-        /* unit handling: */
-        jx = 0;
-        if (isualpha(uch)) {
-            while (isualpha(uch)) {
-                uunit[jx] = uch; uch = fgetuc(stream); jx++;
-            }
-        }
-        else if (uch == L'°') {
-            uunit[jx] = uch; uch = fgetuc(stream); jx++;
-        }
-        uunit[jx] = L'\0';
-        fungetuc(uch, stream);
         ustr[ix] = L'\0';
+        fungetuc(uch, stream);
+		/* from end of ustr find last alphabetic char */
+		for (ix--; isualpha(ustr[ix]); ix--);
+		/* from there copy to unit */
+		for (jx = 0, ix++; ustr[ix]; ix++, jx++) {
+			uunit[jx] = ustr[ix];
+			if(!jx) ustr[ix] = 0;	/* zero first unit char */
+		}
+		/** Handle scale (ʰᵐˢ vs. °'") and number format (sex/hex/dec) **/
+		uunit[jx] = L'\0';
         return _new_token_num(TOK_NUM, ustr, uunit, lno);
     }
     else if (isualpha(uch)) {

@@ -20,11 +20,12 @@
 
 .SUFFIXES: .obj
 
-CC		= gcc -g -Wall --pedantic-error
-MAPS	= star.db
-OBJS	= token.o ucstr.o uctype.o usio.o
-OBJSP	= $(OBJS) parse.o
-WOBJS	= token.obj ucstr.obj uctype.obj usio.obj parse.obj
+CC 		= gcc -g -Wall --pedantic-error
+MAPS 	= star.db
+OBJS 	= token.o ucstr.o uctype.o usio.o
+OBJSP 	= $(OBJS) parse.o
+WOBJS 	= token.obj ucstr.obj uctype.obj usio.obj
+WOBJSP 	= $(WOBJS) parse.obj
 
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
@@ -43,6 +44,7 @@ orion.png: orion.svg
 
 clean:
 	rm -f *.o
+	rm -f *.obj
 	rm -f *~*
 
 distclean: clean
@@ -58,9 +60,13 @@ view: orion.svg
 mkmap.exe: mkmap.c $(WOBJS)
 	$(CC) -o $@ $< $(WOBJS) -lm
 
+parse_program.exe: parse_program.c $(WOBJSP)
+	$(CC) -o $@ $< $(WOBJSP) -lm
+
 .c.obj:
 	$(CC) -o $@ -c $<
 
 orionw.svg: mkmap.exe maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS) > $@
+
 
