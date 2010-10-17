@@ -1,0 +1,32 @@
+(select * from star) where 
+	((RA between 2 and 5) and (DE between 0 and +20) and (vmag < 6.5));
+"select * from star" ≡
+	"select (table.star.columns) from star"
+T[R] = T where R -
+	T is a table
+	R is a row description (≡ row interval)
+	f.ex.:
+		(select * from star) where 
+			(vmag between
+				(select vmag from star) where (desg = 'α CMa')
+				and 
+				(select vmag from star) where (desg = 'α Dra'))
+			;
+
+T[R]          = T where R - restriction
+(T₁ ⋈ T₂)[c]  = T₁ join T₂ on c -
+	            exact join on column c ∈ table.T₁.columns ∩ table.T₂.columns
+T₁ ⊨ T₂       = T₁ extend T₂ -
+	            a new table T where table.T.columns = 
+	            table.T₁.columns ∪ table.T₂.columns
+	            and ∀r₁ ∈ T₁ ∃r₂ ∈ T₂ r₁ = r₂[table.T₁.columns]
+(T₁ ⊳ T₂)[c]  = T₁ left join T₂ on c = (T₁ ⋈ T₂)[c] ∪ (T₁ ⊨ T₂)          FEL!
+(T₁ ⊲ T₂)[c]  = T₁ right join T₂ on c = (T₁ ⋈ T₂)[c] ∪ (T₂ ⊨ T₁)         FEL!
+(T₁ ⊲⊳ T₂)[c] = T₁ double join T₂ on c = (T₁ =⋈ T₂)[c] ∪ (T₁ ⋈= T₂)[c]   FEL!
+T₁ ∪ T₂       = T₁ union T₂ - as usual
+T₁ ∩ T₂       = T₁ intersection T₂ - as usual
+T₁ \ T₂       - as usual
+
+★ T₁ ∪ T₂ = (T₁ ∩ T₂) ∪ (T₁ \ T₂) ∪ (T₂ \ T₁)
+
+
