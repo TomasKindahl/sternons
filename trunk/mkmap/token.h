@@ -21,17 +21,11 @@
 #ifndef _SCAN_H
 #define _SCAN_H
 
+typedef struct _token_S token;		/* private */
+
 typedef enum {
     TOK_NONE, TOK_STR, TOK_KW, TOK_OP, TOK_LPAR, TOK_RPAR, TOK_NUM
 } token_type;
-
-typedef struct _token_S {
-    token_type type;
-    uchar *ustr;
-    uchar *unit;
-    double num;
-    int line_num;
-} token;
 
 typedef struct _token_file_S {
     /* specialized token file allowing token get and unget */
@@ -68,3 +62,4 @@ char *tok_unit(char *buf, token *tok, int size);
 void tok_free(token *tok);
 
 #endif /* _SCAN_H */
+

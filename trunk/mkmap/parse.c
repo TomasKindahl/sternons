@@ -30,6 +30,7 @@
 void tok_dump(token *tok, program_state *pstat) {
     char buf[1024], buf2[1024];
     uchar _L_0x3B[] = {L';',0};
+	static num = 0;
 
     switch (tok->type) {
       case TOK_STR:
@@ -48,6 +49,11 @@ void tok_dump(token *tok, program_state *pstat) {
       default:                    
         fprintf(pstat->debug_out, "⟨%s⟩%s", tok_type_str(tok), tok_str(buf, tok, 1023));
     }
+	if (num == 7) {
+		fprintf(pstat->debug_out, "\n  ⊕ ");
+		num = 0;
+	}
+	else num++;
 }
 
 program_state *new_program_state(int debug, FILE *debug_out) {
