@@ -1,11 +1,24 @@
-    ASCII mode           UTF-8 mode
+    UTF-8 mode
 --------------------------------------------------------------------------------
-Hexadecimal hours:
-    [[NNh]NNm]NN[.I]s    [[NNʰ]NNᵐ]NN[.I]ˢ
-    [NNh]NN[.I]m         [NNʰ]NN[.I]ᵐ
-    NN.Ih                NN[.I]ʰ
-Hexadecimal degrees:
-    [[NNN°]NN']NN[.I]"   [[NNN°]NN']NN[.I]"
-    [NNN°]NN[.I]'        [NNN°]NN[.I]'
-    NNN.I°               NNN.I°
+Sexagesimal hours:
+    [[N⁺ʰ]NNᵐ]NN[.I]ˢ    SH3a    ʰᵐˢ
+    [[N⁺ʰ]NNᵐ]NNˢ[.I]    SH3b    ʰᵐˢ
+    [N⁺ʰ]NN[.I]ᵐ         SH2a    ʰᵐ
+    [N⁺ʰ]NNᵐ[.I]         SH2b    ʰᵐ
+    N⁺[.I]ʰ              SH1     ʰ
+    N⁺ʰ[.I]              SH1     ʰ
+Sexagesimal degrees:
+    [[N⁺°]NN']NN[.I]"    SD3a    °'"
+    [[N⁺°]NN']NN"[.I]    SD3b    °'"
+    [N⁺°]NN[.I]'         SD2a    °'
+    [N⁺°]NN'[.I]         SD2b    °'
+    N⁺.I°                SD1a    °
+    N⁺°.I                SD1b    °
+Hexadecimal integer:
+    0xH⁺
+
+1. is it a hexadecimal?     → read hex
+2. is it sexagesimal?       → read sex
+3. is it a decimal number?  → read float + unit
+
 
