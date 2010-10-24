@@ -26,14 +26,6 @@
 #include "usio.h"
 #include "token.h"
 
-struct _token_S {
-    token_type type;
-    uchar *ustr;
-    int line_num;
-	/* for numbers only: */
-    uchar *unit;
-};
-
 token_file *tokfopen(char *fname) {
     token_file *res = (token_file *)malloc(sizeof(token_file));
     res->tok_file = u8fopen(fname);
@@ -114,19 +106,21 @@ token *_scan(utf8_file *stream) {
         return _new_token(TOK_STR, ustr, lno);
     }
     else if (isunum(uch)) {
+    	/* NUMBER WITH SCALE FACTOR AND UNIT */
         ustr[0] = uch;
         ix = 0;
-		while (isunum(uch) || isualpha(uch) || ishms(uch) || isdms(uch)) {
+		while (isunum(uch) || isualpha(uch)
+		|| ishms(uch) || isdms(uch) || uch == L'.') {
             ix ++; uch = fgetuc(stream); ustr[ix] = uch;
         }
         ustr[ix] = L'\0';
         fungetuc(uch, stream);
-		/* from end of ustr find last alphabetic char */
+		/* from end of ustr find last alphabetic char = start of unit */
 		for (ix--; isualpha(ustr[ix]); ix--);
-		/* from there copy to unit */
+		/* from there copy unit str to uunit */
 		for (jx = 0, ix++; ustr[ix]; ix++, jx++) {
 			uunit[jx] = ustr[ix];
-			if(!jx) ustr[ix] = 0;	/* zero first unit char */
+			if(!jx) ustr[ix] = 0;	/* cut number before unit substr */
 		}
 		/** Handle scale (ʰᵐˢ vs. °'") and number format (sex/hex/dec) **/
 		uunit[jx] = L'\0';
