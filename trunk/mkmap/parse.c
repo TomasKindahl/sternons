@@ -30,15 +30,20 @@
 void tok_dump(token *tok, program_state *pstat) {
     char buf[1024], buf2[1024];
     uchar _L_0x3B[] = {L';',0};
-	static num = 0;
+    static num = 0;
 
     switch (tok->type) {
       case TOK_STR:
         fprintf(pstat->debug_out, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
         break;
       case TOK_NUM:
-        fprintf(pstat->debug_out, "⟨%s⟩%s(%s)", tok_type_str(tok),
-                tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
+        if (tok->base == BAS_DEC)
+            fprintf(pstat->debug_out, "⟨%s⟩%s(%s)", tok_type_str(tok),
+                    tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023));
+        else
+            fprintf(pstat->debug_out, "⟨%s⟩%s(%s/%s)", tok_type_str(tok),
+                    tok_str(buf, tok, 1023), tok_unit(buf2, tok, 1023),
+                    tok_base_name(tok));
         break;
       case TOK_OP:
           if (is_op(tok, _L_0x3B))
@@ -49,11 +54,11 @@ void tok_dump(token *tok, program_state *pstat) {
       default:                    
         fprintf(pstat->debug_out, "⟨%s⟩%s", tok_type_str(tok), tok_str(buf, tok, 1023));
     }
-	if (num == 7) {
-		fprintf(pstat->debug_out, "\n  ⊕ ");
-		num = 0;
-	}
-	else num++;
+    if (num == 7) {
+        fprintf(pstat->debug_out, "\n  ⊕ ");
+        num = 0;
+    }
+    else num++;
 }
 
 program_state *new_program_state(int debug, FILE *debug_out) {
@@ -222,39 +227,39 @@ void _parse_program_image(token_file *pfile, program_state *pstat) {
 }
 
 int parse_block_statement(token_file *pfile, program_state *pstat) {
-	token *tok;
+    token *tok;
     uchar _C_lbrace[] = {'{',0}, _C_rbrace[] = {'}',0};
     FILE *dout = pstat->debug_out;
 
     if(tokfeof(pfile)) return 0;
     if (!is_lpar(tok = scan(pfile), _C_lbrace))
         { unscan(tok, pfile); return 0; }
-	fprintf(dout, "\n**** { ****\n");
-	while (!is_rpar(tok, _C_rbrace)) {
-		tok_dump(tok, pstat);
+    fprintf(dout, "\n**** { ****\n");
+    while (!is_rpar(tok, _C_rbrace)) {
+        tok_dump(tok, pstat);
         if(tokfeof(pfile)) return 0;
         tok = scan(pfile);
-	}
-	tok_dump(tok, pstat);
-	fprintf(dout, "\n**** } ****\n");
-	return 1;
+    }
+    tok_dump(tok, pstat);
+    fprintf(dout, "\n**** } ****\n");
+    return 1;
 }
 
 int parse_undefined_statement(token_file *pfile, program_state *pstat) {
-	token *tok;
+    token *tok;
     uchar _C_semi[] = {';',0}, _C_rbrace[] = {'}',0};
     FILE *dout = pstat->debug_out;
 
     if(tokfeof(pfile)) return 0;
     if (is_rpar(tok = scan(pfile), _C_rbrace))
         { unscan(tok, pfile); return 0; }
-	while (!is_op(tok, _C_semi)) {
-		tok_dump(tok, pstat);
+    while (!is_op(tok, _C_semi)) {
+        tok_dump(tok, pstat);
         if(tokfeof(pfile)) return 0;
         tok = scan(pfile);
-	}
-	tok_dump(tok, pstat);
-	return 1;
+    }
+    tok_dump(tok, pstat);
+    return 1;
 }
 
 int parse_procedure(token_file *pfile, program_state *pstat) {
@@ -267,7 +272,7 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
 
     if(tokfeof(pfile)) return 0;
     if (!is_any_kw(name = scan(pfile))) {
-    	if (tokfeof(pfile)) return 0;
+        if (tokfeof(pfile)) return 0;
         fprintf(dout, "ERROR: function name expected on line %i, instead "
                 "got '%s'\n", name->line_num, ucstombs(buf, tok_ustr(name), 1023));
         return 0;
@@ -294,23 +299,16 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
         fprintf(dout, "\n**** %s () { ****\n", ucstombs(buf, tok_ustr(name), 1023));
     }
     for (end = 1; end; ) {
-    	if (parse_block_statement(pfile, pstat)) {
-    		;
-    	}
-    	else if (parse_undefined_statement(pfile, pstat)) {
-    		;
-    	}
-    	else {
-    		end = 0;
-    	}
+        if (parse_block_statement(pfile, pstat)) {
+            ;
+        }
+        else if (parse_undefined_statement(pfile, pstat)) {
+            ;
+        }
+        else {
+            end = 0;
+        }
     }
-/*  tok = scan(pfile);
-    while (!is_rpar(tok, _C_rbrace)) {
-        tok_dump(tok, pstat);
-        tok = scan(pfile); 
-        if(tokfeof(pfile)) return 0;
-    }
-    */
     if(tokfeof(pfile)) return 0;
     if (!is_rpar(tok = scan(pfile),_C_rbrace)) {
         fprintf(dout, "ERROR: '}' expected on line %i\n", name->line_num);
@@ -337,7 +335,7 @@ int parse_program(char *program, program_state *pstat) {
         NL = 0;
         while (!tokfeof(pfile)) {
             if (!parse_procedure(pfile, pstat)) {
-            	if (tokfeof(pfile)) return 1;
+                if (tokfeof(pfile)) return 1;
                 fprintf(pstat->debug_out, "\nERROR: procedure parse failed\n");
                 break;
             }

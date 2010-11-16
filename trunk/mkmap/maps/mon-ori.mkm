@@ -44,25 +44,28 @@ main() {
     ## are to be used, is up to the programmer and the naming 
     ## is free by programmer choice:
 
-    layer background(noproj); # background: no projections, just one frame
-    layer border;             #   border: given in αδ* as a loop → coorsys
-                              #   change, projection, frame
-    layer grid;               # grid: given in αδ* as lines → coorsys change,
-                              #   projection, frame
-    layer nebulae;            # nebulae: given in αδ → coorsys change,
-                              #   projection, frame
-    layer stars;              # stars: given in αδ → coorsys change,
-                              #   projection, frame
-    layer labels(noproj);     # labels: given in αδ → x₀y₀ + xy offset ???
+    layer background;    # background: no projections, just one frame
+    layer border;        # border: given in αδ* as line loops →
+                         #   coorsys change, projection, frame
+    layer grid;          # grid: given in αδ* as lines →
+                         #   coorsys change, projection, frame
+    layer nebulae;       # nebulae: given in αδ → coorsys change,
+                         #   coorsys change, projection, frame
+    layer stars;         # stars: given in αδ → coorsys change,
+                         #   coorsys change, projection, frame
+    layer labels;        # labels: given in αδ → x₀y₀ + xy offset ???
+
+    in background set no projection;
+    in labels set no projection;
 
     ## That achieved, data is created and put into the layers:
 
     background += infinite [color: [r: x00, g: x00, b: x40]];
     grid       += grid [α: 1ʰ, δ: 10°];
     stars      += load “stars.db”;
-    labels     += align stars “stardesg.db”;
+    labels     += align stars with “stardesg.db”;
     nebulae    += load “nebulae.db”;
-    labels     += align nebulae “nebdesg.db”;
+    labels     += align nebulae with “nebdesg.db”;
     { # a stacklike block for loading local data
         orion; # run procedure ‘orion’
         out “orion.svg”;
