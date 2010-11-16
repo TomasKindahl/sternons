@@ -50,11 +50,12 @@ token *_new_token(token_type type, uchar *ustr, int line_num) {
     return res;
 }
 
-token *_new_token_num(token_type type, uchar *ustr, uchar *unit, int line_num) {
+token *_new_token_num(token_type type, uchar *ustr, uchar *unit, base_mode base, int line_num) {
     token *res = (token *)malloc(sizeof(token));
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = ucsdup(unit);
+    res->base = base;
     res->line_num = line_num;
     return res;
 }
@@ -70,15 +71,52 @@ token *_new_token_uchar(token_type type, uchar uc, int line_num) {
 }
 
 int ishms(uch) {
-	return uch == L'ʰ' || uch == L'ᵐ' || uch == L'ˢ';
+    return uch == L'ʰ' || uch == L'ᵐ' || uch == L'ˢ';
 }
 
 int isdms(uch) {
-	return uch == L'°' || uch == L'\'' || uch == L'"';
+    return uch == L'°' || uch == L'\'' || uch == L'"';
+}
+
+base_mode scan_mode(uchar *ustr) {
+    base_mode bmode;
+    int ix;
+
+    bmode = BAS_DEC;
+    for (ix = 0; ustr[ix]; ix++) {
+        switch (ustr[ix]) {
+            case L'ʰ':
+                if (bmode == BAS_DEC) bmode = BAS_H; else return BAS_ERROR;
+                ustr[ix] = L':';
+                break;
+            case L'°':
+                if (bmode == BAS_DEC) bmode = BAS_D; else return BAS_ERROR;
+                ustr[ix] = L':';
+                break;
+            case L'ᵐ':
+                if (bmode == BAS_H) bmode = BAS_HM; else return BAS_ERROR;
+                ustr[ix] = L':';
+                break;
+            case L'\'':
+                if (bmode == BAS_D) bmode = BAS_DM; else return BAS_ERROR;
+                ustr[ix] = L':';
+                break;
+            case L'ˢ':
+                if (bmode == BAS_HM) bmode = BAS_HMS; else return BAS_ERROR;
+                ustr[ix] = L':';
+                break;
+            case L'"':
+                if (bmode == BAS_DM) bmode = BAS_DMS; else return BAS_ERROR;
+                ustr[ix] = L':';
+                break;
+            default: break;
+        }
+    }
+    return bmode;
 }
 
 token *_scan(utf8_file *stream) {
-    uchar ustr[256], uunit[256];
+    uchar ustr[256], uunit[32], ubase[32];
     uchar uch;
     int ix, jx, lno;
 
@@ -106,25 +144,29 @@ token *_scan(utf8_file *stream) {
         return _new_token(TOK_STR, ustr, lno);
     }
     else if (isunum(uch)) {
-    	/* NUMBER WITH SCALE FACTOR AND UNIT */
+        /* NUMBER WITH SCALE FACTOR AND UNIT */
+        base_mode bmode;
+
         ustr[0] = uch;
         ix = 0;
-		while (isunum(uch) || isualpha(uch)
-		|| ishms(uch) || isdms(uch) || uch == L'.') {
+        while (isunum(uch) || isualpha(uch)
+        || ishms(uch) || isdms(uch) || uch == L'.') {
             ix ++; uch = fgetuc(stream); ustr[ix] = uch;
         }
         ustr[ix] = L'\0';
         fungetuc(uch, stream);
-		/* from end of ustr find last alphabetic char = start of unit */
-		for (ix--; isualpha(ustr[ix]); ix--);
-		/* from there copy unit str to uunit */
-		for (jx = 0, ix++; ustr[ix]; ix++, jx++) {
-			uunit[jx] = ustr[ix];
-			if(!jx) ustr[ix] = 0;	/* cut number before unit substr */
-		}
-		/** Handle scale (ʰᵐˢ vs. °'") and number format (sex/hex/dec) **/
-		uunit[jx] = L'\0';
-        return _new_token_num(TOK_NUM, ustr, uunit, lno);
+        /* from end of ustr find last alphabetic char = start of unit */
+        for (ix--; isualpha(ustr[ix]); ix--);
+        /* from there copy unit str to uunit */
+        for (jx = 0, ix++; ustr[ix]; ix++, jx++) {
+            uunit[jx] = ustr[ix];
+            if(!jx) ustr[ix] = 0;    /* cut number before unit substr */
+        }
+        uunit[jx] = L'\0';
+        /** Handle scale (ʰᵐˢ vs. °'") and number format (sex/hex/dec) **/
+        bmode = scan_mode(ustr);
+
+        return _new_token_num(TOK_NUM, ustr, uunit, bmode, lno);
     }
     else if (isualpha(uch)) {
         ustr[0] = uch;
@@ -194,22 +236,14 @@ int is_rpar(token *tok, uchar *op) { return is_item(tok, op, TOK_RPAR); }
 
 char *tok_type_str(token *tok) {
     switch(tok->type) {
-        case TOK_NONE:
-            return "ERR";
-        case TOK_STR:
-            return "STR";
-        case TOK_KW:
-            return "KW";
-        case TOK_OP:
-            return "OP";
-        case TOK_LPAR:
-            return "LPAR";
-        case TOK_RPAR:
-            return "RPAR";
-        case TOK_NUM:
-            return "NUM";
-        default:
-            return "unknown";
+        case TOK_NONE: return "ERR";
+        case TOK_STR:  return "STR";
+        case TOK_KW:   return "KW";
+        case TOK_OP:   return "OP";
+        case TOK_LPAR: return "LPAR";
+        case TOK_RPAR: return "RPAR";
+        case TOK_NUM:  return "NUM";
+        default:       return "unknown";
     }
     return "unknown";
 }
@@ -225,6 +259,23 @@ char *tok_str(char *buf, token *tok, int size) {
 char *tok_unit(char *buf, token *tok, int size) {
     if (tok->type != TOK_NUM) return "";
     return ucstombs(buf, tok->unit, size);
+}
+
+char *tok_base_name(token *tok) {
+    switch (tok->base) {
+        case BAS_DEC: return "decimal";
+        case BAS_HEX: return "hexadecimal";
+        case BAS_OCT: return "octal";
+        case BAS_H: return "h";
+        case BAS_HM: return "hm";
+        case BAS_HMS: return "hms";
+        case BAS_D: return "d";
+        case BAS_DM: return "dm";
+        case BAS_DMS: return "dms";
+        case BAS_ERROR: return "error";
+        default: return "unknown";
+    }
+    return 0;
 }
 
 void tok_free(token *tok) {

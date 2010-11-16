@@ -56,7 +56,7 @@ hard: clean
 view: orion.svg
 	epiphany $< &
 
-# For Windows:
+#### For Windows:
 mkmap.exe: mkmap.c $(WOBJS)
 	$(CC) -o $@ $< $(WOBJS) -lm
 
@@ -69,4 +69,13 @@ parse_program.exe: parse_program.c $(WOBJSP)
 orionw.svg: mkmap.exe maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS) > $@
 
+#### svn tools:
+
+# difference overview (preparation for commit message)
+svndiff:
+	svn diff --diff-cmd /usr/bin/diff -x '--brief'
+
+# generate commit message stub diff.u8
+difflist: diff.u8
+	svn diff | grep Index: > diff.u8
 

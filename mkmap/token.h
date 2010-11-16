@@ -25,12 +25,18 @@ typedef enum {
     TOK_NONE, TOK_STR, TOK_KW, TOK_OP, TOK_LPAR, TOK_RPAR, TOK_NUM
 } token_type;
 
+typedef enum {
+    BAS_DEC, BAS_HEX, BAS_OCT,
+    BAS_H, BAS_HM, BAS_HMS, BAS_D, BAS_DM, BAS_DMS, BAS_ERROR
+} base_mode;
+
 typedef struct _token_S {
     token_type type;
     uchar *ustr;
     int line_num;
-	/* for numbers only: */
+    /* for numbers only: */
     uchar *unit;
+    base_mode base;
 } token;
 
 typedef struct _token_file_S {
@@ -65,6 +71,7 @@ char *tok_type_str(token *tok);
 uchar *tok_ustr(token *tok);
 char *tok_str(char *buf, token *tok, int size);
 char *tok_unit(char *buf, token *tok, int size);
+char *tok_base_name(token *tok);
 void tok_free(token *tok);
 
 #endif /* _SCAN_H */
