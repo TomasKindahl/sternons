@@ -27,6 +27,22 @@
 #include "token.h"
 #include "parse.h"
 
+/*************************************************************/
+/**                      PROCEDURES                         **/
+/*************************************************************/
+
+procedure *new_procedure(uchar *name, procedure *next) {
+    procedure *res = (procedure *)malloc(sizeof(procedure));
+    res->name = ucsdup(name);
+    res->next = next;
+    return res;
+}
+
+procedure *set_next(procedure *current, procedure *next) {
+    current->next = next;
+    return current;
+}
+
 void tok_dump(token *tok, program_state *pstat) {
     char buf[1024], buf2[1024];
     uchar _L_0x3B[] = {L';',0};
@@ -65,6 +81,7 @@ program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
     res->debug = debug;
     res->debug_out = debug_out;
+    res->proc = 0;
     return res;
 }
 
@@ -117,6 +134,26 @@ void set_program_var(token *var, token *value, program_state *pstat) {
             ucstombs(buf, tok_ustr(var), 1023),
             ucstombs(buf2, tok_ustr(value), 1023));
     return;
+}
+
+void add_procedure(program_state *pstat, uchar *ucs) {
+    /** Check whether exists, if so scream_exit */
+    /* insert at start of list: */
+    pstat->proc = new_procedure(ucs,pstat->proc);
+}
+
+procedure *_drop_procedure(procedure *proc, uchar *ucs) {
+    if (!proc) return 0;
+    if (0 == ucscmp(proc->name,ucs)) {
+        return proc->next;
+    }
+    return set_next(proc, _drop_procedure(proc->next, ucs));
+}
+
+void drop_procedure(program_state *pstat, uchar *ucs) {
+    if (!pstat->proc) return; /** silently? */
+    /* how cleanup removed procedure? */
+    pstat->proc = _drop_procedure(pstat->proc,ucs);
 }
 
 /*************************************************************/
@@ -298,6 +335,7 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
     if(pstat->debug == DEBUG) {
         fprintf(dout, "\n**** %s () { ****\n", ucstombs(buf, tok_ustr(name), 1023));
     }
+    add_procedure(pstat, tok_ustr(name));
     for (end = 1; end; ) {
         if (parse_block_statement(pfile, pstat)) {
             ;
@@ -312,6 +350,7 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
     if(tokfeof(pfile)) return 0;
     if (!is_rpar(tok = scan(pfile),_C_rbrace)) {
         fprintf(dout, "ERROR: '}' expected on line %i\n", name->line_num);
+        drop_procedure(pstat, tok_ustr(name));
         return 0;
     }
     if(pstat->debug == DEBUG) { 
@@ -347,4 +386,17 @@ int parse_program(char *program, program_state *pstat) {
     return 1;
 }
 
+void dump_procedures(program_state *pstat, procedure *proc) {
+    char buf[1024];
+    if (!proc) return;
+    fprintf(pstat->debug_out, "   procedure %s () {\n", ucstombs(buf, proc->name, 1023));
+    fprintf(pstat->debug_out, "   }\n");
+    dump_procedures(pstat, proc->next);
+}
 
+void dump_program(program_state *pstat) {
+    fprintf(pstat->debug_out, "INFO: dumping program {\n");
+    dump_procedures(pstat, pstat->proc);
+    fprintf(pstat->debug_out, "}\n");
+    return;
+}
