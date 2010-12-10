@@ -21,6 +21,8 @@ int main (int argc, char **argv) {
     /* init: */
     if (!parse_program(argv[1], pstat))
         usage_exit();
+    else
+        dump_program(pstat);
 
     return 0;
 }
