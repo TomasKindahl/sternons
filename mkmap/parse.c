@@ -34,6 +34,7 @@
 procedure *new_procedure(uchar *name, procedure *next) {
     procedure *res = (procedure *)malloc(sizeof(procedure));
     res->name = ucsdup(name);
+    res->layers = 0;
     res->next = next;
     return res;
 }
@@ -41,6 +42,15 @@ procedure *new_procedure(uchar *name, procedure *next) {
 procedure *set_next(procedure *current, procedure *next) {
     current->next = next;
     return current;
+}
+
+void add_layer(procedure *current, uchar *name) {
+    /** FIXME UGLY: */
+    map_layer *layer = (map_layer *)malloc(sizeof(map_layer));
+    layer->name = ucsdup(name);
+    layer->next = current->layers;
+    current->layers = layer;
+    return;
 }
 
 void tok_dump(token *tok, program_state *pstat) {
@@ -77,6 +87,10 @@ void tok_dump(token *tok, program_state *pstat) {
     else num++;
 }
 
+/*************************************************************/
+/**                    PROGRAM SETTINGS                     **/
+/*************************************************************/
+
 program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
     res->debug = debug;
@@ -84,10 +98,6 @@ program_state *new_program_state(int debug, FILE *debug_out) {
     res->proc = 0;
     return res;
 }
-
-/*************************************************************/
-/**                    PROGRAM SETTINGS                     **/
-/*************************************************************/
 
 void set_program_attr(token *var, token *attr, token *value, program_state *pstat) {
     return;
@@ -268,17 +278,40 @@ int parse_block_statement(token_file *pfile, program_state *pstat) {
     uchar _C_lbrace[] = {'{',0}, _C_rbrace[] = {'}',0};
     FILE *dout = pstat->debug_out;
 
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (!is_lpar(tok = scan(pfile), _C_lbrace))
         { unscan(tok, pfile); return 0; }
     fprintf(dout, "\n**** { ****\n");
     while (!is_rpar(tok, _C_rbrace)) {
         tok_dump(tok, pstat);
-        if(tokfeof(pfile)) return 0;
+        if (tokfeof(pfile)) return 0;
         tok = scan(pfile);
     }
     tok_dump(tok, pstat);
     fprintf(dout, "\n**** } ****\n");
+    return 1;
+}
+
+int parse_layer_definition(token_file *pfile, program_state *pstat) {
+    token *tok;
+    uchar _C_semi[] = {';',0}, _C_layer[] = {'l','a','y','e','r',0};
+    FILE *dout = pstat->debug_out;
+    int first = 1;
+
+    if (tokfeof(pfile)) return 0;
+    if (!is_kw(tok = scan(pfile), _C_layer))
+        { unscan(tok, pfile); return 0; }
+    fprintf(dout, " [LAYER] ");
+    /** FIXME: The following code is much too tolerant, a layer  */
+    /** definition should look like 'layer' ⟨layername⟩ ';' with */
+    /** possible options, syntax unknown */
+    for (first = 1; !is_op(tok, _C_semi); first = 0) {
+        tok_dump(tok, pstat);
+        if (tokfeof(pfile)) return 0;
+        tok = scan(pfile);
+        if (first) { add_layer(pstat->proc, tok_ustr(tok)); }
+    }
+    tok_dump(tok, pstat);
     return 1;
 }
 
@@ -287,12 +320,12 @@ int parse_undefined_statement(token_file *pfile, program_state *pstat) {
     uchar _C_semi[] = {';',0}, _C_rbrace[] = {'}',0};
     FILE *dout = pstat->debug_out;
 
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (is_rpar(tok = scan(pfile), _C_rbrace))
         { unscan(tok, pfile); return 0; }
     while (!is_op(tok, _C_semi)) {
         tok_dump(tok, pstat);
-        if(tokfeof(pfile)) return 0;
+        if (tokfeof(pfile)) return 0;
         tok = scan(pfile);
     }
     tok_dump(tok, pstat);
@@ -307,14 +340,14 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
     FILE *dout = pstat->debug_out;
     int end;
 
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (!is_any_kw(name = scan(pfile))) {
         if (tokfeof(pfile)) return 0;
         fprintf(dout, "ERROR: function name expected on line %i, instead "
                 "got '%s'\n", name->line_num, ucstombs(buf, tok_ustr(name), 1023));
         return 0;
     }
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (!is_lpar(tok = scan(pfile),_C_lpar)) {
         fprintf(dout, "ERROR: '(' expected on line %i\n", name->line_num);
         return 0;
@@ -322,12 +355,12 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
     /*************************/
     /** ARGUMENT LIST HERE! **/
     /*************************/
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (!is_rpar(tok = scan(pfile),_C_rpar)) {
         fprintf(dout, "ERROR: ')' expected on line %i\n", name->line_num);
         return 0;
     }
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (!is_lpar(tok = scan(pfile),_C_lbrace)) {
         fprintf(dout, "ERROR: '{' expected on line %i\n", name->line_num);
         return 0;
@@ -336,18 +369,21 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
         fprintf(dout, "\n**** %s () { ****\n", ucstombs(buf, tok_ustr(name), 1023));
     }
     add_procedure(pstat, tok_ustr(name));
-    for (end = 1; end; ) {
+    for (end = 0; !end; ) {
         if (parse_block_statement(pfile, pstat)) {
+            ;
+        }
+        else if (parse_layer_definition(pfile, pstat)) {
             ;
         }
         else if (parse_undefined_statement(pfile, pstat)) {
             ;
         }
         else {
-            end = 0;
+            end = 1;
         }
     }
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     if (!is_rpar(tok = scan(pfile),_C_rbrace)) {
         fprintf(dout, "ERROR: '}' expected on line %i\n", name->line_num);
         drop_procedure(pstat, tok_ustr(name));
@@ -356,7 +392,7 @@ int parse_procedure(token_file *pfile, program_state *pstat) {
     if(pstat->debug == DEBUG) { 
         fprintf(dout, "\n**** } ****\n");
     }
-    if(tokfeof(pfile)) return 0;
+    if (tokfeof(pfile)) return 0;
     return 1;
 }
 
@@ -386,10 +422,18 @@ int parse_program(char *program, program_state *pstat) {
     return 1;
 }
 
+void dump_layers(program_state *pstat, map_layer *layer) {
+    char buf[1024];
+    if (!layer) return;
+    fprintf(pstat->debug_out, "      layer %s;\n", ucstombs(buf, layer->name, 1023));
+    dump_layers(pstat, layer->next);
+}
+
 void dump_procedures(program_state *pstat, procedure *proc) {
     char buf[1024];
     if (!proc) return;
     fprintf(pstat->debug_out, "   procedure %s () {\n", ucstombs(buf, proc->name, 1023));
+    dump_layers(pstat, proc->layers);
     fprintf(pstat->debug_out, "   }\n");
     dump_procedures(pstat, proc->next);
 }
