@@ -4,8 +4,14 @@
 #define NO_DEBUG 0
 #define DEBUG 1
 
+typedef struct _map_layer_S {
+    uchar *name;
+    struct _map_layer_S *next;
+} map_layer;
+
 typedef struct _procedure_S {
     uchar *name;
+    map_layer *layers;
     struct _procedure_S *next;
 } procedure;
 
@@ -20,5 +26,4 @@ int parse_program(char *program, program_state *pstat);
 void dump_program(program_state *pstat);
 
 #endif /* _PARSE_H */
-
 

@@ -77,5 +77,7 @@ svndiff:
 
 # generate commit message stub diff.u8
 difflist: diff.u8
+
+diff.u8:
 	svn diff | grep Index: > diff.u8
 
