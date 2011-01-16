@@ -49,6 +49,7 @@ clean:
 
 distclean: clean
 	rm -f cmap cmp dump mkmap
+	rm -f *.exe
 
 hard: clean
 	$(MAKE) cmap

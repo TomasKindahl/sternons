@@ -127,14 +127,76 @@ image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
     return image;
 }
 
+typedef struct _star_T {
+    int HIP;
+    double RA, DE, vmag;
+} star;
+
+star *new_star(int HIP, double RA, double DE, double vmag) {
+    star *res = (star *)malloc(sizeof(star));
+    res->HIP = HIP; res->RA = RA; res->DE = DE; res->vmag = vmag;
+    return res;
+}
+
+typedef struct _star_vec_S {
+    int size;
+    int next;
+    star **S;
+} star_vec;
+
+star_vec *new_star_vec(int size) {
+    star_vec *res = (star_vec *)malloc(sizeof(star_vec));
+    res->size = size;
+    res->next = 0;
+    res->S = (star **)malloc(sizeof(star *)*size);
+    return res;
+}
+
+int append_star(star_vec *SV, star *S) {
+    if (SV->next == SV->size) {
+        int newsize = SV->size<<1; /* double it */
+        int ix;
+        star **NS = (star **)malloc(sizeof(star *)*newsize);
+        for(ix = 0; ix < SV->size; ix++) {
+            NS[ix] = SV->S[ix];
+        }
+        free(SV->S);
+        SV->S = NS;
+        SV->size = newsize;
+        SV->S[SV->next++] = S;
+        return 1;
+    }
+    SV->S[SV->next++] = S;
+    return 0;
+}
+
+void dump_star(FILE *stream, star *S) {
+    fprintf(stream, "  (star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
+            S->HIP, S->RA, S->DE, S->vmag);
+}
+
+void dump_star_vec(FILE *stream, star_vec *SV) {
+    int ix;
+    fprintf(stream, "star_vector: size=%i, alloc=%i {\n", SV->next, SV->size);
+    for(ix = 0; ix < SV->next; ix++) {
+        dump_star(stream, SV->S[ix]);
+    }
+    fprintf(stream, "}\n");
+}
+
 typedef struct _program_state_S {
-	image_struct *image;
+    /* hard-coded layers */
+    star_vec *star_vector;
+    /* hard-coded image data */
+    image_struct *image;
+    FILE *out_file;
     int debug;
 } program_state;
 
 program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
     res->debug = debug;
+    res->star_vector = new_star_vec(1024);
     return res;
 }
 
@@ -143,65 +205,56 @@ image_struct *program_set_image(program_state *prog, image_struct *image) {
     return image;
 }
 
-typedef struct _star_T {
-	int HIP;
-	double RA, DE, vmag;
-} star;
-
-star *new_star(int HIP, double RA, double DE, double vmag) {
-	star *res = (star *)malloc(sizeof(star));
-	res->HIP = HIP; res->RA = RA; res->DE = DE; res->vmag = vmag;
-	return res;
-}
-
-void print_star(FILE *stream, star *S) {
-    fprintf(stream, "(star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
-            S->HIP, S->RA, S->DE, S->vmag);
-}
-
 #define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
 
-int pos_in_frame(int *x, int *y, double X, double Y, image_struct *frame) {
+int pos_in_frame(double *x, double *y, double X, double Y, image_struct *frame) {
     *x = frame->width/2-frame->dim*X*frame->scale;
     *y = frame->height/2-frame->dim*Y*frame->scale;
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
+}
+
+int open_file(char *fname, program_state *pstat) {
+    pstat->out_file = fopen(fname, "wt");
+    if (!pstat->out_file) return 0;
+    return 1;
 }
 
 void head(program_state *pstat) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y;
-    int x, y;
+    double x, y;
     image_struct *image = pstat->image;
     lambert_proj *proj = image->proj;
+    FILE *out = pstat->out_file;
 
     W = image->width; W2 = W/2;
     H = image->height; H2 = H/2;
     dim = image->dim;
-    printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-    printf("<svg width=\"%i\" height=\"%i\"\n"
-           "     xmlns=\"http://www.w3.org/2000/svg\"\n"
-           "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-           "     >\n", W, H);
-    printf("<rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
-           "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
-           "stroke-dasharray:none;stroke-opacity:1\"\n"
-           "      width=\"%i\" height=\"%i\"/>\n", W, H);
+    fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+    fprintf(out, "<svg width=\"%i\" height=\"%i\"\n"
+                 "     xmlns=\"http://www.w3.org/2000/svg\"\n"
+                 "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+                 "     >\n", W, H);
+    fprintf(out, "<rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
+                 "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
+                 "stroke-dasharray:none;stroke-opacity:1\"\n"
+                 "      width=\"%i\" height=\"%i\"/>\n", W, H);
     if (pstat->debug == DEBUG) {
         /* Helper lines, paper coordinates: */
         /* vertical */
         for (ix = 100; ix < 560; ix += 100) {
-            printf("<path style=\"stroke:#000000;stroke-width:1px\" "
-                   "d=\"M %i,0 L %i,%i\"/>\n", ix, ix, H);
-            printf("<path style=\"stroke:#080808;stroke-width:1px\" "
-                   "d=\"M %i,0 L %i,%i\"/>\n", ix-50, ix-50, H);
+            fprintf(out, "<path style=\"stroke:#000000;stroke-width:1px\" "
+                         "d=\"M %i,0 L %i,%i\"/>\n", ix, ix, H);
+            fprintf(out, "<path style=\"stroke:#080808;stroke-width:1px\" "
+                         "d=\"M %i,0 L %i,%i\"/>\n", ix-50, ix-50, H);
         }
         /* horizontal */
         for (iy = 100; iy < 560; iy += 100) {
-            printf("<path style=\"stroke:#000000;stroke-width:1px\" "
-                   "d=\"M 0,%i L %i,%i\"/>\n", iy, W, iy);
-            printf("<path style=\"stroke:#080808;stroke-width:1px\" "
-                   "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
+            fprintf(out, "<path style=\"stroke:#000000;stroke-width:1px\" "
+                         "d=\"M 0,%i L %i,%i\"/>\n", iy, W, iy);
+            fprintf(out, "<path style=\"stroke:#080808;stroke-width:1px\" "
+                         "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
         }
     }
     /* Declination lines: */
@@ -214,9 +267,9 @@ void head(program_state *pstat) {
         for (ix = 0; ix < NUM_DE; ix++) {
             Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
             if (pos_in_frame(&x, &y, X, Y, image)) {
-                printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
-                printf("            style=\"opacity:1;fill:#880088;");
-                printf("fill-opacity:1;\"/>\n");
+                fprintf(out, "    <circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\"\n", x, y);
+                fprintf(out, "            style=\"opacity:1;fill:#880088;");
+                fprintf(out, "fill-opacity:1;\"/>\n");
             }
         }
     }
@@ -229,20 +282,20 @@ void head(program_state *pstat) {
         for (iy = 0; iy < NUM_RA; iy++) {
             Lambert(&X, &Y, deg2rad(de), ras[iy], proj);
             if (pos_in_frame(&x, &y, X, Y, image)) {
-                printf("    <circle cx=\"%i\" cy=\"%i\" r=\"1\"\n", x, y);
-                printf("            style=\"opacity:1;fill:#880088;");
-                printf("fill-opacity:1;\"/>\n");
+                fprintf(out, "    <circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\"\n", x, y);
+                fprintf(out, "            style=\"opacity:1;fill:#880088;");
+                fprintf(out, "fill-opacity:1;\"/>\n");
             }
         }
     }
 }
 
 double next_dfield(uchar **pos) {
-	*pos = ucschr(*pos,'|')+1;
-	return ucstof(*pos);
+    *pos = ucschr(*pos,'|')+1;
+    return ucstof(*pos);
 }
 
-int draw_stars(char *fname, program_state *pstat) {
+int load_stars(char *fname, program_state *pstat) {
     /*
     DROP TABLE _cmap;
     SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
@@ -252,40 +305,68 @@ int draw_stars(char *fname, program_state *pstat) {
     */
     int HIP;
     double RA, DE, vmag;
-    double X, Y, size;
-    int x, y;
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
-    image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
-	star *S = 0;
+    star *S = 0;
 
     if (!inf) return 0;
+    /* LOAD THE STARS */
     while (fgetus(line, 1023, inf)) {
         line[ucslen(line)-1] = L'\0';
-        HIP = ucstoi(&line[0]);
         pos = line;
+        HIP = ucstoi(pos);
         RA =  next_dfield(&pos);
         DE =  next_dfield(&pos);
         vmag = next_dfield(&pos);
-		S = new_star(HIP, RA, DE, vmag);
-        /* print_star(stderr, S); */
-        Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
-        if(pos_in_frame(&x, &y, X, Y, image)) {
-            size = (6.8-vmag)*0.8*image->scale;
-            printf("    <circle title=\"HIP %i\" cx=\"%i\" cy=\"%i\" r=\"%g\"\n",
-            	   HIP, x, y, size);
-            printf("            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
-                   "stroke:#666666;stroke-width:1px\"/>\n");
-        }
+        S = new_star(HIP, RA, DE, vmag);
+        append_star(pstat->star_vector, S);
     }
     return 1;
 }
 
-void foot(void) {
+void draw_stars(program_state *pstat) {
+    /*
+    DROP TABLE _cmap;
+    SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
+           from _hipp where vmag < 6.5 order by vmag, ra, de;
+    COPY _cmap TO '/home/rursus/Desktop/dumps/sternons/trunk/star.db'
+         DELIMITER '|';
+    */
+    int ix;
+    int HIP;
+    double RA, DE, vmag;
+    double X, Y, size;
+    double x, y;
+    image_struct *image = pstat->image;
+    lambert_proj *proj = image->proj;
+    FILE *out = pstat->out_file;
+    star *S = 0;
+
+    /* DRAW THE STARS */
+    for (ix = 0; ix < pstat->star_vector->next; ix++) {
+        S = pstat->star_vector->S[ix];
+        DE = S->DE; RA = S->RA; vmag = S->vmag;
+        Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
+        if(pos_in_frame(&x, &y, X, Y, image)) {
+            size = (6.8-vmag)*0.8*image->scale;
+            fprintf(out, "    <circle title=\"HIP %i\" cx=\"%.2f\" cy=\"%.2f\" r=\"%g\"\n",
+                             HIP, x, y, size);
+            fprintf(out, "            style=\"opacity:1;fill:#FFFFFF;fill-opacity:1;"
+                         "stroke:#666666;stroke-width:1px\"/>\n");
+        }
+    }
+    /* dump_star_vec(stderr, pstat->star_vector); */
+}
+
+void foot(program_state *pstat) {
     /* printf("    <image y=\"200\" x=\"200\" height=\"100\" width=\"100\"\n"); */
     /* printf("           xlink:href=\"neptune.png\" />\n"); */
-    printf("</svg>\n");
+    fprintf(pstat->out_file, "</svg>\n");
+}
+
+int close_file(program_state *pstat) {
+    fclose(pstat->out_file);
+    return 0;
 }
 
 void usage_exit(void) {
@@ -311,22 +392,25 @@ void tok_dump(int debug, token *tok) {
 
 int main (int argc, char **argv) {
     /* dummy setup: */
-    program_state *pstat = new_program_state(DEBUG, stderr);
-    lambert_proj *proj = init_Lambert_deg(80, 0, 10, 20);
+    program_state *pstat;
+    lambert_proj *proj;
     /*lambert_proj *proj = init_Lambert_deg(107.5, 0, 10, 20); Monoceros hack*/
-	uchar _L_Orion[] = {'O','r','i','o','n',0};
-    image_struct *image = new_image(_L_Orion, 500, 500, 1.4);
+    uchar _L_Orion[] = {'O','r','i','o','n',0};
+    image_struct *image;
 
+    pstat = new_program_state(DEBUG, stderr);
+    proj = init_Lambert_deg(80, 0, 10, 20);
+    image = new_image(_L_Orion, 500, 500, 1.4);
     program_set_image(pstat, image);
     image_set_projection(image, proj);
 
     /*>Arg handling here! */
-    /*>---A₀:   mkmap /stardb/              -- star db only                         ---*/
-    /*>---A₁:   mkmap /dummyprog/ /stardb/  -- prog loaded but unused               ---*/
-    /*>   A₁,₅: mkmap /dummyprog/ /stardb/ -- prog loaded partially used            ---*/
-    /*>   A₂:   mkmap /prog/ /stardb/       -- prog loaded and used for std setting    */
-    /*>   A₃:   mkmap /prog/                -- prog also used for star db loading      */
-    /*>   A₄:     /dismissed/                                                          */
+    /*>---A₀:   mkmap /stardb/              -- star db only                          ---*/
+    /*>---A₁:   mkmap /dummyprog/ /stardb/  -- prog loaded but unused                ---*/
+    /*>   A₁,₅: mkmap /dummyprog/ /stardb/  -- prog loaded partially used            ---*/
+    /*>   A₂:   mkmap /prog/ /stardb/       -- prog loaded and used for std setting     */
+    /*>   A₃:   mkmap /prog/                -- prog also used for star db loading       */
+    /*>   A₄:     /dismissed/                                                           */
     /*>   A₅:   mkmap /prog/ö /arg₁/ ...     -- make the 2++ arg real arguments         */
 
     if (argc != 3) usage_exit();
@@ -336,9 +420,16 @@ int main (int argc, char **argv) {
         usage_exit();*/
 
     /* generate the output map: */
-    head(pstat);
-    draw_stars(argv[2], pstat);
-    foot();
+    if (open_file("orion.svg", pstat)) {
+        head(pstat);
+        load_stars(argv[2], pstat);
+        draw_stars(pstat);
+        foot(pstat);
+        close_file(pstat);
+    }
+    else {
+        fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
+    }
 
     return 0;
 }
