@@ -36,7 +36,7 @@ parse_program: parse_program.c $(OBJSP)
 	$(CC) -c $<
 
 orion.svg: mkmap maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm $(MAPS) > $@
+	./$< maps/orion.mkm $(MAPS)
 
 orion.png: orion.svg 
 	inkscape --export-png=$@ $<
@@ -66,8 +66,8 @@ parse_program.exe: parse_program.c $(WOBJSP)
 .c.obj:
 	$(CC) -o $@ -c $<
 
-orionw.svg: mkmap.exe maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm $(MAPS) > $@
+orionw: mkmap.exe maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm $(MAPS)
 
 #### svn tools:
 
