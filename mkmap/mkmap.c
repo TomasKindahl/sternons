@@ -220,6 +220,20 @@ int open_file(char *fname, program_state *pstat) {
 }
 
 void head(program_state *pstat) {
+    int H, W;
+    image_struct *image = pstat->image;
+    FILE *out = pstat->out_file;
+
+    W = image->width;
+    H = image->height;
+    fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+    fprintf(out, "<svg width=\"%i\" height=\"%i\"\n"
+                 "     xmlns=\"http://www.w3.org/2000/svg\"\n"
+                 "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+                 "     >\n", W, H);
+}
+
+void draw_background(program_state *pstat) {
     int ix, iy, H, W, H2, W2, dim;
     double ra, ras[24], de, des[17];
     double X, Y;
@@ -231,11 +245,6 @@ void head(program_state *pstat) {
     W = image->width; W2 = W/2;
     H = image->height; H2 = H/2;
     dim = image->dim;
-    fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-    fprintf(out, "<svg width=\"%i\" height=\"%i\"\n"
-                 "     xmlns=\"http://www.w3.org/2000/svg\"\n"
-                 "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-                 "     >\n", W, H);
     fprintf(out, "    <rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
                  "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
                  "stroke-dasharray:none;stroke-opacity:1\"\n"
@@ -415,21 +424,14 @@ int main (int argc, char **argv) {
     program_state *pstat;
     lambert_proj *proj;
     /*lambert_proj *proj = init_Lambert_deg(107.5, 0, 10, 20); Monoceros hack*/
-    uchar _L_Orion[] = {'O','r','i','o','n',0};
+    uchar _L_Orion[]     = {'O','r','i','o','n',0};
+    uchar _L_Monoceros[] = {'M','o','n','o','c','e','r','o','s',0};
     image_struct *image;
 
     if (argc != 3) usage_exit();
     /* init: */
     /*if (!parse_program(argv[1], pstat))
         usage_exit();*/
-
-    pstat = new_program_state(DEBUG, stderr);
-    load_stars(argv[2], pstat);
-
-    proj = init_Lambert_deg(80, 0, 10, 20);
-    image = new_image(_L_Orion, 500, 500, 1.4);
-    program_set_image(pstat, image);
-    image_set_projection(image, proj);
 
     /*>Arg handling here! */
     /*>---A₀:   mkmap /stardb/              -- star db only                          ---*/
@@ -438,11 +440,20 @@ int main (int argc, char **argv) {
     /*>   A₂:   mkmap /prog/ /stardb/       -- prog loaded and used for std setting     */
     /*>   A₃:   mkmap /prog/                -- prog also used for star db loading       */
     /*>   A₄:     /dismissed/                                                           */
-    /*>   A₅:   mkmap /prog/ö /arg₁/ ...     -- make the 2++ arg real arguments         */
+    /*>   A₅:   mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments         */
+
+    pstat = new_program_state(DEBUG, stderr);
+    load_stars(argv[2], pstat);
+
+    proj = init_Lambert_deg(80, 5, 15, 25);
+    image = new_image(_L_Orion, 500, 500, 1.4);
+    program_set_image(pstat, image);
+    image_set_projection(image, proj);
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
         head(pstat);
+        draw_background(pstat);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);
@@ -450,6 +461,23 @@ int main (int argc, char **argv) {
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
+    }
+
+    proj = init_Lambert_deg(107.5, 0, 10, 20);
+    image = new_image(_L_Monoceros, 600, 550, 1.4);
+    program_set_image(pstat, image);
+    image_set_projection(image, proj);
+
+    if (open_file("monoceros.svg", pstat)) {
+        head(pstat);
+        draw_background(pstat);
+        draw_stars(pstat);
+        write_version(pstat);
+        foot(pstat);
+        close_file(pstat);
+    }
+    else {
+        fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
     }
 
     return 0;

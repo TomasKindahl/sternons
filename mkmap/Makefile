@@ -17,7 +17,7 @@
 #  along with mkmap. If not, see <http://www.gnu.org/licenses/>.       #
 ########################################################################
 
-.SUFFIXES: .obj
+.SUFFIXES: .obj .mkm .png .svg
 
 CC 		= gcc -g -Wall --pedantic-error
 MAPS 	= star.db
@@ -37,6 +37,9 @@ parse_program: parse_program.c $(OBJSP)
 
 orion.svg: mkmap maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS)
+
+monoceros.svg: mkmap maps/monoceros.mkm $(MAPS)
+	./$< maps/monoceros.mkm $(MAPS)
 
 orion.png: orion.svg 
 	inkscape --export-png=$@ $<
