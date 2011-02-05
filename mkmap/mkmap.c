@@ -220,6 +220,7 @@ int open_file(char *fname, program_state *pstat) {
 }
 
 void head(program_state *pstat) {
+	char buf[256];
     int H, W;
     image_struct *image = pstat->image;
     FILE *out = pstat->out_file;
@@ -231,6 +232,7 @@ void head(program_state *pstat) {
                  "     xmlns=\"http://www.w3.org/2000/svg\"\n"
                  "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
                  "     >\n", W, H);
+    fprintf(out, "     <title>%s</title>", ucstombs(buf, pstat->image->name, 256));
 }
 
 void draw_background(program_state *pstat) {
@@ -330,6 +332,27 @@ int load_stars(char *fname, program_state *pstat) {
         S = new_star(HIP, RA, DE, vmag);
         append_star(pstat->star_vector, S);
     }
+    u8fclose(inf);
+    return 1;
+}
+
+int load_lines(char *fname, program_state *pstat) {
+    int boldness, HIP1, HIP2;
+    uchar line[1024], *pos;
+    utf8_file *inf = u8fopen(fname);
+
+    if (!inf) return 0;
+    while (fgetus(line, 1023, inf)) {
+    	line[ucslen(line)-1] = L'\0';
+    	pos = line;
+        boldness = ucstoi(pos);
+        HIP1 =  next_dfield(&pos);
+        HIP2 =  next_dfield(&pos);
+        fprintf(stdout, "line: %s %i %i\n", 
+        		boldness==1?"heavy":(boldness==2?"bold":"light"),
+        		HIP1, HIP2);
+    }
+    u8fclose(inf);
     return 1;
 }
 
@@ -354,7 +377,7 @@ void draw_stars(program_state *pstat) {
     /* DRAW THE STARS */
     for (ix = 0; ix < pstat->star_vector->next; ix++) {
         S = pstat->star_vector->S[ix];
-        DE = S->DE; RA = S->RA; vmag = S->vmag;
+        DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
             size = (6.8-vmag)*0.8*image->scale;
@@ -394,8 +417,7 @@ void foot(program_state *pstat) {
 }
 
 int close_file(program_state *pstat) {
-    fclose(pstat->out_file);
-    return 0;
+    return fclose(pstat->out_file);
 }
 
 void usage_exit(void) {
@@ -452,6 +474,7 @@ int main (int argc, char **argv) {
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
+        load_lines("ori-lin.db", pstat);
         head(pstat);
         draw_background(pstat);
         draw_stars(pstat);
