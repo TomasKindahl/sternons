@@ -69,7 +69,7 @@ parse_program.exe: parse_program.c $(WOBJSP)
 .c.obj:
 	$(CC) -o $@ -c $<
 
-orionw: mkmap.exe maps/orion.mkm $(MAPS)
+winimg: mkmap.exe maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS)
 
 #### svn tools:

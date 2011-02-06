@@ -24,7 +24,7 @@
 
 --------------------------------------------------------------------------------
 
-Blocktilldelningen:
+Block assignment:
 
     image->projection =
         new projection {
@@ -33,9 +33,9 @@ Blocktilldelningen:
 
 problem:
 
-    överskriver redan satta värden med dem default i satta 
+    overwrites already set values with those set in the default 
 
-alt-tolkning:
+alternate interpretation:
 
     image->projection = new projection;
     with image->projection = IP do {

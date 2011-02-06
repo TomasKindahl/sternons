@@ -35,6 +35,27 @@ uchar *ucscpy(uchar *dest, uchar *src) {
     return dest;
 }
 
+uchar *ucsncpy(uchar *dest, uchar *src, int num) {
+    int ix, jx;
+
+	/* Weird implementation acc2 standard libc */
+    for (ix = jx = 0; ix < num; ix++) {
+        dest[ix] = src[jx];
+		if(src[jx]) jx++;
+	}
+    return dest;
+}
+
+uchar *ucsntcpy(uchar *dest, uchar *src, int max) {
+    int ix;
+	
+	/* Null terminating AT MOST /max/ uchars copied */
+    for (ix = 0; ix < max && src[ix]; ix++)
+        dest[ix] = src[ix];
+    dest[ix] = L'\0';
+    return dest;
+}
+
 int ucscmp(uchar *ucs1, uchar *ucs2) {
     int ix;
     for (ix = 0; ucs1[ix] && ucs2[ix] && ucs1[ix] == ucs2[ix]; ix++);
@@ -61,6 +82,18 @@ uchar *ucsdup(uchar *src) {
     len = ucslen(src);
     res = (uchar *)malloc(sizeof(uchar)*(len+1));
     ucscpy(res, src);
+    return res;
+}
+
+uchar *ucsndup(uchar *src, int max) {
+    int len;
+    uchar *res;
+
+    if(!src) return 0;
+    len = ucslen(src);
+	if (len > max) len = max;
+    res = (uchar *)malloc(sizeof(uchar)*(len+1));
+    ucsntcpy(res, src, max);
     return res;
 }
 
