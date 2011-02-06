@@ -128,31 +128,47 @@ image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
 }
 
 typedef struct _star_T {
-    int HIP;
+    /* TBA: int type; -- class */
     double RA, DE, vmag;
+    struct _star_T *prev;
+    int HIP;
 } star;
 
-star *new_star(int HIP, double RA, double DE, double vmag) {
+star *new_star(star *prev, int HIP, double RA, double DE, double vmag) {
     star *res = (star *)malloc(sizeof(star));
-    res->HIP = HIP; res->RA = RA; res->DE = DE; res->vmag = vmag;
+    res->RA = RA; res->DE = DE; res->vmag = vmag;
+    res->prev = prev;
+    res->HIP = HIP;
     return res;
 }
 
-typedef struct _star_vec_S {
+int star_cmp_by_mag(const void *P1, const void *P2) {
+	star *S1 = *((star **)P1);
+	star *S2 = *((star **)P2);
+	return (S1->vmag > S2->vmag) - (S1->vmag < S2->vmag);
+}
+
+int star_cmp_by_HIP(const void *P1, const void *P2) {
+	star *S1 = *((star **)P1);
+	star *S2 = *((star **)P2);
+	return (S1->HIP > S2->HIP) - (S1->HIP < S2->HIP);
+}
+
+typedef struct _star_view_S {
     int size;
     int next;
     star **S;
-} star_vec;
+} star_view;
 
-star_vec *new_star_vec(int size) {
-    star_vec *res = (star_vec *)malloc(sizeof(star_vec));
+star_view *new_star_view(int size) {
+    star_view *res = (star_view *)malloc(sizeof(star_view));
     res->size = size;
     res->next = 0;
     res->S = (star **)malloc(sizeof(star *)*size);
     return res;
 }
 
-int append_star(star_vec *SV, star *S) {
+int append_star(star_view *SV, star *S) {
     if (SV->next == SV->size) {
         int newsize = SV->size<<1; /* double it */
         int ix;
@@ -170,23 +186,29 @@ int append_star(star_vec *SV, star *S) {
     return 0;
 }
 
-void dump_star(FILE *stream, star *S) {
+void dump_stars(FILE *stream, star *S) {
     fprintf(stream, "  (star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
             S->HIP, S->RA, S->DE, S->vmag);
 }
 
-void dump_star_vec(FILE *stream, star_vec *SV) {
+void dump_stars_view(FILE *stream, star_view *SV) {
     int ix;
-    fprintf(stream, "star_vector: size=%i, alloc=%i {\n", SV->next, SV->size);
+    fprintf(stream, "stars_by_mag: size=%i, alloc=%i {\n", SV->next, SV->size);
     for(ix = 0; ix < SV->next; ix++) {
-        dump_star(stream, SV->S[ix]);
+        dump_stars(stream, SV->S[ix]);
     }
     fprintf(stream, "}\n");
 }
 
 typedef struct _program_state_S {
-    /* hard-coded layers */
-    star_vec *star_vector;
+    /* hard-coded feature data */
+        /* physical objects */
+            star *latest_star;
+            star_view *stars_by_mag;
+            star_view *stars_by_HIP;
+        /* virtual objects */
+            /* TBA: line *latest_line;            */
+            /* TBA: line_view *lines_by_label;    */
     /* hard-coded image data */
     image_struct *image;
     FILE *out_file;
@@ -196,9 +218,16 @@ typedef struct _program_state_S {
 program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
     res->debug = debug;
-    res->star_vector = new_star_vec(1024);
+    res->stars_by_mag = new_star_view(1024);
+    res->stars_by_HIP = new_star_view(1024);
     return res;
 }
+
+/* TBD:
+program_state *clone_program_state(program_state *PS) {
+    
+}
+*/
 
 image_struct *program_set_image(program_state *prog, image_struct *image) {
     prog->image = image;
@@ -220,7 +249,7 @@ int open_file(char *fname, program_state *pstat) {
 }
 
 void head(program_state *pstat) {
-	char buf[256];
+    char buf[256];
     int H, W;
     image_struct *image = pstat->image;
     FILE *out = pstat->out_file;
@@ -301,9 +330,17 @@ void draw_background(program_state *pstat) {
     }
 }
 
-double next_dfield(uchar **pos) {
+double next_field_double(uchar **pos) {
     *pos = ucschr(*pos,'|')+1;
     return ucstof(*pos);
+}
+
+uchar *next_field_ustr(uchar **pos) {
+    uchar *pos2;
+
+    *pos = ucschr(*pos,'|')+1;
+    pos2 = ucschr(*pos,'|');
+    return ucsndup(*pos,pos2-(*pos));
 }
 
 int load_stars(char *fname, program_state *pstat) {
@@ -318,7 +355,6 @@ int load_stars(char *fname, program_state *pstat) {
     double RA, DE, vmag;
     uchar line[1024], *pos;
     utf8_file *inf = u8fopen(fname);
-    star *S = 0;
 
     if (!inf) return 0;
     /* LOAD THE STARS */
@@ -326,31 +362,43 @@ int load_stars(char *fname, program_state *pstat) {
         line[ucslen(line)-1] = L'\0';
         pos = line;
         HIP = ucstoi(pos);
-        RA =  next_dfield(&pos);
-        DE =  next_dfield(&pos);
-        vmag = next_dfield(&pos);
-        S = new_star(HIP, RA, DE, vmag);
-        append_star(pstat->star_vector, S);
+        RA = next_field_double(&pos);
+        DE = next_field_double(&pos);
+        vmag = next_field_double(&pos);
+        pstat->latest_star = new_star(pstat->latest_star, HIP, RA, DE, vmag);
+        append_star(pstat->stars_by_mag, pstat->latest_star);
+        append_star(pstat->stars_by_HIP, pstat->latest_star);
     }
+    /* quicksort the stars in pstat->stars_by_mag by mag */
+    qsort((void *)pstat->stars_by_mag->S,
+           pstat->stars_by_mag->next,
+           sizeof(star *), star_cmp_by_mag);
+    /* quicksort the stars in pstat->stars_by_HIP by HIP number */
+    qsort((void *)pstat->stars_by_HIP->S,
+           pstat->stars_by_HIP->next,
+           sizeof(star *), star_cmp_by_HIP);
     u8fclose(inf);
     return 1;
 }
 
 int load_lines(char *fname, program_state *pstat) {
     int boldness, HIP1, HIP2;
-    uchar line[1024], *pos;
+    uchar line[1024], *pos, *asterism;
     utf8_file *inf = u8fopen(fname);
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
-    	line[ucslen(line)-1] = L'\0';
-    	pos = line;
+        char buf[128];
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
         boldness = ucstoi(pos);
-        HIP1 =  next_dfield(&pos);
-        HIP2 =  next_dfield(&pos);
-        fprintf(stdout, "line: %s %i %i\n", 
-        		boldness==1?"heavy":(boldness==2?"bold":"light"),
-        		HIP1, HIP2);
+        asterism = next_field_ustr(&pos);
+        HIP1 = next_field_double(&pos);
+        HIP2 = next_field_double(&pos);
+        fprintf(stdout, "line: %s %s %i %i\n", 
+                boldness==1?"heavy":(boldness==2?"bold":"light"),
+                ucstombs(buf,asterism,128),
+                HIP1, HIP2);
     }
     u8fclose(inf);
     return 1;
@@ -375,8 +423,8 @@ void draw_stars(program_state *pstat) {
     star *S = 0;
 
     /* DRAW THE STARS */
-    for (ix = 0; ix < pstat->star_vector->next; ix++) {
-        S = pstat->star_vector->S[ix];
+    for (ix = 0; ix < pstat->stars_by_mag->next; ix++) {
+        S = pstat->stars_by_mag->S[ix];
         DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
@@ -387,7 +435,11 @@ void draw_stars(program_state *pstat) {
                          "stroke:#666666;stroke-width:1px\"/>\n");
         }
     }
-    /* dump_star_vec(stderr, pstat->star_vector); */
+    /* dump_stars_by_vmag_view(stderr, pstat->stars_by_mag); */
+}
+
+void draw_lines(program_state *pstat, uchar *id) {
+    
 }
 
 void write_version(program_state *pstat) {
@@ -448,6 +500,7 @@ int main (int argc, char **argv) {
     /*lambert_proj *proj = init_Lambert_deg(107.5, 0, 10, 20); Monoceros hack*/
     uchar _L_Orion[]     = {'O','r','i','o','n',0};
     uchar _L_Monoceros[] = {'M','o','n','o','c','e','r','o','s',0};
+    uchar _L_Ori_Bdy[]   = {'O','r','i',' ','B','d','y',0};
     image_struct *image;
 
     if (argc != 3) usage_exit();
@@ -467,6 +520,13 @@ int main (int argc, char **argv) {
     pstat = new_program_state(DEBUG, stderr);
     load_stars(argv[2], pstat);
 
+	/*		dump_stars_view(stdout, pstat->stars_by_mag);
+			dump_stars_view(stdout, pstat->stars_by_HIP);
+			return 0;
+	*/
+
+    load_lines("lines.db", pstat);
+
     proj = init_Lambert_deg(80, 5, 15, 25);
     image = new_image(_L_Orion, 500, 500, 1.4);
     program_set_image(pstat, image);
@@ -474,9 +534,9 @@ int main (int argc, char **argv) {
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
-        load_lines("ori-lin.db", pstat);
         head(pstat);
         draw_background(pstat);
+        draw_lines(pstat, _L_Ori_Bdy);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);

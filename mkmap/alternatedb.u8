@@ -1,0 +1,65 @@
+According to my private database hack experiences, classical RDBMS'es [ɒʴːdbəms]
+suffer from a diversity of problems due to flawed thinking:
+
+   1. a non-DB user loads data from files into the database, and the issue about
+      how to organize them into tables is a later question, RDBMS requires data
+      to be structured before loading;
+
+   2. when data is to be shared between tables in a RDBMS, it requires erecting
+      complicated dependencies and relations between raws and columns in those
+      tables, while the non-DB user instead perceives tables as ways to present
+      data, and therefore that any data item that fits a certain pattern and
+      number of conditions naturally belongs to all tables where it fits;
+   
+   3. when a table is to be rebuilt in a RDBMS, many dependencies and relations
+      between tables and datatypes must be manually broken apart and built up
+      again, before restoring the database into a new better incarnation — this
+      process is complicated, and requires book keeping in order to not relax
+      the dependencies and relations of the original table layout by unintended
+      omission;
+
+   4. RDBMS usually suffers from a painfully rich type system, that won’t be
+      used when integrating the database to a program language, since there are
+      few rich type programming languages matching this degree of elaboration —
+      if any programmer naïvely tries to use the full arsenal of the RDBMS type
+      system, (s)he will soon run into serious programming complexity problems,
+      that endangers the project and the programmer’s position;
+
+Alternate model (provisionally called ADBMS [e͡ıdbəms], ‘A’ for ‘alternate’):
+
+   1. in ADBMS’es data are initially to be loaded into a “bag of everything”,
+      accepting name/value N-tuples (or dictionaries), such as
+        [kind:star, HIP:76798, α:2h35m08.3s, δ:+43°16'23.12", vmag:11.7,
+         SP:A0pvar]
+        [kind:galaxy, α:2h35m08.3s, δ:+43°16'23.12", vmag:13.7, morph:SBa3]
+        [kind:planet, name:Jupiter, ...]
+
+   2. tables are to be created like those views of the RDBMS’es that applies to
+      this permanent bag of everything, and automatically applies to all items
+      that fulfill the strictures, dependencies and relations determined in the
+      definition of the table — bag items that contain more data than to be
+      presented in the table, are nevertheless shown in the table, which
+      exhibits only those items relevant for the table, so a table of objects
+      exhibiting kind, α, δ and vmag, nicely show a list of any bag item having
+      kind, α, δ and vmag; a table of stars, then, would need a stricture to
+      exhibit only bag items with kind = star; killing a table, or duplicating
+      and modifying a table will then not affect the presence or absence of bag
+      items — these are in principle added or removed independently; two tables
+      with identical row and column strictures, dependencies and relations will
+      display exactly the same bag items;
+
+   3. a ADBMS should allow the managing programmer to temporarily disable
+      strictures and relations one by one to test and redesign the table for an
+      updated program environment without actually throwing away the strictures
+      and relations; a warning system should complaint as long as strictures and
+      relations are still disabled, in order for the managing programmer to keep
+      track of the degree of stricture/relation violation until the table is
+      fully redesigned — in this way, similar to a certain state of the art
+      compiler usage praxis, the programmer can control the development of the
+      table with less factors to keep in mind mentally;
+
+   4. the type system of an ADBMS should be data storage oriented, using
+      attached program test routines to ascertain a stricture or a relation when
+      the integrity is to be kept by the ADBMS, otherwise letting the program do
+      all other necessary integrity checks.
+

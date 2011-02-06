@@ -22,9 +22,12 @@
 
 int ucslen(uchar *ustr);
 uchar *ucscpy(uchar *dest, uchar *src);
+uchar *ucsncpy(uchar *dest, uchar *src, int num);
+uchar *ucsntcpy(uchar *dest, uchar *src, int max);
 int ucscmp(uchar *ucs1, uchar *ucs2);
 uchar *ucschr(uchar *haystack, uchar needle);
 uchar *ucsdup(uchar *src);
+uchar *ucsndup(uchar *src, int max);
 long ucstoi(uchar *ucs);
 double ucstof(uchar *ucs);
 
