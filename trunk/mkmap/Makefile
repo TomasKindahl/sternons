@@ -21,9 +21,9 @@
 
 CC 		= gcc -g -Wall --pedantic-error
 MAPS 	= star.db
-OBJS 	= token.o ucstr.o uctype.o usio.o
+OBJS 	= token.o ucstr.o uctype.o usio.o star.o
 OBJSP 	= $(OBJS) parse.o
-WOBJS 	= token.obj ucstr.obj uctype.obj usio.obj
+WOBJS 	= token.obj ucstr.obj uctype.obj usio.obj star.obj
 WOBJSP 	= $(WOBJS) parse.obj
 
 mkmap: mkmap.c $(OBJS)
@@ -34,6 +34,9 @@ parse_program: parse_program.c $(OBJSP)
 
 .c.o:
 	$(CC) -c $<
+
+img: mkmap maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm $(MAPS)
 
 orion.svg: mkmap maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS)
