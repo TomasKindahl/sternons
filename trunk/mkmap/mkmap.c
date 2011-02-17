@@ -134,7 +134,7 @@ typedef struct _program_state_S {
     /* hard-coded feature data */
         /* physical objects */
             star *latest_star;
-            star_view *stars_by_mag;
+            star_view *stars_by_vmag;
             star_view *stars_by_HIP;
         /* virtual objects */
             /* TBA: line *latest_line;            */
@@ -148,7 +148,7 @@ typedef struct _program_state_S {
 program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
     res->debug = debug;
-    res->stars_by_mag = new_star_view(1024);
+    res->stars_by_vmag = new_star_view(1024);
     res->stars_by_HIP = new_star_view(1024);
     return res;
 }
@@ -296,13 +296,13 @@ int load_stars(char *fname, program_state *pstat) {
         DE = next_field_double(&pos);
         vmag = next_field_double(&pos);
         pstat->latest_star = new_star(pstat->latest_star, HIP, RA, DE, vmag);
-        append_star(pstat->stars_by_mag, pstat->latest_star);
+        append_star(pstat->stars_by_vmag, pstat->latest_star);
         append_star(pstat->stars_by_HIP, pstat->latest_star);
     }
-    /* quicksort the stars in pstat->stars_by_mag by mag */
-    qsort((void *)pstat->stars_by_mag->S,
-           pstat->stars_by_mag->next,
-           sizeof(star *), star_cmp_by_mag);
+    /* quicksort the stars in pstat->stars_by_vmag by mag */
+    qsort((void *)pstat->stars_by_vmag->S,
+           pstat->stars_by_vmag->next,
+           sizeof(star *), star_cmp_by_vmag);
     /* quicksort the stars in pstat->stars_by_HIP by HIP number */
     qsort((void *)pstat->stars_by_HIP->S,
            pstat->stars_by_HIP->next,
@@ -353,8 +353,8 @@ void draw_stars(program_state *pstat) {
     star *S = 0;
 
     /* DRAW THE STARS */
-    for (ix = 0; ix < pstat->stars_by_mag->next; ix++) {
-        S = pstat->stars_by_mag->S[ix];
+    for (ix = 0; ix < pstat->stars_by_vmag->next; ix++) {
+        S = pstat->stars_by_vmag->S[ix];
         DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
@@ -365,7 +365,7 @@ void draw_stars(program_state *pstat) {
                          "stroke:#666666;stroke-width:1px\"/>\n");
         }
     }
-    /* dump_stars_by_vmag_view(stderr, pstat->stars_by_mag); */
+    /* dump_stars_by_vmag_view(stderr, pstat->stars_by_vmag); */
 }
 
 void draw_lines(program_state *pstat, uchar *id) {
@@ -450,7 +450,7 @@ int main (int argc, char **argv) {
     pstat = new_program_state(DEBUG, stderr);
     load_stars(argv[2], pstat);
 
-	/*		dump_stars_view(stdout, pstat->stars_by_mag);
+	/*		dump_stars_view(stdout, pstat->stars_by_vmag);
 			dump_stars_view(stdout, pstat->stars_by_HIP);
 			return 0;
 	*/

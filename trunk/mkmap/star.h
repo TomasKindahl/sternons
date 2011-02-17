@@ -36,7 +36,7 @@ typedef struct _star_view_S {
 star *new_star(star *prev, int HIP, double RA, double DE, double vmag);
 star_view *new_star_view(int size);
 int append_star(star_view *SV, star *S);
-int star_cmp_by_mag(const void *P1, const void *P2);
+int star_cmp_by_vmag(const void *P1, const void *P2);
 int star_cmp_by_HIP(const void *P1, const void *P2);
 void dump_stars(FILE *stream, star *S);
 void dump_stars_view(FILE *stream, star_view *SV);
