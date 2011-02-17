@@ -36,17 +36,15 @@ int append_star(star_view *SV, star *S) {
     return 0;
 }
 
-int star_cmp_by_mag(const void *P1, const void *P2) {
-	star *S1 = *((star **)P1);
-	star *S2 = *((star **)P2);
-	return (S1->vmag > S2->vmag) - (S1->vmag < S2->vmag);
-}
+#define QSORT_CMP(FIELD) \
+	int star_cmp_by_ ## FIELD(const void *P1, const void *P2) {		\
+	    star *S1 = *((star **)P1);										\
+	    star *S2 = *((star **)P2);										\
+	    return (S1->FIELD > S2->FIELD) - (S1->FIELD < S2->FIELD);		\
+	}
 
-int star_cmp_by_HIP(const void *P1, const void *P2) {
-	star *S1 = *((star **)P1);
-	star *S2 = *((star **)P2);
-	return (S1->HIP > S2->HIP) - (S1->HIP < S2->HIP);
-}
+QSORT_CMP(vmag)
+QSORT_CMP(HIP)
 
 void dump_stars(FILE *stream, star *S) {
     fprintf(stream, "  (star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
