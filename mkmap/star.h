@@ -20,6 +20,8 @@
 #ifndef _STAR_H
 #define _STAR_H
 
+#define VIEW(ITEM) ITEM ## _view		/* Should be in a meta type file */
+
 typedef struct _star_T {
     /* TBA: int type; -- class */
     double RA, DE, vmag;
@@ -31,7 +33,7 @@ typedef struct _star_view_S {
     int size;
     int next;
     star **S;
-} star_view;
+} VIEW(star);
 
 star *new_star(star *prev, int HIP, double RA, double DE, double vmag);
 star_view *new_star_view(int size);
