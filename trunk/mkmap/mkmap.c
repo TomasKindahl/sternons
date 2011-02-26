@@ -28,7 +28,7 @@
 #include "token.h"
 /* Application libraries */
 /* TD:  #include "parse.h"*/
-#include "star.h"		/* star struct and DB views */
+#include "star.h"        /* star struct and DB views */
 
 /* ==================================================================== |
      Known bugs and features:                                           |
@@ -130,14 +130,37 @@ image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
     return image;
 }
 
+typedef struct _line_S {
+	int boldness;
+    int HIP_1; double RA_1, DE_1;
+    int HIP_2; double RA_2, DE_2;
+    struct _line_S *prev;
+} line;
+
+line *new_line(int boldness, int HIP_1, int HIP_2, line *prev) {
+    line *res = (line*)malloc(sizeof(line));
+	res->boldness = boldness;
+    res->HIP_1 = HIP_1; res->HIP_2 = HIP_2;
+	res->prev = prev;
+    return res;
+}
+
+#define LINE_SET_POS(IX) \
+    void line_set_pos_ ## IX (line *L, double RA, double DE) { \
+        L->RA_ ## IX = RA; L->DE_ ## IX = DE; \
+    }
+
+LINE_SET_POS(1)
+LINE_SET_POS(2)
+
 typedef struct _program_state_S {
     /* hard-coded feature data */
         /* physical objects */
             star *latest_star;
-            star_view *stars_by_vmag;
-            star_view *stars_by_HIP;
+            VIEW(star) *stars_by_vmag;
+            VIEW(star) *stars_by_HIP;
         /* virtual objects */
-            /* TBA: line *latest_line;            */
+            line *latest_line;
             /* TBA: line_view *lines_by_label;    */
     /* hard-coded image data */
     image_struct *image;
@@ -147,9 +170,11 @@ typedef struct _program_state_S {
 
 program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
+	res->latest_star = 0;
     res->debug = debug;
     res->stars_by_vmag = new_star_view(1024);
     res->stars_by_HIP = new_star_view(1024);
+	res->latest_line = 0;
     return res;
 }
 
@@ -313,22 +338,55 @@ int load_stars(char *fname, program_state *pstat) {
 
 int load_lines(char *fname, program_state *pstat) {
     int boldness, HIP1, HIP2;
+    double RA1, DE1;
+    double RA2, DE2;
     uchar line[1024], *pos, *asterism;
     utf8_file *inf = u8fopen(fname);
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
-        char buf[128];
+        /* char buf[128]; */
+        star *s, *S;
         line[ucslen(line)-1] = L'\0';
         pos = line;
         boldness = ucstoi(pos);
         asterism = next_field_ustr(&pos);
         HIP1 = next_field_double(&pos);
+        s = new_star(0, HIP1, 0, 0, 0);
+        S = *((star **)bsearch(&s, (void *)pstat->stars_by_HIP->S,
+                                pstat->stars_by_HIP->next,
+                                sizeof(star *), star_cmp_by_HIP));
+        if (S) {
+            RA1 = S->RA; DE1 = S->DE; /* vmag1 = S->vmag; */
+        }
+        else {
+            RA1 = 666; DE1 = 666; /* vmag1 = 666; */
+        }
+        free(s);
         HIP2 = next_field_double(&pos);
-        fprintf(stdout, "line: %s %s %i %i\n", 
+        s = new_star(0, HIP2, 0, 0, 0);
+        S = *((star **)bsearch(&s, (void *)pstat->stars_by_HIP->S,
+                             pstat->stars_by_HIP->next,
+                             sizeof(star *), star_cmp_by_HIP));
+        if (S) {
+            RA2 = S->RA; DE2 = S->DE; /* vmag2 = S->vmag; */
+        }
+        else {
+            RA2 = 666; DE2 = 666; /* vmag2 = 666; */
+        }
+        free(s);
+		{ char buf[256];
+        fprintf(stdout, "line %s %s:\n", 
                 boldness==1?"heavy":(boldness==2?"bold":"light"),
-                ucstombs(buf,asterism,128),
-                HIP1, HIP2);
+                ucstombs(buf,asterism,128));
+        fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n",
+                HIP1, RA1, DE1);
+        fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n",
+                HIP2, RA2, DE2);
+		}
+        pstat->latest_line = new_line(boldness, HIP1, HIP2, pstat->latest_line);
+        line_set_pos_1(pstat->latest_line, RA1, DE1);
+        line_set_pos_2(pstat->latest_line, RA2, DE2);
     }
     u8fclose(inf);
     return 1;
@@ -369,7 +427,30 @@ void draw_stars(program_state *pstat) {
 }
 
 void draw_lines(program_state *pstat, uchar *id) {
-    
+	line *L;
+	double X1, Y1, X2, Y2;
+	double x1, y1, x2, y2;
+    image_struct *image = pstat->image;
+    lambert_proj *proj = image->proj;
+    FILE *out = pstat->out_file;
+
+	for (L = pstat->latest_line; L; L = L->prev) {
+		Lambert(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), proj);
+		Lambert(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), proj);
+		if (pos_in_frame(&x1, &y1, X1, Y1, image)
+		  | pos_in_frame(&x2, &y2, X2, Y2, image)) {
+			char *color;
+			switch(L->boldness) {
+			    case 1: color = "CC0000"; break;
+			    case 2: color = "880000"; break;
+			    case 3: color = "440000"; break;
+			    default: color = "220000"; break;
+			}
+			fprintf(out, "    <path ");
+			fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\" ", color);
+			fprintf(out, "d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n", x1, y1, x2, y2);
+		}
+	}
 }
 
 void write_version(program_state *pstat) {
@@ -450,10 +531,10 @@ int main (int argc, char **argv) {
     pstat = new_program_state(DEBUG, stderr);
     load_stars(argv[2], pstat);
 
-	/*		dump_stars_view(stdout, pstat->stars_by_vmag);
-			dump_stars_view(stdout, pstat->stars_by_HIP);
-			return 0;
-	*/
+    /*        dump_stars_view(stdout, pstat->stars_by_vmag);
+            dump_stars_view(stdout, pstat->stars_by_HIP);
+            return 0;
+    */
 
     load_lines("lines.db", pstat);
 
