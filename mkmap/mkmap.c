@@ -131,7 +131,7 @@ image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
 }
 
 typedef struct _line_S {
-	int boldness;
+    int boldness;
     int HIP_1; double RA_1, DE_1;
     int HIP_2; double RA_2, DE_2;
     struct _line_S *prev;
@@ -139,9 +139,9 @@ typedef struct _line_S {
 
 line *new_line(int boldness, int HIP_1, int HIP_2, line *prev) {
     line *res = (line*)malloc(sizeof(line));
-	res->boldness = boldness;
+    res->boldness = boldness;
     res->HIP_1 = HIP_1; res->HIP_2 = HIP_2;
-	res->prev = prev;
+    res->prev = prev;
     return res;
 }
 
@@ -162,6 +162,7 @@ typedef struct _program_state_S {
         /* virtual objects */
             line *latest_line;
             /* TBA: line_view *lines_by_label;    */
+            line *latest_bound;
     /* hard-coded image data */
     image_struct *image;
     FILE *out_file;
@@ -170,11 +171,12 @@ typedef struct _program_state_S {
 
 program_state *new_program_state(int debug, FILE *debug_out) {
     program_state *res = (program_state *)malloc(sizeof(program_state));
-	res->latest_star = 0;
+    res->latest_star = 0;
     res->debug = debug;
     res->stars_by_vmag = new_star_view(1024);
     res->stars_by_HIP = new_star_view(1024);
-	res->latest_line = 0;
+    res->latest_line = 0;
+    res->latest_bound = 0;
     return res;
 }
 
@@ -336,7 +338,7 @@ int load_stars(char *fname, program_state *pstat) {
     return 1;
 }
 
-int load_lines(char *fname, program_state *pstat) {
+int load_star_lines(char *fname, program_state *pstat) {
     int boldness, HIP1, HIP2;
     double RA1, DE1;
     double RA2, DE2;
@@ -375,18 +377,47 @@ int load_lines(char *fname, program_state *pstat) {
             RA2 = 666; DE2 = 666; /* vmag2 = 666; */
         }
         free(s);
-		{ char buf[256];
+        { char buf[256];
         fprintf(stdout, "line %s %s:\n", 
                 boldness==1?"heavy":(boldness==2?"bold":"light"),
                 ucstombs(buf,asterism,128));
-        fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n",
-                HIP1, RA1, DE1);
-        fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n",
-                HIP2, RA2, DE2);
-		}
+        fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n", HIP1, RA1, DE1);
+        fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n", HIP2, RA2, DE2);
+        }
         pstat->latest_line = new_line(boldness, HIP1, HIP2, pstat->latest_line);
         line_set_pos_1(pstat->latest_line, RA1, DE1);
         line_set_pos_2(pstat->latest_line, RA2, DE2);
+    }
+    u8fclose(inf);
+    return 1;
+}
+
+int load_constellation_bounds(char *fname, program_state *pstat) {
+    int boldness;
+    double RA1, DE1;
+    double RA2, DE2;
+    uchar line[1024], *pos, *constellation;
+    utf8_file *inf = u8fopen(fname);
+
+    if (!inf) return 0;
+    while (fgetus(line, 1023, inf)) {
+        /* char buf[128]; */
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
+        boldness = ucstoi(pos);
+        constellation = next_field_ustr(&pos);
+        RA1 = next_field_double(&pos)*15;
+        DE1 = next_field_double(&pos);
+        RA2 = next_field_double(&pos)*15;
+        DE2 = next_field_double(&pos);
+        if (0) { char buf[256];
+        fprintf(stdout, "border %s:\n", ucstombs(buf,constellation,128));
+        fprintf(stdout, "  start RA=%f DE=%f\n", RA1, DE1);
+        fprintf(stdout, "  end RA=%f DE=%f\n", RA2, DE2);
+        }
+        pstat->latest_bound = new_line(4, -1, -1, pstat->latest_bound);
+        line_set_pos_1(pstat->latest_bound, RA1, DE1);
+        line_set_pos_2(pstat->latest_bound, RA2, DE2);
     }
     u8fclose(inf);
     return 1;
@@ -426,31 +457,40 @@ void draw_stars(program_state *pstat) {
     /* dump_stars_by_vmag_view(stderr, pstat->stars_by_vmag); */
 }
 
-void draw_lines(program_state *pstat, uchar *id) {
-	line *L;
-	double X1, Y1, X2, Y2;
-	double x1, y1, x2, y2;
+void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
+    line *L;
+    double X1, Y1, X2, Y2;
+    double x1, y1, x2, y2;
     image_struct *image = pstat->image;
     lambert_proj *proj = image->proj;
     FILE *out = pstat->out_file;
 
-	for (L = pstat->latest_line; L; L = L->prev) {
-		Lambert(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), proj);
-		Lambert(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), proj);
-		if (pos_in_frame(&x1, &y1, X1, Y1, image)
-		  | pos_in_frame(&x2, &y2, X2, Y2, image)) {
-			char *color;
-			switch(L->boldness) {
-			    case 1: color = "CC0000"; break;
-			    case 2: color = "880000"; break;
-			    case 3: color = "440000"; break;
-			    default: color = "220000"; break;
-			}
-			fprintf(out, "    <path ");
-			fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\" ", color);
-			fprintf(out, "d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n", x1, y1, x2, y2);
-		}
-	}
+    for (L = line_set; L; L = L->prev) {
+        Lambert(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), proj);
+        Lambert(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), proj);
+        if (pos_in_frame(&x1, &y1, X1, Y1, image)
+          | pos_in_frame(&x2, &y2, X2, Y2, image)) {
+            char *color;
+            switch(L->boldness) {
+                case 1: color = "00CC00"; break;
+                case 2: color = "008800"; break;
+                case 3: color = "004400"; break;
+                case 4: color = "004466"; break; /* constellation borders */
+                default: color = "220000"; break;
+            }
+            fprintf(out, "    <path ");
+            fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\" ", color);
+            fprintf(out, "d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n", x1, y1, x2, y2);
+        }
+    }
+}
+
+void draw_lines(program_state *pstat, uchar *id) {
+    draw_line_set(pstat, id, pstat->latest_line);
+}
+
+void draw_bounds(program_state *pstat, uchar *id) {
+    draw_line_set(pstat, id, pstat->latest_bound);
 }
 
 void write_version(program_state *pstat) {
@@ -508,15 +548,17 @@ int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat;
     lambert_proj *proj;
-    /*lambert_proj *proj = init_Lambert_deg(107.5, 0, 10, 20); Monoceros hack*/
     uchar _L_Orion[]     = {'O','r','i','o','n',0};
     uchar _L_Monoceros[] = {'M','o','n','o','c','e','r','o','s',0};
     uchar _L_Ori_Bdy[]   = {'O','r','i',' ','B','d','y',0};
+    uchar _L_Mon_Bdy[]   = {'M','o','n',' ','B','d','y',0};
+    uchar _L_Ori[]       = {'O','r','i',0};
+    uchar _L_Mon[]       = {'M','o','n',0};
     image_struct *image;
 
     if (argc != 3) usage_exit();
     /* init: */
-    /*if (!parse_program(argv[1], pstat))
+    /*TBD: if (!parse_program(argv[1], pstat))
         usage_exit();*/
 
     /*>Arg handling here! */
@@ -529,14 +571,10 @@ int main (int argc, char **argv) {
     /*>   A₅:   mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments         */
 
     pstat = new_program_state(DEBUG, stderr);
+
     load_stars(argv[2], pstat);
-
-    /*        dump_stars_view(stdout, pstat->stars_by_vmag);
-            dump_stars_view(stdout, pstat->stars_by_HIP);
-            return 0;
-    */
-
-    load_lines("lines.db", pstat);
+    load_star_lines("lines.db", pstat);             /* dependent on load_stars */
+    load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
 
     proj = init_Lambert_deg(80, 5, 15, 25);
     image = new_image(_L_Orion, 500, 500, 1.4);
@@ -545,13 +583,16 @@ int main (int argc, char **argv) {
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
+        /* pstat = program_save(pstat); */
         head(pstat);
         draw_background(pstat);
         draw_lines(pstat, _L_Ori_Bdy);
+        draw_bounds(pstat, _L_Ori);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);
         close_file(pstat);
+        /* pstat = program_restore(pstat); */
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
@@ -563,12 +604,16 @@ int main (int argc, char **argv) {
     image_set_projection(image, proj);
 
     if (open_file("monoceros.svg", pstat)) {
+        /* pstat = program_save(pstat); */
         head(pstat);
         draw_background(pstat);
+        draw_lines(pstat, _L_Mon_Bdy);
+        draw_bounds(pstat, _L_Mon);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);
         close_file(pstat);
+        /* pstat = program_restore(pstat); */
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
