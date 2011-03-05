@@ -132,14 +132,16 @@ image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
 
 typedef struct _line_S {
     int boldness;
+    uchar *asterism;
     int HIP_1; double RA_1, DE_1;
     int HIP_2; double RA_2, DE_2;
     struct _line_S *prev;
 } line;
 
-line *new_line(int boldness, int HIP_1, int HIP_2, line *prev) {
+line *new_line(int boldness, uchar *asterism, int HIP_1, int HIP_2, line *prev) {
     line *res = (line*)malloc(sizeof(line));
     res->boldness = boldness;
+    res->asterism = ucsdup(asterism);
     res->HIP_1 = HIP_1; res->HIP_2 = HIP_2;
     res->prev = prev;
     return res;
@@ -153,6 +155,62 @@ line *new_line(int boldness, int HIP_1, int HIP_2, line *prev) {
 LINE_SET_POS(1)
 LINE_SET_POS(2)
 
+typedef struct _polygon_S {
+    double RA;
+    double DE;
+    struct _polygon_S *prev;
+} polygon;
+
+polygon *new_polygon(double RA, double DE, polygon *prev) {
+    polygon *res = (polygon *)malloc(sizeof(polygon));
+    res->RA = RA;
+    res->DE = DE;
+    res->prev = prev;
+    return res;
+}
+
+typedef struct _polygon_set_S {
+    polygon *poly;
+    uchar *name;
+    struct _polygon_set_S *next;
+} polygon_set;
+
+polygon_set *new_polygon_set(uchar *name, polygon_set *next) {
+    polygon_set *res = (polygon_set *)malloc(sizeof(polygon_set));
+    res->name = ucsdup(name);
+    res->poly = 0;
+    res->next = next;
+    return res;
+}
+
+polygon_set *add_point(uchar *name, double RA, double DE, polygon_set *current) {
+	polygon_set *res;
+    if (!current) {
+        res = new_polygon_set(name, 0);
+    }
+    else if (0 != ucscmp(name, current->name)) {
+        res = new_polygon_set(name, 0);
+        current->next = res;
+    }
+    else {
+        res = current;
+    }
+    res->poly = new_polygon(RA, DE, res->poly);
+    return res;
+}
+
+void dump_polygon_set(polygon_set *PS) {
+    char buf[256];
+    polygon *P;
+    int ix;
+    
+    if (!PS) return;
+    printf("polygon set for %s: ", ucstombs(buf, PS->name, 256));
+    for (P = PS->poly, ix = 0; P; P = P->prev, ix++);
+    printf("%i\n", ix);
+    dump_polygon_set(PS->next);
+}
+
 typedef struct _program_state_S {
     /* hard-coded feature data */
         /* physical objects */
@@ -163,6 +221,8 @@ typedef struct _program_state_S {
             line *latest_line;
             /* TBA: line_view *lines_by_label;    */
             line *latest_bound;
+            polygon_set *first_const;
+            polygon_set *last_const;
     /* hard-coded image data */
     image_struct *image;
     FILE *out_file;
@@ -175,8 +235,12 @@ program_state *new_program_state(int debug, FILE *debug_out) {
     res->debug = debug;
     res->stars_by_vmag = new_star_view(1024);
     res->stars_by_HIP = new_star_view(1024);
+    /* line stuff */
     res->latest_line = 0;
     res->latest_bound = 0;
+    /* delportian areas */
+    res->first_const = 0;
+    res->last_const = 0;
     return res;
 }
 
@@ -218,26 +282,23 @@ void head(program_state *pstat) {
                  "     xmlns=\"http://www.w3.org/2000/svg\"\n"
                  "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
                  "     >\n", W, H);
-    fprintf(out, "     <title>%s</title>", ucstombs(buf, pstat->image->name, 256));
+    fprintf(out, "     <title>%s</title>\n", ucstombs(buf, pstat->image->name, 256));
 }
 
 void draw_background(program_state *pstat) {
     int ix, iy, H, W, H2, W2, dim;
-    double ra, ras[24], de, des[17];
-    double X, Y;
-    double x, y;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
     FILE *out = pstat->out_file;
 
     W = image->width; W2 = W/2;
     H = image->height; H2 = H/2;
     dim = image->dim;
+    fprintf(out, "    <!-- BACKGROUND -->\n");
     fprintf(out, "    <rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
                  "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
                  "stroke-dasharray:none;stroke-opacity:1\"\n"
                  "          width=\"%i\" height=\"%i\"/>\n", W, H);
-    if (pstat->debug == DEBUG) {
+    if (0 && pstat->debug == DEBUG) {
         /* Helper lines, paper coordinates: */
         /* vertical */
         for (ix = 100; ix < 560; ix += 100) {
@@ -254,9 +315,24 @@ void draw_background(program_state *pstat) {
                          "d=\"M 0,%i L %i,%i\"/>\n", iy-50, W, iy-50);
         }
     }
+}
+
+void draw_grid(program_state *pstat) {
+    int ix, iy, H, W, H2, W2, dim;
+    double ra, ras[24], de, des[17];
+    double X, Y;
+    double x, y;
+    image_struct *image = pstat->image;
+    lambert_proj *proj = image->proj;
+    FILE *out = pstat->out_file;
+
+    W = image->width; W2 = W/2;
+    H = image->height; H2 = H/2;
+    dim = image->dim;
     /* Declination lines: */
     #define NUM_DE 17
 
+    fprintf(out, "    <!-- GRID -->\n");
     for (iy = 0; iy < NUM_DE; iy++) {
         des[iy] = deg2rad(iy*10-80);
     }
@@ -377,14 +453,15 @@ int load_star_lines(char *fname, program_state *pstat) {
             RA2 = 666; DE2 = 666; /* vmag2 = 666; */
         }
         free(s);
-        { char buf[256];
-        fprintf(stdout, "line %s %s:\n", 
-                boldness==1?"heavy":(boldness==2?"bold":"light"),
-                ucstombs(buf,asterism,128));
-        fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n", HIP1, RA1, DE1);
-        fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n", HIP2, RA2, DE2);
+        if(0) { char buf[256];
+            fprintf(stdout, "line %s %s:\n", 
+                    boldness==1?"heavy":(boldness==2?"bold":"light"),
+                    ucstombs(buf,asterism,128));
+            fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n", HIP1, RA1, DE1);
+            fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n", HIP2, RA2, DE2);
         }
-        pstat->latest_line = new_line(boldness, HIP1, HIP2, pstat->latest_line);
+        pstat->latest_line = new_line(boldness, asterism, HIP1, HIP2,
+                                      pstat->latest_line);
         line_set_pos_1(pstat->latest_line, RA1, DE1);
         line_set_pos_2(pstat->latest_line, RA2, DE2);
     }
@@ -396,7 +473,7 @@ int load_constellation_bounds(char *fname, program_state *pstat) {
     int boldness;
     double RA1, DE1;
     double RA2, DE2;
-    uchar line[1024], *pos, *constellation;
+    uchar line[1024], *pos, *constel;
     utf8_file *inf = u8fopen(fname);
 
     if (!inf) return 0;
@@ -405,21 +482,29 @@ int load_constellation_bounds(char *fname, program_state *pstat) {
         line[ucslen(line)-1] = L'\0';
         pos = line;
         boldness = ucstoi(pos);
-        constellation = next_field_ustr(&pos);
+        constel = next_field_ustr(&pos);
         RA1 = next_field_double(&pos)*15;
         DE1 = next_field_double(&pos);
         RA2 = next_field_double(&pos)*15;
         DE2 = next_field_double(&pos);
         if (0) { char buf[256];
-        fprintf(stdout, "border %s:\n", ucstombs(buf,constellation,128));
-        fprintf(stdout, "  start RA=%f DE=%f\n", RA1, DE1);
-        fprintf(stdout, "  end RA=%f DE=%f\n", RA2, DE2);
+            fprintf(stdout, "border %s:\n", ucstombs(buf,constel,128));
+            fprintf(stdout, "  start RA=%f DE=%f\n", RA1, DE1);
+            fprintf(stdout, "  end RA=%f DE=%f\n", RA2, DE2);
         }
-        pstat->latest_bound = new_line(4, -1, -1, pstat->latest_bound);
+        /* as lines */
+        pstat->latest_bound = new_line(4, constel, -1, -1, pstat->latest_bound);
         line_set_pos_1(pstat->latest_bound, RA1, DE1);
         line_set_pos_2(pstat->latest_bound, RA2, DE2);
+        /* as polygonal areas */
+        pstat->last_const = add_point(constel, RA1, DE1, pstat->last_const);
+        if (!pstat->first_const) {
+            pstat->first_const = pstat->last_const;
+        }
+        /** cleanup constel */
     }
     u8fclose(inf);
+    /* dump_polygon_set(pstat->first_const); */
     return 1;
 }
 
@@ -442,6 +527,7 @@ void draw_stars(program_state *pstat) {
     star *S = 0;
 
     /* DRAW THE STARS */
+    fprintf(out, "    <!-- STARS -->\n");
     for (ix = 0; ix < pstat->stars_by_vmag->next; ix++) {
         S = pstat->stars_by_vmag->S[ix];
         DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
@@ -464,8 +550,10 @@ void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
     image_struct *image = pstat->image;
     lambert_proj *proj = image->proj;
     FILE *out = pstat->out_file;
+    char buf[256];
 
     for (L = line_set; L; L = L->prev) {
+    	if (id && 0 != ucscmp(id,L->asterism)) continue;
         Lambert(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), proj);
         Lambert(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), proj);
         if (pos_in_frame(&x1, &y1, X1, Y1, image)
@@ -478,9 +566,11 @@ void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
                 case 4: color = "004466"; break; /* constellation borders */
                 default: color = "220000"; break;
             }
+            fprintf(out, "    <!-- LINE FOR %s -->\n", ucstombs(buf, L->asterism, 256));
             fprintf(out, "    <path ");
-            fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\" ", color);
-            fprintf(out, "d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n", x1, y1, x2, y2);
+            fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\"\n", color);
+            fprintf(out, "          d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n",
+                    x1, y1, x2, y2);
         }
     }
 }
@@ -489,8 +579,40 @@ void draw_lines(program_state *pstat, uchar *id) {
     draw_line_set(pstat, id, pstat->latest_line);
 }
 
-void draw_bounds(program_state *pstat, uchar *id) {
-    draw_line_set(pstat, id, pstat->latest_bound);
+void draw_bounds(program_state *pstat) {
+    draw_line_set(pstat, 0, pstat->latest_bound);
+}
+
+void draw_delportian_area(program_state *pstat, uchar *id) {
+    polygon_set *PS;
+    image_struct *image = pstat->image;
+    lambert_proj *proj = image->proj;
+    FILE *out = pstat->out_file;
+
+    for (PS = pstat->first_const; PS; PS = PS->next) {
+        if (0 == ucscmp(id, PS->name)) {
+            double X, Y;
+            double x, y;
+            polygon *P = PS->poly;
+            char buf[256];
+
+            fprintf(out, "    <!-- bounds for %s-->\n", ucstombs(buf,PS->name,256));
+            fprintf(out, "    <path ");
+            fprintf(out, "style=\"stroke:#0088AA; stroke-width: 1px; ");
+            fprintf(out, "fill: #00001A\"\n");
+            P = PS->poly;
+            Lambert(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), proj);
+            pos_in_frame(&x, &y, X, Y, image);
+            fprintf(out, "          d=\"M %.2f,%.2f\n", x, y);
+            for (P = P->prev; P; P = P->prev) {
+                Lambert(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), proj);
+                pos_in_frame(&x, &y, X, Y, image);
+                fprintf(out, "             L %.2f,%.2f\n", x, y);
+            }
+            fprintf(out, "             Z\"\n");
+            fprintf(out, "/>\n");
+        }
+    }
 }
 
 void write_version(program_state *pstat) {
@@ -551,6 +673,8 @@ int main (int argc, char **argv) {
     uchar _L_Orion[]     = {'O','r','i','o','n',0};
     uchar _L_Monoceros[] = {'M','o','n','o','c','e','r','o','s',0};
     uchar _L_Ori_Bdy[]   = {'O','r','i',' ','B','d','y',0};
+    uchar _L_Ori_Arm[]   = {'O','r','i',' ','A','r','m',0};
+    uchar _L_Ori_Shd[]   = {'O','r','i',' ','S','h','d',0};
     uchar _L_Mon_Bdy[]   = {'M','o','n',' ','B','d','y',0};
     uchar _L_Ori[]       = {'O','r','i',0};
     uchar _L_Mon[]       = {'M','o','n',0};
@@ -586,8 +710,12 @@ int main (int argc, char **argv) {
         /* pstat = program_save(pstat); */
         head(pstat);
         draw_background(pstat);
+        draw_bounds(pstat);
+        draw_delportian_area(pstat, _L_Ori);
+        draw_grid(pstat);
         draw_lines(pstat, _L_Ori_Bdy);
-        draw_bounds(pstat, _L_Ori);
+        draw_lines(pstat, _L_Ori_Arm);
+        draw_lines(pstat, _L_Ori_Shd);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);
@@ -598,7 +726,7 @@ int main (int argc, char **argv) {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
     }
 
-    proj = init_Lambert_deg(107.5, 0, 10, 20);
+    proj = init_Lambert_deg(106, 0, 10, 20);
     image = new_image(_L_Monoceros, 600, 550, 1.4);
     program_set_image(pstat, image);
     image_set_projection(image, proj);
@@ -607,8 +735,10 @@ int main (int argc, char **argv) {
         /* pstat = program_save(pstat); */
         head(pstat);
         draw_background(pstat);
+        draw_bounds(pstat);
+        draw_delportian_area(pstat, _L_Mon);
+        draw_grid(pstat);
         draw_lines(pstat, _L_Mon_Bdy);
-        draw_bounds(pstat, _L_Mon);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);
