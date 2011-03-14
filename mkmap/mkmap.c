@@ -211,6 +211,34 @@ void dump_polygon_set(polygon_set *PS) {
     dump_polygon_set(PS->next);
 }
 
+typedef struct _label_S {
+    int HIP;
+    uchar *text;
+    double distance, direction, RA, DE;
+    int anchor;
+    struct _label_S *prev;
+} label;
+
+label *new_label(int HIP, uchar *text, double distance, double direction,
+		         int anchor, label *prev) {
+    label *res = (label *)malloc(sizeof(label));
+    res->HIP = HIP;
+    res->text = ucsdup(text);
+    res->distance = distance;
+    res->direction = direction;
+    res->RA = -999;
+    res->DE = -999;
+    res->anchor = anchor;
+    res->prev = prev;
+    return res;
+}
+
+label *label_set_pos(label *L, double RA, double DE) {
+    if (!L) return 0;
+    L->RA = RA; L->DE = DE;
+    return L;
+}
+
 typedef struct _program_state_S {
     /* hard-coded feature data */
         /* physical objects */
@@ -218,11 +246,15 @@ typedef struct _program_state_S {
             VIEW(star) *stars_by_vmag;
             VIEW(star) *stars_by_HIP;
         /* virtual objects */
+            /* asterism lines */
             line *latest_line;
+            /* delportian constellation bounds lines */
             /* TBA: line_view *lines_by_label;    */
             line *latest_bound;
+            /* delportian constellation areas */
             polygon_set *first_const;
             polygon_set *last_const;
+			label *latest_star_label;
     /* hard-coded image data */
     image_struct *image;
     FILE *out_file;
@@ -236,11 +268,14 @@ program_state *new_program_state(int debug, FILE *debug_out) {
     res->stars_by_vmag = new_star_view(1024);
     res->stars_by_HIP = new_star_view(1024);
     /* line stuff */
-    res->latest_line = 0;
-    res->latest_bound = 0;
+        /* asterism lines */
+        res->latest_line = 0;
+        res->latest_bound = 0;
     /* delportian areas */
-    res->first_const = 0;
-    res->last_const = 0;
+        res->first_const = 0;
+        res->last_const = 0;
+    /* labels */
+        res->latest_star_label = 0;
     return res;
 }
 
@@ -293,7 +328,7 @@ void draw_background(program_state *pstat) {
     W = image->width; W2 = W/2;
     H = image->height; H2 = H/2;
     dim = image->dim;
-    fprintf(out, "    <!-- BACKGROUND -->\n");
+    if (pstat->debug) fprintf(out, "    <!-- BACKGROUND -->\n");
     fprintf(out, "    <rect style=\"opacity:1;fill:#000033;fill-opacity:1;stroke:none;"
                  "stroke-width:0.2;stroke-linejoin:miter;stroke-miterlimit:4;"
                  "stroke-dasharray:none;stroke-opacity:1\"\n"
@@ -414,6 +449,17 @@ int load_stars(char *fname, program_state *pstat) {
     return 1;
 }
 
+star *find_star_by_HIP(int HIP, program_state *pstat) {
+    star *s, *res;
+
+    s = new_star(0, HIP, 0, 0, 0);
+    res = *((star **)bsearch(&s, (void *)pstat->stars_by_HIP->S,
+                              pstat->stars_by_HIP->next,
+                              sizeof(star *), star_cmp_by_HIP));
+    free(s);
+    return res;
+}
+
 int load_star_lines(char *fname, program_state *pstat) {
     int boldness, HIP1, HIP2;
     double RA1, DE1;
@@ -424,35 +470,27 @@ int load_star_lines(char *fname, program_state *pstat) {
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
         /* char buf[128]; */
-        star *s, *S;
+        star *S;
         line[ucslen(line)-1] = L'\0';
         pos = line;
         boldness = ucstoi(pos);
         asterism = next_field_ustr(&pos);
         HIP1 = next_field_double(&pos);
-        s = new_star(0, HIP1, 0, 0, 0);
-        S = *((star **)bsearch(&s, (void *)pstat->stars_by_HIP->S,
-                                pstat->stars_by_HIP->next,
-                                sizeof(star *), star_cmp_by_HIP));
+        S = find_star_by_HIP(HIP1, pstat);
         if (S) {
             RA1 = S->RA; DE1 = S->DE; /* vmag1 = S->vmag; */
         }
         else {
             RA1 = 666; DE1 = 666; /* vmag1 = 666; */
         }
-        free(s);
         HIP2 = next_field_double(&pos);
-        s = new_star(0, HIP2, 0, 0, 0);
-        S = *((star **)bsearch(&s, (void *)pstat->stars_by_HIP->S,
-                             pstat->stars_by_HIP->next,
-                             sizeof(star *), star_cmp_by_HIP));
+        S = find_star_by_HIP(HIP2, pstat);
         if (S) {
             RA2 = S->RA; DE2 = S->DE; /* vmag2 = S->vmag; */
         }
         else {
             RA2 = 666; DE2 = 666; /* vmag2 = 666; */
         }
-        free(s);
         if(0) { char buf[256];
             fprintf(stdout, "line %s %s:\n", 
                     boldness==1?"heavy":(boldness==2?"bold":"light"),
@@ -508,6 +546,41 @@ int load_constellation_bounds(char *fname, program_state *pstat) {
     return 1;
 }
 
+int load_star_labels(char *fname, program_state *pstat) {
+    int HIP, anchor;
+    double distance, direction, RA, DE;
+    uchar line[1024], *pos, *label;
+    utf8_file *inf = u8fopen(fname);
+
+    while (fgetus(line, 1023, inf)) {
+        star *S;
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
+        HIP = ucstoi(pos);
+        label = next_field_ustr(&pos);
+        distance = next_field_double(&pos);
+        direction = next_field_double(&pos);
+        anchor = next_field_double(&pos);
+        pstat->latest_star_label = new_label(HIP, label, distance, direction,
+        									 anchor, pstat->latest_star_label);
+        S = find_star_by_HIP(HIP, pstat);
+        if (S) {
+            double dir = deg2rad(direction);
+            RA = S->RA + distance * cos(dir);
+            DE = S->DE + distance * sin(dir);
+        }
+        else {
+            RA = 666; DE = 666;
+        }
+        label_set_pos(pstat->latest_star_label, RA, DE);
+    }
+    u8fclose(inf);
+
+    return 1;
+}
+
+#define FONT_STYLE "font-family: FreeSans, sans serif; font-weight: bold;"
+
 void draw_stars(program_state *pstat) {
     /*
     DROP TABLE _cmap;
@@ -527,7 +600,7 @@ void draw_stars(program_state *pstat) {
     star *S = 0;
 
     /* DRAW THE STARS */
-    fprintf(out, "    <!-- STARS -->\n");
+    if (pstat->debug) fprintf(out, "    <!-- STARS -->\n");
     for (ix = 0; ix < pstat->stars_by_vmag->next; ix++) {
         S = pstat->stars_by_vmag->S[ix];
         DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
@@ -560,13 +633,14 @@ void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
           | pos_in_frame(&x2, &y2, X2, Y2, image)) {
             char *color;
             switch(L->boldness) {
-                case 1: color = "00CC00"; break;
-                case 2: color = "008800"; break;
-                case 3: color = "004400"; break;
-                case 4: color = "004466"; break; /* constellation borders */
+                case 1: color = "0000FF"; break;
+                case 2: color = "0000CC"; break;
+                case 3: color = "0000AA"; break;
+                case 4: color = "005577"; break; /* constellation borders */
                 default: color = "220000"; break;
             }
-            fprintf(out, "    <!-- LINE FOR %s -->\n", ucstombs(buf, L->asterism, 256));
+            if (pstat->debug)
+            	fprintf(out, "    <!-- LINE FOR %s -->\n", ucstombs(buf, L->asterism, 256));
             fprintf(out, "    <path ");
             fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\"\n", color);
             fprintf(out, "          d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n",
@@ -596,10 +670,11 @@ void draw_delportian_area(program_state *pstat, uchar *id) {
             polygon *P = PS->poly;
             char buf[256];
 
-            fprintf(out, "    <!-- bounds for %s-->\n", ucstombs(buf,PS->name,256));
+            if (pstat->debug) 
+            	fprintf(out, "    <!-- bounds for %s -->\n", ucstombs(buf,PS->name,256));
             fprintf(out, "    <path ");
             fprintf(out, "style=\"stroke:#0088AA; stroke-width: 1px; ");
-            fprintf(out, "fill: #00001A\"\n");
+            fprintf(out, "fill: #000022\"\n");
             P = PS->poly;
             Lambert(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), proj);
             pos_in_frame(&x, &y, X, Y, image);
@@ -615,6 +690,36 @@ void draw_delportian_area(program_state *pstat, uchar *id) {
     }
 }
 
+void draw_labels(program_state *pstat, uchar *id) {
+    label *L;
+    image_struct *image = pstat->image;
+    lambert_proj *proj = image->proj;
+    FILE *out = pstat->out_file;
+
+    for (L = pstat->latest_star_label; L; L = L->prev) {
+        double X, Y;
+        double x, y;
+        char buf[256], *anchor;
+        Lambert(&X, &Y, deg2rad(L->DE), deg2rad(L->RA), proj);
+        if (pos_in_frame(&x, &y, X, Y, image)) {
+        	switch (L->anchor) {
+        	  	case 1: anchor = "start"; break;
+        	  	case 2: anchor = "middle"; break;
+        	  	case 3: anchor = "end"; break;
+        	  	default: anchor = "end"; break;
+        	}
+            if (pstat->debug) 
+            	fprintf(out, "    <!-- label \"%s\" for HIP %i -->\n",
+            			ucstombs(buf,L->text,256),
+            			L->HIP);
+            fprintf(out, "    <text x=\"%.2f\" y=\"%.2f\" "
+            		     "style=\"fill:#CC0000; text-anchor: %s;"
+                         "font-size:13px;%s\">%s</text>\n",
+                    x, y, anchor, FONT_STYLE, ucstombs(buf,L->text,256));
+        }
+    }
+}
+
 void write_version(program_state *pstat) {
     struct tm *TM;
     time_t T = time(NULL);
@@ -625,13 +730,13 @@ void write_version(program_state *pstat) {
         if (T == -1) return;
         TM = localtime(&T);
         fprintf(pstat->out_file, "    <text x=\"%i\" y=\"%i\" "
-                "style=\"fill:#CC0000;font-size:12px\">generated by mkmap "
+                "style=\"fill:#00CC00;font-size:11px\">generated by mkmap "
                 "%04i-%02i-%02i, %02i:%02i"
                 "</text>\n",
                 10, height - 10,
                 TM->tm_year+1900, TM->tm_mon+1, TM->tm_mday,
                 TM->tm_hour, TM->tm_min
-                );
+               );
     }
 }
 
@@ -699,8 +804,9 @@ int main (int argc, char **argv) {
     load_stars(argv[2], pstat);
     load_star_lines("lines.db", pstat);             /* dependent on load_stars */
     load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
+    load_star_labels("orion-labels.db", pstat);
 
-    proj = init_Lambert_deg(80, 5, 15, 25);
+    proj = init_Lambert_deg(82.5, 5, 15, 25);
     image = new_image(_L_Orion, 500, 500, 1.4);
     program_set_image(pstat, image);
     image_set_projection(image, proj);
@@ -716,6 +822,7 @@ int main (int argc, char **argv) {
         draw_lines(pstat, _L_Ori_Bdy);
         draw_lines(pstat, _L_Ori_Arm);
         draw_lines(pstat, _L_Ori_Shd);
+        draw_labels(pstat, _L_Ori);
         draw_stars(pstat);
         write_version(pstat);
         foot(pstat);
@@ -738,6 +845,7 @@ int main (int argc, char **argv) {
         draw_bounds(pstat);
         draw_delportian_area(pstat, _L_Mon);
         draw_grid(pstat);
+        draw_labels(pstat, _L_Mon);
         draw_lines(pstat, _L_Mon_Bdy);
         draw_stars(pstat);
         write_version(pstat);
