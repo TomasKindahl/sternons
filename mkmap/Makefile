@@ -21,9 +21,9 @@
 
 CC 		= gcc -g -Wall --pedantic-error
 MAPS 	= star.db
-OBJS 	= token.o ucstr.o uctype.o usio.o star.o
+OBJS 	= token.o ucstr.o uctype.o usio.o pointobj.o
 OBJSP 	= $(OBJS) parse.o
-WOBJS 	= token.obj ucstr.obj uctype.obj usio.obj star.obj
+WOBJS 	= token.obj ucstr.obj uctype.obj usio.obj pointobj.obj
 WOBJSP 	= $(WOBJS) parse.obj
 
 mkmap: mkmap.c $(OBJS)
@@ -86,4 +86,7 @@ difflist: diff.u8
 
 diff.u8:
 	svn diff | grep Index: > diff.u8
+
+status:
+	svn status | grep -v '.png' | grep -v '.svg'
 

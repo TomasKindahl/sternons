@@ -18,6 +18,7 @@
  ************************************************************************/
 
 #include <stdlib.h>
+#include "meta.h"
 #include "defs.h"
 #include "uctype.h"
 
@@ -80,7 +81,7 @@ uchar *ucsdup(uchar *src) {
 
     if(!src) return 0;
     len = ucslen(src);
-    res = (uchar *)malloc(sizeof(uchar)*(len+1));
+    res = ALLOCN(uchar, len+1);
     ucscpy(res, src);
     return res;
 }
@@ -92,7 +93,7 @@ uchar *ucsndup(uchar *src, int max) {
     if(!src) return 0;
     len = ucslen(src);
 	if (len > max) len = max;
-    res = (uchar *)malloc(sizeof(uchar)*(len+1));
+	res = ALLOCN(uchar, len+1);
     ucsntcpy(res, src, max);
     return res;
 }
