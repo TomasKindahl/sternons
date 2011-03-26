@@ -28,7 +28,7 @@
 #include "token.h"
 /* Application libraries */
 /* TD:  #include "parse.h"*/
-#include "star.h"        /* star struct and DB views */
+#include "pointobj.h"        /* star struct and DB views */
 
 /* ==================================================================== |
      Known bugs and features:                                           |
@@ -88,7 +88,7 @@ double pi_itv(double nu) {
 }
 
 lambert_proj *init_Lambert(double lambda0, double phi0, double phi1, double phi2) {
-    lambert_proj *res = (lambert_proj *)malloc(sizeof(lambert_proj));
+    lambert_proj *res = ALLOC(lambert_proj);
     res->lambda0 = lambda0;
     /* res->phi0 = phi0; res->phi1 = phi1; res->phi2 = phi2; */
     res->n = log(cos(phi1)*sec(phi2))/log(tan(M_PI_4+phi2/2)*cot(M_PI_4+phi1/2));
@@ -116,7 +116,7 @@ typedef struct _image_struct_S {
 } image_struct;
 
 image_struct *new_image(uchar *name, int width, int height, double scale) {
-    image_struct *res = (image_struct *)malloc(sizeof(image_struct));
+    image_struct *res = ALLOC(image_struct);
     res->name = ucsdup(name);
     res->width = width;
     res->height = height;
@@ -139,7 +139,7 @@ typedef struct _line_S {
 } line;
 
 line *new_line(int boldness, uchar *asterism, int HIP_1, int HIP_2, line *prev) {
-    line *res = (line*)malloc(sizeof(line));
+    line *res = ALLOC(line);
     res->boldness = boldness;
     res->asterism = ucsdup(asterism);
     res->HIP_1 = HIP_1; res->HIP_2 = HIP_2;
@@ -162,7 +162,7 @@ typedef struct _polygon_S {
 } polygon;
 
 polygon *new_polygon(double RA, double DE, polygon *prev) {
-    polygon *res = (polygon *)malloc(sizeof(polygon));
+    polygon *res = ALLOC(polygon);
     res->RA = RA;
     res->DE = DE;
     res->prev = prev;
@@ -176,7 +176,7 @@ typedef struct _polygon_set_S {
 } polygon_set;
 
 polygon_set *new_polygon_set(uchar *name, polygon_set *next) {
-    polygon_set *res = (polygon_set *)malloc(sizeof(polygon_set));
+    polygon_set *res = ALLOC(polygon_set);
     res->name = ucsdup(name);
     res->poly = 0;
     res->next = next;
@@ -221,7 +221,7 @@ typedef struct _label_S {
 
 label *new_label(int HIP, uchar *text, double distance, double direction,
 		         int anchor, label *prev) {
-    label *res = (label *)malloc(sizeof(label));
+    label *res = ALLOC(label);
     res->HIP = HIP;
     res->text = ucsdup(text);
     res->distance = distance;
@@ -239,17 +239,19 @@ label *label_set_pos(label *L, double RA, double DE) {
     return L;
 }
 
+#define BY_VMAG 0
+#define BY_HIP 1
+
 typedef struct _program_state_S {
     /* hard-coded feature data */
         /* physical objects */
-            star *latest_star;
-            VIEW(star) *stars_by_vmag;
-            VIEW(star) *stars_by_HIP;
+            pointobj *latest_star;
+            VIEW(pointobj) **stars;
         /* virtual objects */
             /* asterism lines */
             line *latest_line;
             /* delportian constellation bounds lines */
-            /* TBA: line_view *lines_by_label;    */
+            /** TBA: line_view *lines_by_label;       */
             line *latest_bound;
             /* delportian constellation areas */
             polygon_set *first_const;
@@ -262,13 +264,13 @@ typedef struct _program_state_S {
 } program_state;
 
 program_state *new_program_state(int debug, FILE *debug_out) {
-    program_state *res = (program_state *)malloc(sizeof(program_state));
+    program_state *res = ALLOC(program_state);
     res->latest_star = 0;
     res->debug = debug;
-    res->stars_by_vmag = new_star_view(1024);
-    res->stars_by_HIP = new_star_view(1024);
-    /* line stuff */
-        /* asterism lines */
+    res->stars = ALLOCN(VIEW(pointobj) *,2);
+    res->stars[BY_VMAG] = new_pointobj_view(1024);
+    res->stars[BY_HIP] = new_pointobj_view(1024);
+    /* asterism lines */
         res->latest_line = 0;
         res->latest_bound = 0;
     /* delportian areas */
@@ -304,7 +306,199 @@ int open_file(char *fname, program_state *pstat) {
     return 1;
 }
 
-void head(program_state *pstat) {
+double next_field_double(uchar **pos) {
+    *pos = ucschr(*pos,'|')+1;
+    return ucstof(*pos);
+}
+
+int next_field_int(uchar **pos) {
+    *pos = ucschr(*pos,'|')+1;
+    return ucstoi(*pos);
+}
+
+uchar *next_field_ustr(uchar **pos) {
+    uchar *pos2;
+
+    *pos = ucschr(*pos,'|')+1;
+    pos2 = ucschr(*pos,'|');
+    return ucsndup(*pos,pos2-(*pos));
+}
+
+void sort_pointobj_view(program_state *pstat, VIEW(pointobj) *view, 
+						int compare(const void *, const void *))
+{
+    /* quicksort the point objects in 'view' by function 'compare' */
+	qsort((void *)view->S, view->next, sizeof(pointobj *), compare);
+}
+
+int load_stars(char *fname, program_state *pstat) {
+    /*
+    DROP TABLE _cmap;
+    SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
+           from _hipp where vmag < 6.5 order by vmag, ra, de;
+    COPY _cmap TO '/home/rursus/Desktop/dumps/sternons/trunk/star.db'
+         DELIMITER '|';
+    */
+    int HIP;
+    double RA, DE, vmag;
+    uchar line[1024], *pos;
+    utf8_file *inf = u8fopen(fname);
+
+    if (!inf) return 0;
+    /* LOAD THE STARS */
+    while (fgetus(line, 1023, inf)) {
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
+        HIP = ucstoi(pos);
+        RA = next_field_double(&pos);
+        DE = next_field_double(&pos);
+        vmag = next_field_double(&pos);
+        pstat->latest_star =
+        	new_pointobj(CLASS_STAR, HIP, RA, DE, vmag, pstat->latest_star);
+        append_pointobj(pstat->stars[BY_VMAG], pstat->latest_star);
+        append_pointobj(pstat->stars[BY_HIP], pstat->latest_star);
+    }
+    /* sort stars by visual magnitude */
+    sort_pointobj_view(pstat, pstat->stars[BY_VMAG], pointobj_cmp_by_vmag);
+    /* sort stars by HIP number */
+    sort_pointobj_view(pstat, pstat->stars[BY_HIP], pointobj_cmp_by_HIP);
+    u8fclose(inf);
+    return 1;
+}
+
+pointobj *find_star_by_HIP(int HIP, program_state *pstat) {
+    pointobj *s, *res;
+
+    s = new_pointobj(CLASS_STAR, HIP, 0, 0, 0, 0);
+    res = *((pointobj **)bsearch(&s, (void *)pstat->stars[BY_HIP]->S,
+                                  pstat->stars[BY_HIP]->next,
+                                  sizeof(pointobj *), pointobj_cmp_by_HIP));
+    free(s);
+    return res;
+}
+
+int load_star_lines(char *fname, program_state *pstat) {
+    int boldness, HIP1, HIP2;
+    double RA1, DE1;
+    double RA2, DE2;
+    uchar line[1024], *pos, *asterism;
+    utf8_file *inf = u8fopen(fname);
+
+    if (!inf) return 0;
+    while (fgetus(line, 1023, inf)) {
+        /* char buf[128]; */
+        pointobj *S;
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
+        boldness = ucstoi(pos);
+        asterism = next_field_ustr(&pos);
+        HIP1 = next_field_int(&pos);
+        S = find_star_by_HIP(HIP1, pstat);
+        if (S) {
+            RA1 = S->RA; DE1 = S->DE; /* vmag1 = S->vmag; */
+        }
+        else {
+            RA1 = 666; DE1 = 666; /* vmag1 = 666; */
+        }
+        HIP2 = next_field_double(&pos);
+        S = find_star_by_HIP(HIP2, pstat);
+        if (S) {
+            RA2 = S->RA; DE2 = S->DE; /* vmag2 = S->vmag; */
+        }
+        else {
+            RA2 = 666; DE2 = 666; /* vmag2 = 666; */
+        }
+        if(0) { char buf[256];
+            fprintf(stdout, "line %s %s:\n", 
+                    boldness==1?"heavy":(boldness==2?"bold":"light"),
+                    ucstombs(buf,asterism,128));
+            fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n", HIP1, RA1, DE1);
+            fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n", HIP2, RA2, DE2);
+        }
+        pstat->latest_line = new_line(boldness, asterism, HIP1, HIP2,
+                                      pstat->latest_line);
+        line_set_pos_1(pstat->latest_line, RA1, DE1);
+        line_set_pos_2(pstat->latest_line, RA2, DE2);
+    }
+    u8fclose(inf);
+    return 1;
+}
+
+int load_constellation_bounds(char *fname, program_state *pstat) {
+    int boldness;
+    double RA1, DE1;
+    double RA2, DE2;
+    uchar line[1024], *pos, *constel;
+    utf8_file *inf = u8fopen(fname);
+
+    if (!inf) return 0;
+    while (fgetus(line, 1023, inf)) {
+        /* char buf[128]; */
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
+        boldness = ucstoi(pos);
+        constel = next_field_ustr(&pos);
+        RA1 = next_field_double(&pos)*15;
+        DE1 = next_field_double(&pos);
+        RA2 = next_field_double(&pos)*15;
+        DE2 = next_field_double(&pos);
+        if (0) { char buf[256];
+            fprintf(stdout, "border %s:\n", ucstombs(buf,constel,128));
+            fprintf(stdout, "  start RA=%f DE=%f\n", RA1, DE1);
+            fprintf(stdout, "  end RA=%f DE=%f\n", RA2, DE2);
+        }
+        /* as lines */
+        pstat->latest_bound = new_line(4, constel, -1, -1, pstat->latest_bound);
+        line_set_pos_1(pstat->latest_bound, RA1, DE1);
+        line_set_pos_2(pstat->latest_bound, RA2, DE2);
+        /* as polygonal areas */
+        pstat->last_const = add_point(constel, RA1, DE1, pstat->last_const);
+        if (!pstat->first_const) {
+            pstat->first_const = pstat->last_const;
+        }
+        /** cleanup constel */
+    }
+    u8fclose(inf);
+    /* dump_polygon_set(pstat->first_const); */
+    return 1;
+}
+
+int load_star_labels(char *fname, program_state *pstat) {
+    int HIP, anchor;
+    double distance, direction, RA, DE;
+    uchar line[1024], *pos, *label;
+    utf8_file *inf = u8fopen(fname);
+
+    while (fgetus(line, 1023, inf)) {
+        pointobj *S;
+        line[ucslen(line)-1] = L'\0';
+        pos = line;
+        HIP = ucstoi(pos);
+        label = next_field_ustr(&pos);
+        distance = next_field_double(&pos);
+        direction = next_field_double(&pos);
+        anchor = next_field_int(&pos);
+        pstat->latest_star_label = new_label(HIP, label, distance, direction,
+        									 anchor, pstat->latest_star_label);
+        S = find_star_by_HIP(HIP, pstat);
+        if (S) {
+            double dir = deg2rad(direction);
+            RA = S->RA + distance * cos(dir);
+            DE = S->DE + distance * sin(dir);
+        }
+        else {
+            RA = 666; DE = 666;
+        }
+        label_set_pos(pstat->latest_star_label, RA, DE);
+    }
+    u8fclose(inf);
+
+    return 1;
+}
+
+#define FONT_STYLE "font-family: FreeSans, sans serif; font-weight: bold;"
+
+void draw_head(program_state *pstat) {
     char buf[256];
     int H, W;
     image_struct *image = pstat->image;
@@ -312,12 +506,14 @@ void head(program_state *pstat) {
 
     W = image->width;
     H = image->height;
-    fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+    fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" "
+    		     "standalone=\"no\"?>\n");
     fprintf(out, "<svg width=\"%i\" height=\"%i\"\n"
                  "     xmlns=\"http://www.w3.org/2000/svg\"\n"
                  "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
                  "     >\n", W, H);
-    fprintf(out, "     <title>%s</title>\n", ucstombs(buf, pstat->image->name, 256));
+    fprintf(out, "     <title>%s</title>\n",
+    		     ucstombs(buf, pstat->image->name, 256));
 }
 
 void draw_background(program_state *pstat) {
@@ -398,189 +594,6 @@ void draw_grid(program_state *pstat) {
     }
 }
 
-double next_field_double(uchar **pos) {
-    *pos = ucschr(*pos,'|')+1;
-    return ucstof(*pos);
-}
-
-uchar *next_field_ustr(uchar **pos) {
-    uchar *pos2;
-
-    *pos = ucschr(*pos,'|')+1;
-    pos2 = ucschr(*pos,'|');
-    return ucsndup(*pos,pos2-(*pos));
-}
-
-int load_stars(char *fname, program_state *pstat) {
-    /*
-    DROP TABLE _cmap;
-    SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
-           from _hipp where vmag < 6.5 order by vmag, ra, de;
-    COPY _cmap TO '/home/rursus/Desktop/dumps/sternons/trunk/star.db'
-         DELIMITER '|';
-    */
-    int HIP;
-    double RA, DE, vmag;
-    uchar line[1024], *pos;
-    utf8_file *inf = u8fopen(fname);
-
-    if (!inf) return 0;
-    /* LOAD THE STARS */
-    while (fgetus(line, 1023, inf)) {
-        line[ucslen(line)-1] = L'\0';
-        pos = line;
-        HIP = ucstoi(pos);
-        RA = next_field_double(&pos);
-        DE = next_field_double(&pos);
-        vmag = next_field_double(&pos);
-        pstat->latest_star = new_star(pstat->latest_star, HIP, RA, DE, vmag);
-        append_star(pstat->stars_by_vmag, pstat->latest_star);
-        append_star(pstat->stars_by_HIP, pstat->latest_star);
-    }
-    /* quicksort the stars in pstat->stars_by_vmag by mag */
-    qsort((void *)pstat->stars_by_vmag->S,
-           pstat->stars_by_vmag->next,
-           sizeof(star *), star_cmp_by_vmag);
-    /* quicksort the stars in pstat->stars_by_HIP by HIP number */
-    qsort((void *)pstat->stars_by_HIP->S,
-           pstat->stars_by_HIP->next,
-           sizeof(star *), star_cmp_by_HIP);
-    u8fclose(inf);
-    return 1;
-}
-
-star *find_star_by_HIP(int HIP, program_state *pstat) {
-    star *s, *res;
-
-    s = new_star(0, HIP, 0, 0, 0);
-    res = *((star **)bsearch(&s, (void *)pstat->stars_by_HIP->S,
-                              pstat->stars_by_HIP->next,
-                              sizeof(star *), star_cmp_by_HIP));
-    free(s);
-    return res;
-}
-
-int load_star_lines(char *fname, program_state *pstat) {
-    int boldness, HIP1, HIP2;
-    double RA1, DE1;
-    double RA2, DE2;
-    uchar line[1024], *pos, *asterism;
-    utf8_file *inf = u8fopen(fname);
-
-    if (!inf) return 0;
-    while (fgetus(line, 1023, inf)) {
-        /* char buf[128]; */
-        star *S;
-        line[ucslen(line)-1] = L'\0';
-        pos = line;
-        boldness = ucstoi(pos);
-        asterism = next_field_ustr(&pos);
-        HIP1 = next_field_double(&pos);
-        S = find_star_by_HIP(HIP1, pstat);
-        if (S) {
-            RA1 = S->RA; DE1 = S->DE; /* vmag1 = S->vmag; */
-        }
-        else {
-            RA1 = 666; DE1 = 666; /* vmag1 = 666; */
-        }
-        HIP2 = next_field_double(&pos);
-        S = find_star_by_HIP(HIP2, pstat);
-        if (S) {
-            RA2 = S->RA; DE2 = S->DE; /* vmag2 = S->vmag; */
-        }
-        else {
-            RA2 = 666; DE2 = 666; /* vmag2 = 666; */
-        }
-        if(0) { char buf[256];
-            fprintf(stdout, "line %s %s:\n", 
-                    boldness==1?"heavy":(boldness==2?"bold":"light"),
-                    ucstombs(buf,asterism,128));
-            fprintf(stdout, "  star 1 HIP=%i RA=%f DE=%f\n", HIP1, RA1, DE1);
-            fprintf(stdout, "  star 2 HIP=%i RA=%f DE=%f\n", HIP2, RA2, DE2);
-        }
-        pstat->latest_line = new_line(boldness, asterism, HIP1, HIP2,
-                                      pstat->latest_line);
-        line_set_pos_1(pstat->latest_line, RA1, DE1);
-        line_set_pos_2(pstat->latest_line, RA2, DE2);
-    }
-    u8fclose(inf);
-    return 1;
-}
-
-int load_constellation_bounds(char *fname, program_state *pstat) {
-    int boldness;
-    double RA1, DE1;
-    double RA2, DE2;
-    uchar line[1024], *pos, *constel;
-    utf8_file *inf = u8fopen(fname);
-
-    if (!inf) return 0;
-    while (fgetus(line, 1023, inf)) {
-        /* char buf[128]; */
-        line[ucslen(line)-1] = L'\0';
-        pos = line;
-        boldness = ucstoi(pos);
-        constel = next_field_ustr(&pos);
-        RA1 = next_field_double(&pos)*15;
-        DE1 = next_field_double(&pos);
-        RA2 = next_field_double(&pos)*15;
-        DE2 = next_field_double(&pos);
-        if (0) { char buf[256];
-            fprintf(stdout, "border %s:\n", ucstombs(buf,constel,128));
-            fprintf(stdout, "  start RA=%f DE=%f\n", RA1, DE1);
-            fprintf(stdout, "  end RA=%f DE=%f\n", RA2, DE2);
-        }
-        /* as lines */
-        pstat->latest_bound = new_line(4, constel, -1, -1, pstat->latest_bound);
-        line_set_pos_1(pstat->latest_bound, RA1, DE1);
-        line_set_pos_2(pstat->latest_bound, RA2, DE2);
-        /* as polygonal areas */
-        pstat->last_const = add_point(constel, RA1, DE1, pstat->last_const);
-        if (!pstat->first_const) {
-            pstat->first_const = pstat->last_const;
-        }
-        /** cleanup constel */
-    }
-    u8fclose(inf);
-    /* dump_polygon_set(pstat->first_const); */
-    return 1;
-}
-
-int load_star_labels(char *fname, program_state *pstat) {
-    int HIP, anchor;
-    double distance, direction, RA, DE;
-    uchar line[1024], *pos, *label;
-    utf8_file *inf = u8fopen(fname);
-
-    while (fgetus(line, 1023, inf)) {
-        star *S;
-        line[ucslen(line)-1] = L'\0';
-        pos = line;
-        HIP = ucstoi(pos);
-        label = next_field_ustr(&pos);
-        distance = next_field_double(&pos);
-        direction = next_field_double(&pos);
-        anchor = next_field_double(&pos);
-        pstat->latest_star_label = new_label(HIP, label, distance, direction,
-        									 anchor, pstat->latest_star_label);
-        S = find_star_by_HIP(HIP, pstat);
-        if (S) {
-            double dir = deg2rad(direction);
-            RA = S->RA + distance * cos(dir);
-            DE = S->DE + distance * sin(dir);
-        }
-        else {
-            RA = 666; DE = 666;
-        }
-        label_set_pos(pstat->latest_star_label, RA, DE);
-    }
-    u8fclose(inf);
-
-    return 1;
-}
-
-#define FONT_STYLE "font-family: FreeSans, sans serif; font-weight: bold;"
-
 void draw_stars(program_state *pstat) {
     /*
     DROP TABLE _cmap;
@@ -597,12 +610,12 @@ void draw_stars(program_state *pstat) {
     image_struct *image = pstat->image;
     lambert_proj *proj = image->proj;
     FILE *out = pstat->out_file;
-    star *S = 0;
+    pointobj *S = 0;
 
     /* DRAW THE STARS */
     if (pstat->debug) fprintf(out, "    <!-- STARS -->\n");
-    for (ix = 0; ix < pstat->stars_by_vmag->next; ix++) {
-        S = pstat->stars_by_vmag->S[ix];
+    for (ix = 0; ix < pstat->stars[BY_VMAG]->next; ix++) {
+        S = pstat->stars[BY_VMAG]->S[ix];
         DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
@@ -720,7 +733,7 @@ void draw_labels(program_state *pstat, uchar *id) {
     }
 }
 
-void write_version(program_state *pstat) {
+void draw_debug_info(program_state *pstat) {
     struct tm *TM;
     time_t T = time(NULL);
     int height = pstat->image->height;
@@ -740,7 +753,7 @@ void write_version(program_state *pstat) {
     }
 }
 
-void foot(program_state *pstat) {
+void draw_foot(program_state *pstat) {
     /* printf("    <image y=\"200\" x=\"200\" height=\"100\" width=\"100\"\n"); */
     /* printf("           xlink:href=\"neptune.png\" />\n"); */
     fprintf(pstat->out_file, "</svg>\n");
@@ -814,7 +827,7 @@ int main (int argc, char **argv) {
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
         /* pstat = program_save(pstat); */
-        head(pstat);
+        draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
         draw_delportian_area(pstat, _L_Ori);
@@ -824,8 +837,8 @@ int main (int argc, char **argv) {
         draw_lines(pstat, _L_Ori_Shd);
         draw_labels(pstat, _L_Ori);
         draw_stars(pstat);
-        write_version(pstat);
-        foot(pstat);
+        draw_debug_info(pstat);
+        draw_foot(pstat);
         close_file(pstat);
         /* pstat = program_restore(pstat); */
     }
@@ -840,7 +853,7 @@ int main (int argc, char **argv) {
 
     if (open_file("monoceros.svg", pstat)) {
         /* pstat = program_save(pstat); */
-        head(pstat);
+        draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
         draw_delportian_area(pstat, _L_Mon);
@@ -848,8 +861,8 @@ int main (int argc, char **argv) {
         draw_labels(pstat, _L_Mon);
         draw_lines(pstat, _L_Mon_Bdy);
         draw_stars(pstat);
-        write_version(pstat);
-        foot(pstat);
+        draw_debug_info(pstat);
+        draw_foot(pstat);
         close_file(pstat);
         /* pstat = program_restore(pstat); */
     }

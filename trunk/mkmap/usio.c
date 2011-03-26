@@ -19,11 +19,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "meta.h"
 #include "defs.h"
 #include "usio.h"
 
 utf8_file *u8fopen(char *fname) {
-    utf8_file *res = (utf8_file *)malloc(sizeof(utf8_file));
+    utf8_file *res = ALLOC(utf8_file);
     res->chfile = fopen(fname, "rt");
     if (!res->chfile) { free(res); return 0; }
     res->uchar_save = -1;

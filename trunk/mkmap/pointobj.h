@@ -17,31 +17,36 @@
  *  along with mkmap. If not, see <http://www.gnu.org/licenses/>.       *
  ************************************************************************/
 
-#ifndef _STAR_H
-#define _STAR_H
+#ifndef _POINTOBJ_H
+#define _POINTOBJ_H
 
-#define VIEW(ITEM) ITEM ## _view		/* Should be in a meta type file */
+#include "meta.h"
 
-typedef struct _star_T {
-    /* TBA: int type; -- class */
+#define CLASS_STAR              0x100
+#define CLASS_OPEN_CLUSTER      0x200
+#define CLASS_GLOBULAR_CLUSTER  0x300
+#define CLASS_PLANETARY_NEBULA  0x400
+#define CLASS_BRIGHT_NEBULA     0x500
+#define CLASS_DARK_NEBULA       0x600
+#define CLASS_GALAXY            0x700
+
+typedef struct _pointobj_T {
+    int type;
     double RA, DE, vmag;
-    struct _star_T *prev;
-    int HIP;
-} star;
+    struct _pointobj_T *prev;
+    /* 2Bdef: int cat; -- catalogue */
+    int HIP; /* 2mv */
+} pointobj;
 
-typedef struct _star_view_S {
-    int size;
-    int next;
-    star **S;
-} VIEW(star);
+DEFVIEW(pointobj);
 
-star *new_star(star *prev, int HIP, double RA, double DE, double vmag);
-star_view *new_star_view(int size);
-int append_star(star_view *SV, star *S);
-int star_cmp_by_vmag(const void *P1, const void *P2);
-int star_cmp_by_HIP(const void *P1, const void *P2);
-void dump_stars(FILE *stream, star *S);
-void dump_stars_view(FILE *stream, star_view *SV);
+pointobj *new_pointobj(int type, int HIP, double RA, double DE, double vmag, pointobj *prev);
+pointobj_view *new_pointobj_view(int size);
+int append_pointobj(pointobj_view *SV, pointobj *S);
+int pointobj_cmp_by_vmag(const void *P1, const void *P2);
+int pointobj_cmp_by_HIP(const void *P1, const void *P2);
+void dump_pointobjs(FILE *stream, pointobj *S);
+void dump_pointobj_view(FILE *stream, pointobj_view *SV);
 
-#endif /* _STAR_H */
+#endif /* _POINTOBJ_H */
 

@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "meta.h"
 #include "defs.h"
 #include "ucstr.h"
 #include "uctype.h"
@@ -26,7 +27,7 @@
 #include "token.h"
 
 token_file *tokfopen(char *fname) {
-    token_file *res = (token_file *)malloc(sizeof(token_file));
+    token_file *res = ALLOC(token_file);
     res->tok_file = u8fopen(fname);
     if(!res->tok_file) { free(res); return 0; }
     res->tok_save = 0;        /* init with NO token lookahead */
@@ -40,8 +41,7 @@ int tokfclose(token_file *tok_stream) {
 }
 
 token *_new_token(token_type type, uchar *ustr, int line_num) {
-    token *res;
-    res = (token *)malloc(sizeof(token));
+    token *res = ALLOC(token);
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = 0;
@@ -50,7 +50,7 @@ token *_new_token(token_type type, uchar *ustr, int line_num) {
 }
 
 token *_new_token_num(token_type type, uchar *ustr, uchar *unit, base_mode base, int line_num) {
-    token *res = (token *)malloc(sizeof(token));
+    token *res = ALLOC(token);
     res->type = type;
     res->ustr = ucsdup(ustr);
     res->unit = ucsdup(unit);
@@ -60,9 +60,9 @@ token *_new_token_num(token_type type, uchar *ustr, uchar *unit, base_mode base,
 }
 
 token *_new_token_uchar(token_type type, uchar uc, int line_num) {
-    token *res = (token *)malloc(sizeof(token));
+    token *res = ALLOC(token);
     res->type = type;
-    res->ustr = (uchar *)malloc(sizeof(uchar)*2);
+    res->ustr = ALLOCN(uchar,2);
     res->ustr[0] = uc; res->ustr[1] = L'\0';
     res->unit = 0;
     res->line_num = line_num;
