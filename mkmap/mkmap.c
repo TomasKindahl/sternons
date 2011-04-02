@@ -354,7 +354,7 @@ int load_stars(char *fname, program_state *pstat) {
         DE = next_field_double(&pos);
         vmag = next_field_double(&pos);
         pstat->latest_star =
-        	new_pointobj(CLASS_STAR, HIP, RA, DE, vmag, pstat->latest_star);
+        	new_pointobj(PO_STAR, HIP, RA, DE, vmag, pstat->latest_star);
         append_pointobj(pstat->stars[BY_VMAG], pstat->latest_star);
         append_pointobj(pstat->stars[BY_HIP], pstat->latest_star);
     }
@@ -369,7 +369,7 @@ int load_stars(char *fname, program_state *pstat) {
 pointobj *find_star_by_HIP(int HIP, program_state *pstat) {
     pointobj *s, *res;
 
-    s = new_pointobj(CLASS_STAR, HIP, 0, 0, 0, 0);
+    s = new_pointobj(PO_STAR, HIP, 0, 0, 0, 0);
     res = *((pointobj **)bsearch(&s, (void *)pstat->stars[BY_HIP]->S,
                                   pstat->stars[BY_HIP]->next,
                                   sizeof(pointobj *), pointobj_cmp_by_HIP));

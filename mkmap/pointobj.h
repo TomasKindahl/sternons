@@ -22,13 +22,15 @@
 
 #include "meta.h"
 
-#define CLASS_STAR              0x100
-#define CLASS_OPEN_CLUSTER      0x200
-#define CLASS_GLOBULAR_CLUSTER  0x300
-#define CLASS_PLANETARY_NEBULA  0x400
-#define CLASS_BRIGHT_NEBULA     0x500
-#define CLASS_DARK_NEBULA       0x600
-#define CLASS_GALAXY            0x700
+#define PO_STAR             0x100	/* α, δ, mᵥ,     Δ, B-V?, SP, Δα, Δδ, RV                */
+#define PO_MSTAR            0x200	/* α, δ, mᵥ,     Δ, B-V?,     Δα, Δδ, RV, #⁑, ★₁, ★₂, ⋯ */
+#define PO_VSTAR            0x300	/* α, δ, m̂ᵥ, m̌ᵥ, Δ, B-V?, SP, Δα, Δδ, RV, vartype       */
+#define PO_OPEN_CLUSTER     0x400	/* α, δ, mᵥ,     Δ, B-V?, SP, #⁑ */
+#define PO_GLOBULAR_CLUSTER 0x500	/* α, δ, mᵥ,     Δ, B-V?, SP, GCclass */
+#define PO_PLANETARY_NEBULA 0x600	/* α, δ, mᵥ,     Δ,       dim, PLclass, C★ */
+#define PO_BRIGHT_NEBULA    0x700	
+#define PO_DARK_NEBULA      0x800
+#define PO_GALAXY           0x900
 
 typedef struct _pointobj_T {
     int type;
