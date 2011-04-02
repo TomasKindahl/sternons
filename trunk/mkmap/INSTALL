@@ -1,0 +1,110 @@
+Installation instructions
+=========================
+
+(This file is currently stupid. GNU GPL v3 requires me to make installation
+instructions, and even though the following information is defective and
+incomplete, a programmer might actually save half an hour from reading it.
+Nominally now I fulfill the v3 installation instruction's requirement, although
+praxis show that all instructions are deficient outside of a clearly declared
+context, and by defining a context restrictive enough (f.ex. “the reader ought
+to be a mindreader and guess my intentions”) the installation instructions are
+implicitly provided in the Makefile).
+
+Requirements
+============
+
+Linux:
+	* gcc
+	* gmake (GNU make)
+	* glibc (always installed when installing gcc)
+	* subversion
+Windows:
+	* cygwin
+	* gcc
+	* gmake (GNU make)
+	* subversion
+
+Download
+========
+
+make a subversion checkout from sternons by:
+
+$ svn checkout http://sternons.googlecode.com/svn/trunk/ sternons-read-only
+
+In Windows all commands of course should occur in a cygwin shell window.
+
+mkmap
+=====
+
+compile mkmap
+--------------
+
+Go to mkmap directory:
+
+$ cd sternons/svn/trunk/mkmap
+
+In Windows make
+
+$ make mkmap.exe
+
+then test images
+
+$ make winimg
+
+In Linux just
+
+$ make
+
+and test images
+
+$ make img
+
+cat
+===
+
+Directory cat contains one database table.
+
+$ cd sternons/trunk/cat
+
+In PostgreSQL one can import Tabulae Rudolphinae by
+
+john=# CREATE TABLE Tab_Rud (
+john(#     tr_row int,
+john(#     tr_num int,
+john(#     description varchar(80),
+john(#     longitude varchar(7),
+john(#     latitude varchar(7),
+john(#     magnitude varchar(3),
+john(#     occurrence int,
+john(#     abbreviation varchar(4),
+john(#     page integer
+john(# );
+john=# COPY Tab_Rud FROM 'tabulae-rudolphinae.db' DELIMITER '|';
+
+It probably works similarly in most other database systems with anything like
+standard compliance.
+
+The original table is pretty well reproduced by the command:
+
+john=# SELECT * FROM Tab_Rud ORDER BY tr_row;
+
+The table contains page information not representing stars (or supernovae),
+namely those where tr_num = E'\n', so only stars are selected by:
+
+john=# SELECT * FROM Tab_Rud WHERE tr_num = E'\n' ORDER BY tr_num;
+
+This presents stars measured up by Tycho Brahe, by Hipparchos/Ptolemy and by the
+Dutch southern sky observers Pieter Dirkszoon Keyser and Frederick de Houtman
+(in the table erroneously attributed to Johannes Bayer).
+
+The entries tr_num between 1 and 1008 are from Brahe, although it has been
+theorized that he actually measured up slightly less than 1000 and extrapolated
+the rest from either deficient own observations or positions from
+Hipparchos/Ptolemy. Two are not stars, but instead the reknowned supernovae of
+Tycho in Cassiopeia and Kepler in Ophiuchus. These have trno in (221, 267).
+
+The entries tr_num between 1008 and 1305 are from Hipparchos/Ptolemy not
+measured up by Brahe.
+
+The entries tr_num between 1305 and 1439 are from Keyser and de Houtman.
+
