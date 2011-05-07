@@ -359,7 +359,7 @@ int load_stars(char *fname, program_state *pstat) {
         append_pointobj(pstat->stars[BY_HIP], pstat->latest_star);
     }
     /* sort stars by visual magnitude */
-    sort_pointobj_view(pstat, pstat->stars[BY_VMAG], pointobj_cmp_by_vmag);
+    sort_pointobj_view(pstat, pstat->stars[BY_VMAG], pointobj_cmp_by_V);
     /* sort stars by HIP number */
     sort_pointobj_view(pstat, pstat->stars[BY_HIP], pointobj_cmp_by_HIP);
     u8fclose(inf);
@@ -395,7 +395,7 @@ int load_star_lines(char *fname, program_state *pstat) {
         HIP1 = next_field_int(&pos);
         S = find_star_by_HIP(HIP1, pstat);
         if (S) {
-            RA1 = S->RA; DE1 = S->DE; /* vmag1 = S->vmag; */
+            RA1 = attr_F(S,POA_RA); DE1 = attr_F(S,POA_DE); /* vmag1 = S->vmag; */
         }
         else {
             RA1 = 666; DE1 = 666; /* vmag1 = 666; */
@@ -403,7 +403,7 @@ int load_star_lines(char *fname, program_state *pstat) {
         HIP2 = next_field_double(&pos);
         S = find_star_by_HIP(HIP2, pstat);
         if (S) {
-            RA2 = S->RA; DE2 = S->DE; /* vmag2 = S->vmag; */
+            RA2 = attr_F(S,POA_RA); DE2 = attr_F(S,POA_DE); /* vmag2 = S->vmag; */
         }
         else {
             RA2 = 666; DE2 = 666; /* vmag2 = 666; */
@@ -483,8 +483,8 @@ int load_star_labels(char *fname, program_state *pstat) {
         S = find_star_by_HIP(HIP, pstat);
         if (S) {
             double dir = deg2rad(direction);
-            RA = S->RA + distance * cos(dir);
-            DE = S->DE + distance * sin(dir);
+            RA = attr_F(S,POA_RA) + distance * cos(dir);
+            DE = attr_F(S,POA_DE) + distance * sin(dir);
         }
         else {
             RA = 666; DE = 666;
@@ -616,7 +616,8 @@ void draw_stars(program_state *pstat) {
     if (pstat->debug) fprintf(out, "    <!-- STARS -->\n");
     for (ix = 0; ix < pstat->stars[BY_VMAG]->next; ix++) {
         S = pstat->stars[BY_VMAG]->S[ix];
-        DE = S->DE; RA = S->RA; vmag = S->vmag; HIP = S->HIP;
+        DE = attr_F(S,POA_DE); RA = attr_F(S,POA_RA);
+        vmag = attr_F(S,POA_V); HIP = attr_I(S,POA_HIP);
         Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
         if(pos_in_frame(&x, &y, X, Y, image)) {
             size = (6.8-vmag)*0.8*image->scale;

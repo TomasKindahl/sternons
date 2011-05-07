@@ -1,0 +1,78 @@
+	=== STARS:
+		normal representation:
+			ra, de, vmag, color (SP, B-V or white)
+	    --- full collection:
+		★ I/239 - Hipparcos/Tycho - HIP/TYC: HIP 32349 = TYC 5949-2777-1
+		  = Sirius
+		★ I/312 - PPM-Extended - PPMX: PPMX 064508.8-164257 = Sirius
+		★ I/280B - All-sky Compiled Catalogue of 2.5 million stars (ASCC-2.5,
+		  3rd version) - ASCC: 1447791 = Sirius
+		--- xref:
+		★ IV/27A - HD-DM-GC-HR-HIP-Bayer-Flamsteed Cross Index, Kostjuk N.D.
+		★ IV/22 - FK5-SAO-HD - Common Name Cross Index, Smith W.B.
+		★ IV/12 - SAO-HD-GC-DM Cross Index, Roman, Warren, Schofield
+		--- spectra:
+		★ B/mk - Catalogue of Stellar Spectral Classifications, Skiff, 2010
+	=== MULTIPLE STARS:
+		normal representation:
+			ra, de, vmag, color (SP, B-V or white), multiplicity
+	★ I/274 - Catalogue of the Components of Double and Multiple Stars,
+	  Dommanget, Nys - CCDM
+	=== VARIABLE STARS:
+	★ II/250 - Combined General Catalogue of Variable Stars, Samus, 
+	  Durlevich - GCVS
+	=== DEEP SKY:
+		=== NEBULAE:
+			★ VII/1B - Revised New General Catalogue - RNGC
+			☆ Atlas of galactic nebulae, Neckel, Vehrenberg, 1985
+			=== STAR CLUSTERS & ASSOCIATIONS:
+				=== OPEN CLUSTERS:
+				★ VII/5A - Star Clusters and Associations, Selected Data, Alter+
+				  1970
+				★ VII/101A - Star Clusters/Associations. III. Open Clusters,
+				  Ruprecht+ 1983
+				★ B/ocl - Optically visible open clusters and Candidates, Dias+
+				  2002-2010
+				=== GLOBULAR CLUSTERS:
+				★ VII/202 - Globular Clusters in the Milky Way, Harris, 1997
+				★ VII/44B - Star Clusters & Associations II. Globular Clusters
+				  Ruprecht+ 1981
+				★ VII/13 - Globular-Cluster Catalog, Arp 1965
+				☆ UBV photometry of star clusters in the magellanic cloud, van
+				  den Bergh, Hagen, 1968 - vdB-Ha
+				=== ASSOCIATIONS:
+				★ VII/31B - Star Clusters/Associations. I. Associations,
+				  Ruprecht+ 1982
+				=== INTERSTELLAR MATTER IN CLUSTERS:
+				★ VII/106 - Open Cluster Interstellar Matter Database, Leisawitz
+				  1988
+			=== PLANETARY NEBULAE:
+			★ V/127A - MASH Catalogues of Planetary Nebulae - MASH
+			★ IV/24 - Catalogue of Galactic Planetary Nebulae - PK
+			★ V/84 - Strasbourg-ESO Catalogue of Galactic Planetary Nebulae - 
+			  PN G
+			★ J/A+A/408/1029 - Galactic Planetary Nebulae and their central
+			  stars
+			=== BRIGHT NEBULAE:
+				★ VII/231 (Cederblad) +
+				☆ New emission nebulae, Minkowskij, 1946 (Mi)
+				☆ Catalogue of southern stars embedded in nebulosity, van den
+				  Bergh, Herbst (vdBH)
+				=== H II REGIONS:
+				★ VII/9 (Lynds LBN) + VII/20 (Sharpless Sh2) + VII/216 (RCW)
+				☆ A survey of southern H II regions, Gum, 1955 (Gum)
+				=== REFLECTION NEBULAE:
+				★ VII/21 (Van den Bergh vdB)
+			=== GALAXIES:
+			★ VII/145 - Nearby Galaxies Catalogue - NBG
+			★ VII/26D - Uppsala General Catalogue of Galaxies - UGC
+			☆ Abell A, ●●●●●●●●●●●
+			=== SUPERNOVA REMNANTS:
+			★ VII/227 - A Catalogue of Galactic Supernova Remnants - SNR
+		=== DARK NEBULAE:
+		★ VII/220A (Barnard Dark B) + VII/7A (Lynds LDN)
+		☆ Bernes Be, Sandquist Sa, Sandquist Lindroos SL
+		=== QUASARS AND AGN:S:
+		★ VII/258 - Quasars and Active Galactic Nuclei (13th Ed.), Veron+ 2010
+================================================================================
+
