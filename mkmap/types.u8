@@ -1,0 +1,28 @@
+▷─┬─ any                         ANY                α δ     π          
+  ╰─┬─┬─ star                    STAR               α δ V   π     α̇ δ̇ π̇
+    │ ╰─ varstar                 VAR_STAR           α δ V̂ V̌ π     α̇ δ̇ π̇
+    ├─┬─ composite               COMP               α δ V   π         π̇
+    │ ├─┬─ multstar              MULT_STAR          α δ V   π ⊘   α̇ δ̇ π̇  ★★⋯
+    │ │ ├─ astrometric multstar  METRIC_MULT        α δ V̂ V̌ π     α̇ δ̇ π̇ (★★⋯)
+    │ │ ├─ eclipsing multstar    ECLIPSING_BIN      α δ V̂ V̌ π     α̇ δ̇ π̇ (★★⋯)
+    │ │ ╰─ cataclysmic var star  CATACLYSMIC        α δ V̂ V̌ π     α̇ δ̇ π̇ (★★⋯)
+    │ ├─┬─ cluster               CLUSTER            α δ V   π ⊘ ⊛     π̇
+    │ │ ├─ OC                    OPEN_CLUSTER       α δ V   π ⊘ ⊛ α̇ δ̇ π̇
+    │ │ ╰─ GC                    GLOBULAR_CLUSTER   α δ V   π ⊘ ⊛     π̇
+    │ ├─ star cloud              STAR_CLOUD         α δ V   π ⊘ ⊛     π̇
+    │ ├─ star assoc              ASSOC              α δ     π ⊘ ⊛ α̇ δ̇ π̇
+    │ ╰─ gxy                     GALAXY             α δ V   π ⊘ ⊛     π̇
+    ├─┬─ nebula                  NEBULA             α δ V   π ⊘ ⊛     π̇
+    │ ├─┬─ ejecta                EJECTA             α δ V   π ⊘ ⊛     π̇ ★∨☆
+    │ │ ├─ PN                    PLANETARY_NEBULA   α δ V   π ⊘ ⊛     π̇ ☆
+    │ │ ├─ WR ejecta             WR_EJECTA          α δ V   π ⊘ ⊛     π̇ ★
+    │ │ ╰─ SNR                   SUPERNOVA_REMNANT  α δ V   π ⊘ ⊛     π̇ ☆
+    │ ├─ HII neb                 BRIGHT_NEBULA      α δ V   π ⊘ ⊛     π̇
+    │ ├─ HI dk neb               DARK_NEBULA        α δ     π ⊘ ⊛     π̇
+    │ ╰─ R neb                   REFLECTION_NEBULA  α δ V   π ⊘ ⊛     π̇
+    ╰─┬─ solsysobj               SOLSYS_OBJ         α δ V̂ V̌ π ⊘ ⊛     π̇
+      ├─ major planet            PLANET             α δ V̂ V̌ π     α̇ δ̇ π̇
+      ├─ minor planet            PLANETOID          α δ V̂ V̌ π     α̇ δ̇ π̇
+      ├─ comet                   COMET              α δ V̂ V̌ π     α̇ δ̇ π̇
+      ╰─ meteor swarm            METEOR_SWARM       α δ V̂ V̌ π     α̇ δ̇ π̇
+
