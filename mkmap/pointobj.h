@@ -52,7 +52,7 @@
 #define PO_METEOR_SWARM        0x4300
 
 /** PREDEFINED ATTRIBUTES: **/
-#define POA_none        0  /* for unrecognized attributes    */
+#define POA_none        0  /* for unrecognized attributes   */
 #define POA_RA          1  /* REAL right ascension          */
 #define POA_RA_delta    2  /* REAL right ascension change   */
 #define POA_DE          3  /* REAL declination              */
@@ -68,8 +68,9 @@
 #define POA_SP         13  /* STR */
 #define POA_desg       14  /*  */
 #define POA_morph      15  /*  */
-#define POA_subobjs    16  /* INT  number of object components */
+#define POA_subobjs    16  /* INT number of object components */
 #define POA_HIP        17  /* INT Hipparcos catalog number */
+#define POA_HD         18  /* INT Henry Draper catalog */
 
 typedef struct _cpointobj_T {
 	struct _cpointobj_VT *VT;
@@ -93,8 +94,8 @@ int pointobj_cmp_by_V(const void *P1, const void *P2);
 int pointobj_cmp_by_HIP(const void *P1, const void *P2);
 void dump_pointobjs(FILE *stream, pointobj *S);
 void dump_pointobj_view(FILE *stream, pointobj_view *SV);
-double attr_F(pointobj *S, int attr);
-int attr_I(pointobj *S, int attr);
+double pointobj_attr_D(pointobj *S, int attr);
+int pointobj_attr_I(pointobj *S, int attr);
 
 #endif /* _POINTOBJ_H */
 
