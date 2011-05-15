@@ -1,30 +1,27 @@
 any: RA DE
-	star: RA_d DE_d V B-V PX RV SP HIP⁰¹ TYC⁰¹ HD⁰¹ BD⁰¹ HR⁰¹ Bay⁰¹ Name⁰¹
-		variable star: V_max V_mib V_type
-	composite: 
-		multiple star: RA_d DE_d V B-V PX RV SP HIP⁰¹ TYC⁰¹ HD⁰¹ BD⁰¹ HR⁰¹ Bay⁰¹ Name⁰¹ ★*
-			astrometric variable: (dist angle ★ SP)*
-			eclipsing variable: 
-			cataclysmic variable:
-		star cluster:
-			open cluster:
-			globular cluster:
-		star cloud:
-		star association:
-		galaxy:
-	nebula:
-		star ejectum:
-			planetary nebula:
-			wolf-rayet nebula:
-			supernova remnant:
-		bright nebula:
-			emission nebula:
-			reflection nebula:
-			Herbig-Haro object:
-		dark nebula:
-	solsysobj:
-		planet:
-		minor planet:
-		comet:
-		meteor swarm:
+    star: RA_d? DE_d? V? B_V? PX? RV? SP? HIP? TYC? HD? BD? HR? Bay? Name?
+        variable star: V_max V_min V_type
+        visual multiple star: Comp*
+    composite: 
+        star cluster: 
+            open cluster: 
+            globular cluster: 
+        star cloud: 
+        star association: 
+        galaxy: 
+    nebula: 
+        star ejectum: 
+            planetary nebula: 
+            wolf-rayet nebula: 
+            supernova remnant: 
+        bright nebula: 
+            emission nebula: 
+            reflection nebula: 
+            Herbig-Haro object: 
+        dark nebula: 
+    solsysobj: 
+        planet: 
+        minor planet: 
+        comet: 
+        meteor swarm: 
 
