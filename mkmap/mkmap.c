@@ -817,6 +817,7 @@ int main (int argc, char **argv) {
     /*>   A₄:     /dismissed/                                                           */
     /*>   A₅:   mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments         */
 
+    init_classes();
     pstat = new_program_state(DEBUG, stderr);
 
     load_stars(argv[2], pstat);
