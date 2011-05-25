@@ -52,25 +52,31 @@
 #define PO_METEOR_SWARM        0x4300
 
 /** PREDEFINED ATTRIBUTES: **/
-#define POA_none        0  /* for unrecognized attributes   */
-#define POA_RA          1  /* REAL right ascension          */
-#define POA_RA_delta    2  /* REAL right ascension change   */
-#define POA_DE          3  /* REAL declination              */
-#define POA_DE_delta    4  /* REAL declination change       */
-#define POA_PX          5  /* REAL parallax                 */
-#define POA_RV          6  /* REAL radial velocity          */
-#define POA_V           7  /* REAL visual magnitude         */
-#define POA_V_max       8  /* REAL maximum visual magnitude */
-#define POA_V_min       9  /* REAL minimum visual magnitude */
-#define POA_diam       10  /* REAL diameter                 */
-#define POA_ell        11  /* REAL object ellipticity       */
-#define POA_aspect     12  /* REAL ellipse angle            */
-#define POA_SP         13  /* STR */
-#define POA_desg       14  /*  */
-#define POA_morph      15  /*  */
-#define POA_subobjs    16  /* INT number of object components */
-#define POA_HIP        17  /* INT Hipparcos catalog number */
-#define POA_HD         18  /* INT Henry Draper catalog */
+#define POA_none        0  /* for unrecognized attributes     */
+#define POA_size        1  /* INT size of object of class     */
+#define POA_TYPE        2  /* INT type tag of class           */
+#define POA_prev        3  /* PTR previous same               */
+#define POA_RA          4  /* REAL right ascension            */
+#define POA_RA_delta    5  /* REAL right ascension change     */
+#define POA_DE          6  /* REAL declination                */
+#define POA_DE_delta    7  /* REAL declination change         */
+#define POA_PX          8  /* REAL parallax                   */
+#define POA_RV          9  /* REAL radial velocity            */
+#define POA_V          10  /* REAL visual magnitude           */
+#define POA_V_max      11  /* REAL maximum visual magnitude   */
+#define POA_V_min      12  /* REAL minimum visual magnitude   */
+#define POA_diam       13  /* REAL diameter                   */
+#define POA_ell        14  /* REAL object ellipticity         */
+#define POA_aspect     15  /* REAL ellipse angle              */
+#define POA_SP         16  /* STR spectrum                    */
+#define POA_PN_morph   17  /* STR PN morphology               */
+#define POA_gxy_morph  18  /* STR gxy morphology              */
+#define POA_neb_class  19  /* STR nebula class                */
+#define POA_subobjs    20  /* INT number of object components */
+#define POA_desg       21  /* STR Bayer designation           */
+#define POA_HIP        22  /* INT Hipparcos catalog number    */
+#define POA_HD         23  /* INT Henry Draper catalog        */
+#define POA            24  /* number of parameters            */
 
 typedef struct _cpointobj_T {
 	struct _cpointobj_VT *VT;
@@ -87,6 +93,7 @@ typedef struct _pointobj_T {
 
 DEFVIEW(pointobj);
 
+void init_classes(void);
 pointobj *new_pointobj(int type, int HIP, double RA, double DE, double vmag, pointobj *prev);
 pointobj_view *new_pointobj_view(int size);
 int append_pointobj(pointobj_view *SV, pointobj *S);

@@ -22,6 +22,8 @@
 #include "meta.h"
 #include "pointobj.h"
 
+#define USE_VT_ARRS 1
+
 typedef struct _star_T {
     int type;
     double RA, DE;
@@ -32,21 +34,22 @@ typedef struct _star_T {
 } star;
 
 #define _SZ_TYPE sizeof(int)
+#define _SZ_prev sizeof(struct _pointobj_T *)
 #define _SZ_RA   sizeof(double)
 #define _SZ_DE   sizeof(double)
 #define _SZ_V    sizeof(double)
 #define _SZ_HIP  sizeof(int)
-#define _SZ_prev sizeof(struct _pointobj_T *)
 
 #define _STAR_A_TYPE  0
-#define _STAR_A_RA    ( _STAR_A_TYPE + _SZ_TYPE )
+#define _STAR_A_prev  ( _STAR_A_TYPE + _SZ_TYPE )
+#define _STAR_A_RA    ( _STAR_A_prev + _SZ_prev )
 #define _STAR_A_DE    ( _STAR_A_RA   + _SZ_RA   )
 #define _STAR_A_V     ( _STAR_A_DE   + _SZ_DE   )
 #define _STAR_A_HIP   ( _STAR_A_V    + _SZ_V    )
-#define _STAR_A_prev  ( _STAR_A_HIP  + _SZ_HIP  )
 
 #define byte char
 
+/** Object layout independent set/get for int, double, voidptr **/
 void _iset(byte *res, int index, int ival) {
     int *IPTR = (int *)&res[index];
     *IPTR = ival;
@@ -74,16 +77,75 @@ void * _vget(void *res, int index) {
     return *((void **)(&((byte *)res)[index]));
 }
 
+int _sz[POA];
+int _star_VT[POA];
+
+void init_types(void) {
+    _sz[POA_none] = 0;
+    _sz[POA_TYPE] = sizeof(int);
+    _sz[POA_prev] = sizeof(void *);
+    _sz[POA_RA] = sizeof(double);
+    _sz[POA_RA_delta] = sizeof(double);
+    _sz[POA_DE] = sizeof(double);
+    _sz[POA_DE_delta] = sizeof(double);
+    _sz[POA_PX] = sizeof(double);
+    _sz[POA_RV] = sizeof(double);
+    _sz[POA_V] = sizeof(double);
+    _sz[POA_V_max] = sizeof(double);
+    _sz[POA_V_min] = sizeof(double);
+    _sz[POA_diam] = sizeof(double);
+    _sz[POA_ell] = sizeof(double);
+    _sz[POA_aspect] = sizeof(double);
+    _sz[POA_SP] = sizeof(char[8]);
+    _sz[POA_PN_morph] = sizeof(char[8]);
+    _sz[POA_gxy_morph] = sizeof(char[8]);
+    _sz[POA_neb_class] = sizeof(char[8]);
+    _sz[POA_subobjs] = sizeof(int);
+    _sz[POA_desg] = sizeof(char[8]);
+    _sz[POA_HIP] = sizeof(int);
+    _sz[POA_HD] = sizeof(int);
+}
+
+void init_star_class(void) {
+    int ix;
+    for (ix = 0; ix < POA; ix++) {
+        _star_VT[ix] = -1;
+    }
+    _star_VT[POA_TYPE] = 0;
+    _star_VT[POA_prev] = _star_VT[POA_TYPE] + _SZ_TYPE;
+    _star_VT[POA_RA]   = _star_VT[POA_prev] + _SZ_prev;
+    _star_VT[POA_DE]   = _star_VT[POA_RA]   + _SZ_RA;
+    _star_VT[POA_V]    = _star_VT[POA_DE]   + _SZ_DE;
+    _star_VT[POA_HIP]  = _star_VT[POA_V]    + _SZ_V;
+    _star_VT[POA_size] = _star_VT[POA_HIP]  + _SZ_HIP;
+    return;
+}
+
 pointobj *new_star(int HIP, double RA, double DE, double V, pointobj *prev) {
+#if USE_VT_ARRS == 1
+    byte *res = (byte *)malloc(_star_VT[POA_size]);
+    _iset(res, _star_VT[POA_TYPE], PO_STAR);
+    _pset(res, _star_VT[POA_prev], prev);
+    _dset(res, _star_VT[POA_RA], RA);
+    _dset(res, _star_VT[POA_DE], DE);
+    _dset(res, _star_VT[POA_V], V);
+    _iset(res, _star_VT[POA_HIP], HIP);
+#else
     byte *res = (byte *)malloc(_SZ_TYPE + _SZ_RA + _SZ_DE + _SZ_V
                                + _SZ_HIP + _SZ_prev);
     _iset(res, _STAR_A_TYPE, PO_STAR);
+    _pset(res, _STAR_A_prev, prev);
     _dset(res, _STAR_A_RA, RA);
     _dset(res, _STAR_A_DE, DE);
     _dset(res, _STAR_A_V, V);
     _iset(res, _STAR_A_HIP, HIP);
-    _pset(res, _STAR_A_prev, prev);
+#endif
     return (pointobj *)res;
+}
+
+void init_classes(void) {
+    init_types();
+    init_star_class();
 }
 
 pointobj *new_pointobj(int type, int HIP, double RA, double DE, double V, pointobj *prev) {
@@ -131,16 +193,26 @@ int append_pointobj(VIEW(pointobj) *SV, pointobj *S) {
 int pointobj_cmp_by_V(const void *P1, const void *P2) {
     pointobj *S1 = *((pointobj **)P1);
     pointobj *S2 = *((pointobj **)P2);
+#if USE_VT_ARRS == 1
+    double V1 = _dget(S1,_star_VT[POA_V]);
+    double V2 = _dget(S2,_star_VT[POA_V]);
+#else
     double V1 = _dget(S1,_STAR_A_V);
     double V2 = _dget(S2,_STAR_A_V);
+#endif
     return (V1 > V2) - (V1 < V2);
 }
 
 int pointobj_cmp_by_HIP(const void *P1, const void *P2) {
     pointobj *S1 = *((pointobj **)P1);
     pointobj *S2 = *((pointobj **)P2);
+#if USE_VT_ARRS == 1
+    int H1 = _iget(S1,_star_VT[POA_HIP]);
+    int H2 = _iget(S2,_star_VT[POA_HIP]);
+#else
     int H1 = _iget(S1,_STAR_A_HIP);
     int H2 = _iget(S2,_STAR_A_HIP);
+#endif
     return (H1 > H2) - (H1 < H2);
 }
 
@@ -171,17 +243,29 @@ double pointobj_attr_D(pointobj *PO, int attr) {
     switch(attr) {
         case POA_RA: 
             if (PO->type == PO_STAR) {
+#if USE_VT_ARRS == 1
+                return _dget(PO,_star_VT[POA_RA]);
+#else
                 return _dget(PO,_STAR_A_RA);
+#endif
             }
            return PO->RA;
         case POA_DE: 
             if (PO->type == PO_STAR) {
+#if USE_VT_ARRS == 1
+                return _dget(PO,_star_VT[POA_DE]);
+#else
                 return _dget(PO,_STAR_A_DE);
+#endif
             }
            return PO->DE;
         case POA_V:
             if (PO->type == PO_STAR) {
+#if USE_VT_ARRS == 1
+                return _dget(PO,_star_VT[POA_V]);
+#else
                 return _dget(PO,_STAR_A_V);
+#endif
             }
            return PO->V;
         default:
@@ -195,7 +279,11 @@ int pointobj_attr_I(pointobj *PO, int attr) {
     switch(attr) {
         case POA_HIP:
             if (PO->type == PO_STAR) {
+#if USE_VT_ARRS == 1
+                return _iget(PO,_star_VT[POA_HIP]);
+#else
                 return _iget(PO,_STAR_A_HIP);
+#endif
             }
             S = (star *)PO;
             return S->HIP;
