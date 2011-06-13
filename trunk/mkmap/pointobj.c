@@ -61,8 +61,8 @@ void * _vget(void *res, int index) {
     return *((void **)(&((byte *)res)[index]));
 }
 
-int _sz[POA];
-int _star_VT[POA];
+int _sz[POA];       /* Sizes of attributes */
+int _VT[PO][POA];   /* Virtual tables      */
 
 #define _SZ_INT sizeof(int)
 #define _SZ_PTR sizeof(void *)
@@ -71,7 +71,6 @@ int _star_VT[POA];
 
 void init_method_tags(void) {
     _sz[POA_none] = 0;
-    _sz[POA_TYPE] = _SZ_INT;
     _sz[POA_prev] = _SZ_PTR;
     _sz[POA_RA] = _SZ_DBL;
     _sz[POA_RA_delta] = _SZ_DBL;
@@ -95,34 +94,36 @@ void init_method_tags(void) {
     _sz[POA_HD] = _SZ_INT;
 }
 
-void init_class(int tag[]) {
+void init_class(int type, int tag[]) {
 	int ix;
     for (ix = 0; ix < POA; ix++) {
-        _star_VT[ix] = -1;
+        _VT[type][ix] = -1;
     }
-    _star_VT[tag[0]] = 0;
+    _VT[type][tag[0]] = _SZ_INT; /* all objs start w int size TYPE tag */
     for (ix = 1; tag[ix] != POA_none; ix++) {
-        _star_VT[tag[ix]] = _star_VT[tag[ix-1]] + _sz[tag[ix-1]];
+        _VT[type][tag[ix]] = _VT[type][tag[ix-1]] + _sz[tag[ix-1]];
     }
 }
 
 void init_star_class(void) {
-    int tag[] = {
-        POA_TYPE, POA_prev, POA_RA, POA_DE,
-        POA_V, POA_HIP, POA_size, POA_none
+    int taglist[] = {
+        POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
     };
-    init_class(tag);
-    return;
+    init_class(PO_STAR, taglist);
 }
 
-pointobj *new_obj(int TYPE, double RA, double DE, double V, pointobj *prev) {
-    byte *res = (byte *)malloc(_star_VT[POA_size]);
-    _iset(res, _star_VT[POA_TYPE], TYPE);
-    _pset(res, _star_VT[POA_prev], prev);
-    _dset(res, _star_VT[POA_RA], RA);
-    _dset(res, _star_VT[POA_DE], DE);
-    _dset(res, _star_VT[POA_V], V);
+pointobj *new_obj(int type, double RA, double DE, double V, pointobj *prev) {
+    byte *res = (byte *)malloc(_VT[PO_STAR][POA_size]);
+    _iset(res, 0, type);
+    _pset(res, _VT[type][POA_prev], prev);
+    _dset(res, _VT[type][POA_RA], RA);
+    _dset(res, _VT[type][POA_DE], DE);
+    _dset(res, _VT[type][POA_V], V);
     return (pointobj *)res;
+}
+
+int obj_type(pointobj *obj) {
+    return _iget(obj, 0);
 }
 
 void init_classes(void) {
@@ -130,20 +131,17 @@ void init_classes(void) {
     init_star_class();
 }
 
-pointobj *new_pointobj(int type, int HIP, double RA, double DE, double V, pointobj *prev) {
+pointobj *new_pointobj(
+    int type, int HIP, double RA, double DE, double V, pointobj *prev
+) {
     pointobj *res;
     switch (type) {
         case PO_STAR:
             res = new_obj(PO_STAR, RA, DE, V, prev);
-            _iset((byte *)res, _star_VT[POA_HIP], HIP);
+            _iset((byte *)res, _VT[PO_STAR][POA_HIP], HIP);
             return res;
         default:
-            res = ALLOC(pointobj);
-            res->type = PO_ANY;
-            res->RA = RA; res->DE = DE;
-            res->V = V;
-            res->prev = prev;
-            res->HIP = HIP;
+            return 0;
     }
     return res;
 }
@@ -177,22 +175,30 @@ int append_pointobj(VIEW(pointobj) *SV, pointobj *S) {
 int pointobj_cmp_by_V(const void *P1, const void *P2) {
     pointobj *S1 = *((pointobj **)P1);
     pointobj *S2 = *((pointobj **)P2);
-    double V1 = _dget(S1,_star_VT[POA_V]);
-    double V2 = _dget(S2,_star_VT[POA_V]);
+    double V1 = _dget(S1,_VT[PO_STAR][POA_V]);
+    double V2 = _dget(S2,_VT[PO_STAR][POA_V]);
     return (V1 > V2) - (V1 < V2);
 }
 
 int pointobj_cmp_by_HIP(const void *P1, const void *P2) {
     pointobj *S1 = *((pointobj **)P1);
     pointobj *S2 = *((pointobj **)P2);
-    int H1 = _iget(S1,_star_VT[POA_HIP]);
-    int H2 = _iget(S2,_star_VT[POA_HIP]);
+    int H1 = _iget(S1,_VT[PO_STAR][POA_HIP]);
+    int H2 = _iget(S2,_VT[PO_STAR][POA_HIP]);
     return (H1 > H2) - (H1 < H2);
 }
 
 void dump_pointobjs(FILE *stream, pointobj *S) {
-    fprintf(stream, "  (star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
-            S->HIP, S->RA, S->DE, S->V);
+    if (obj_type(S) == PO_STAR) {
+        fprintf(stream, "  (star: HIP =% 7i, α = %12.8f, δ = %12.8f, m = %4.2f)\n",
+                _iget(S, _VT[PO_STAR][POA_HIP]),
+                _dget(S, _VT[PO_STAR][POA_RA]),
+                _dget(S, _VT[PO_STAR][POA_DE]),
+                _dget(S, _VT[PO_STAR][POA_V]));
+    }
+    else {
+        fprintf(stream, "  (undescribable object)\n");
+    }
 }
 
 void dump_pointobj_view(FILE *stream, pointobj_view *SV) {
@@ -204,49 +210,16 @@ void dump_pointobj_view(FILE *stream, pointobj_view *SV) {
     fprintf(stream, "}\n");
 }
 
-int star_type(int type) {
-    int gtype;
-    gtype = type & 0xF000;
-    if (gtype == 0x1000) return 1;
-    gtype = type & 0xFF00;
-    if (gtype <= 0x2100) return 1;
-    return 0;
-}
-
-double pointobj_attr_D(pointobj *PO, int attr) {
-    switch(attr) {
-        case POA_RA: 
-            if (PO->type == PO_STAR) {
-                return _dget(PO,_star_VT[POA_RA]);
-            }
-           return PO->RA;
-        case POA_DE: 
-            if (PO->type == PO_STAR) {
-                return _dget(PO,_star_VT[POA_DE]);
-            }
-           return PO->DE;
-        case POA_V:
-            if (PO->type == PO_STAR) {
-                return _dget(PO,_star_VT[POA_V]);
-            }
-           return PO->V;
-        default:
-            return -1;
+double pointobj_attr_D(pointobj *pobj, int attr) {
+    if (_sz[attr] == _SZ_DBL) {
+    	return _dget(pobj,_VT[obj_type(pobj)][attr]);
     }
     return -1;
 }
 
-int pointobj_attr_I(pointobj *PO, int attr) {
-    star *S;
-    switch(attr) {
-        case POA_HIP:
-            if (PO->type == PO_STAR) {
-                return _iget(PO,_star_VT[POA_HIP]);
-            }
-            S = (star *)PO;
-            return S->HIP;
-        default:
-            return -1;
+int pointobj_attr_I(pointobj *pobj, int attr) {
+    if (_sz[attr] == _SZ_INT) {
+    	return _iget(pobj,_VT[obj_type(pobj)][attr]);
     }
     return -1;
 }
