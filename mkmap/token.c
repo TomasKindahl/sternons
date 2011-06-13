@@ -115,7 +115,7 @@ base_mode scan_mode(uchar *ustr) {
 }
 
 token *_scan(utf8_file *stream) {
-    uchar ustr[256], uunit[32], ubase[32];
+    uchar ustr[256], uunit[32];
     uchar uch;
     int ix, jx, lno;
 
