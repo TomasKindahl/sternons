@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "meta.h"
+#include "defs.h"
+#include "ucstr.h"
 #include "pointobj.h"
 
 typedef struct _star_T {
@@ -110,6 +112,17 @@ void init_star_class(void) {
         POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
     };
     init_class(PO_STAR, taglist);
+}
+
+int ustring_to_attrib(uchar *ustr) {
+	uchar _UC_RA[] = {'R','A',0};
+	uchar _UC_R_A_[] = {'R','.','A','.',0};
+	uchar _UC_Alpha[] = {0x3B1,0}; /* Unicode alpha */
+
+	if (0 == ucscmp(ustr, _UC_RA))      return POA_RA;
+	if (0 == ucscmp(ustr, _UC_R_A_))    return POA_RA;
+	if (0 == ucscmp(ustr, _UC_Alpha))   return POA_RA;
+    return POA_none;
 }
 
 pointobj *new_obj(int type, double RA, double DE, double V, pointobj *prev) {

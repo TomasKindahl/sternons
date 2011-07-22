@@ -62,6 +62,9 @@ hard: clean
 view: orion.svg
 	epiphany $< &
 
+ucliterals: ucliterals.c usio.c usio.h ucstr.c ucstr.h uctype.c uctype.c
+	$(CC) -o $@ $< $(OBJS)
+
 #### For Windows:
 mkmap.exe: mkmap.c $(WOBJS)
 	$(CC) -o $@ $< $(WOBJS) -lm

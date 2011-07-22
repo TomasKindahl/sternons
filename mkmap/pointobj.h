@@ -78,11 +78,11 @@
 #define POA_HD         22  /* INT Henry Draper catalog        */
 #define POA            23  /* number of parameters            */
 
-typedef struct _cpointobj_T {
+typedef struct _cpointobj_S {
 	struct _cpointobj_VT *VT;
 } cpointobj;
 
-typedef struct _pointobj_T {
+typedef struct _pointobj_S {
 	int dum;
 } pointobj;
 

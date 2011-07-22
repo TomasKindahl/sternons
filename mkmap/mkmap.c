@@ -342,7 +342,7 @@ int load_stars(char *fname, program_state *pstat) {
     int HIP;
     double RA, DE, vmag;
     uchar line[1024], *pos;
-    utf8_file *inf = u8fopen(fname);
+    utf8_file *inf = u8fopen(fname, "rt");
 
     if (!inf) return 0;
     /* LOAD THE STARS */
@@ -382,7 +382,7 @@ int load_star_lines(char *fname, program_state *pstat) {
     double RA1, DE1;
     double RA2, DE2;
     uchar line[1024], *pos, *asterism;
-    utf8_file *inf = u8fopen(fname);
+    utf8_file *inf = u8fopen(fname, "rt");
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
@@ -431,7 +431,7 @@ int load_constellation_bounds(char *fname, program_state *pstat) {
     double RA1, DE1;
     double RA2, DE2;
     uchar line[1024], *pos, *constel;
-    utf8_file *inf = u8fopen(fname);
+    utf8_file *inf = u8fopen(fname, "rt");
 
     if (!inf) return 0;
     while (fgetus(line, 1023, inf)) {
@@ -469,7 +469,7 @@ int load_star_labels(char *fname, program_state *pstat) {
     int HIP, anchor;
     double distance, direction, RA, DE;
     uchar line[1024], *pos, *label;
-    utf8_file *inf = u8fopen(fname);
+    utf8_file *inf = u8fopen(fname, "rt");
 
     while (fgetus(line, 1023, inf)) {
         pointobj *S;
