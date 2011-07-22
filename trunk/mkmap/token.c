@@ -28,7 +28,7 @@
 
 token_file *tokfopen(char *fname) {
     token_file *res = ALLOC(token_file);
-    res->tok_file = u8fopen(fname);
+    res->tok_file = u8fopen(fname, "rt");
     if(!res->tok_file) { free(res); return 0; }
     res->tok_save = 0;        /* init with NO token lookahead */
     return res;

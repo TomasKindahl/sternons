@@ -23,7 +23,7 @@
 #include "defs.h"
 #include "usio.h"
 
-utf8_file *u8fopen(char *fname) {
+utf8_file *u8fopen(char *fname, char *mode) {
     utf8_file *res = ALLOC(utf8_file);
     res->chfile = fopen(fname, "rt");
     if (!res->chfile) { free(res); return 0; }

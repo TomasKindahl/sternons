@@ -31,7 +31,7 @@ typedef struct _utf8_file_S {
     int line_num;
 } utf8_file;
 
-utf8_file *u8fopen(char *fname);        /* DO: "rt", "wt" */
+utf8_file *u8fopen(char *fname, char *mode);           /* DO: "rt", "wt" */
 int u8fclose(utf8_file *file);
 int u8feof(utf8_file *file);
 uchar fgetuc(utf8_file *stream);
