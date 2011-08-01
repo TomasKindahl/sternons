@@ -20,23 +20,34 @@
 .SUFFIXES: .obj .mkm .png .svg
 
 CC 		= gcc -g -Wall --pedantic-error
+UCCVT	= ./ucliterals
 MAPS 	= star.db
-OBJS 	= token.o ucstr.o uctype.o usio.o pointobj.o
+STROBJS	= token.o ucstr.o uctype.o usio.o
+OBJS 	= $(STROBJS) pointobj.o
 OBJSP 	= $(OBJS) parse.o
-WOBJS 	= token.obj ucstr.obj uctype.obj usio.obj pointobj.obj
+SWOBJS	= token.obj ucstr.obj uctype.obj usio.obj
+WOBJS 	= $(SWOBJS) pointobj.obj
 WOBJSP 	= $(WOBJS) parse.obj
+
+all: img
+
+img: mkmap maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm $(MAPS)
 
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
+
+mkmap.c: mkmap.uc $(UCCVT)
+	$(UCCVT) $<
+
+pointobj.c: pointobj.uc $(UCCVT)
+	$(UCCVT) $<
 
 parse_program: parse_program.c $(OBJSP)
 	$(CC) -o $@ $< $(OBJSP) -lm
 
 .c.o:
 	$(CC) -c $<
-
-img: mkmap maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm $(MAPS)
 
 orion.svg: mkmap maps/orion.mkm $(MAPS)
 	./$< maps/orion.mkm $(MAPS)
@@ -51,6 +62,7 @@ clean:
 	rm -f *.o
 	rm -f *.obj
 	rm -f *~*
+	rm -f \#*\#
 
 distclean: clean
 	rm -f cmap cmp dump mkmap
@@ -62,8 +74,8 @@ hard: clean
 view: orion.svg
 	epiphany $< &
 
-ucliterals: ucliterals.c usio.c usio.h ucstr.c ucstr.h uctype.c uctype.c
-	$(CC) -o $@ $< $(OBJS)
+ucliterals: ucliterals.c usio.c usio.h ucstr.c ucstr.h uctype.c $(STROBJS)
+	$(CC) -o $@ $< $(STROBJS)
 
 #### For Windows:
 mkmap.exe: mkmap.c $(WOBJS)
