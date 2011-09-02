@@ -54,36 +54,37 @@
 
 /** PREDEFINED ATTRIBUTES: **/
 #define POA_none        0  /* for unrecognized attributes        */
-#define POA_size        1  /* INT size of object of class        */
-#define POA_prev        2  /* PTR previous same                  */
+#define POA_type        1  /* INT object 'class'                 */
+#define POA_size        2  /* INT size of object of class        */
+#define POA_prev        3  /* PTR previous same                  */
 /* POSITION/MOVEMENT */
-#define POA_RA          3  /* REAL right ascension               */
-#define POA_pmRA        4  /* REAL right ascension proper motion */
-#define POA_DE          5  /* REAL declination                   */
-#define POA_pmDE        6  /* REAL declination proper motion     */
-#define POA_PX          7  /* REAL parallax                      */
-#define POA_RV          8  /* REAL radial velocity               */
+#define POA_RA          4  /* REAL right ascension               */
+#define POA_pmRA        5  /* REAL right ascension proper motion */
+#define POA_DE          6  /* REAL declination                   */
+#define POA_pmDE        7  /* REAL declination proper motion     */
+#define POA_PX          8  /* REAL parallax                      */
+#define POA_RV          9  /* REAL radial velocity               */
 /* MAGNITUDE */
-#define POA_V           9  /* REAL visual magnitude              */
-#define POA_V_max      10  /* REAL maximum visual magnitude      */
-#define POA_V_min      11  /* REAL minimum visual magnitude      */
+#define POA_V          10  /* REAL visual magnitude              */
+#define POA_V_max      11  /* REAL maximum visual magnitude      */
+#define POA_V_min      12  /* REAL minimum visual magnitude      */
 /* ORIENTATION */
-#define POA_diam       12  /* REAL diameter                      */
-#define POA_ecc        13  /* REAL object eccentricity           */
-#define POA_incl       14  /* REAL object inclination            */
-#define POA_angsep     15  /* REAL angular separation            */
-#define POA_posang     16  /* REAL position angle                */
-#define POA_magdiff    17  /* REAL magnitude diff (dbl stars)    */
+#define POA_diam       13  /* REAL diameter                      */
+#define POA_ecc        14  /* REAL object eccentricity           */
+#define POA_incl       15  /* REAL object inclination            */
+#define POA_angsep     16  /* REAL angular separation            */
+#define POA_posang     17  /* REAL position angle                */
+#define POA_magdiff    18  /* REAL magnitude diff (dbl stars)    */
 /* PHYSICS */
-#define POA_SP         18  /* STR spectrum                       */
-#define POA_PN_morph   19  /* STR PN morphology                  */
-#define POA_gxy_morph  20  /* STR gxy morphology                 */
-#define POA_neb_class  21  /* STR nebula class                   */
-#define POA_subobjs    22  /* INT number of object components    */
-#define POA_desg       23  /* STR Bayer designation              */
-#define POA_HIP        24  /* INT Hipparcos catalog number       */
-#define POA_HD         25  /* INT Henry Draper catalog           */
-#define POA            26  /* number of parameters               */
+#define POA_SP         19  /* STR spectrum                       */
+#define POA_PN_morph   20  /* STR PN morphology                  */
+#define POA_gxy_morph  21  /* STR gxy morphology                 */
+#define POA_neb_class  22  /* STR nebula class                   */
+#define POA_subobjs    23  /* INT number of object components    */
+#define POA_desg       24  /* STR Bayer designation              */
+#define POA_HIP        25  /* INT Hipparcos catalog number       */
+#define POA_HD         26  /* INT Henry Draper catalog           */
+#define POA            27  /* number of parameters               */
 
 typedef struct _cpointobj_S {
 	struct _cpointobj_VT *VT;

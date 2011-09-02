@@ -74,6 +74,7 @@ int _VT[PO][POA];   /* Virtual tables      */
 
 void init_method_tags(void) {
     _sz[POA_none] = 0;
+    _sz[POA_type] = _SZ_INT;
     _sz[POA_prev] = _SZ_PTR;
     _sz[POA_RA] = _SZ_DBL;
     _sz[POA_pmRA] = _SZ_DBL;
@@ -100,93 +101,104 @@ void init_method_tags(void) {
 }
 
 void init_class(int type, int tag[]) {
-	int ix;
+    int ix;
     for (ix = 0; ix < POA; ix++) {
         _VT[type][ix] = -1;
     }
-    _VT[type][tag[0]] = _SZ_INT; /* all objs start w int size TYPE tag */
-    for (ix = 1; tag[ix] != POA_none; ix++) {
+    _VT[type][POA_type] = 0;        /* type attrib ALWAYS on zeroth index */
+    _VT[type][POA_prev] = _SZ_INT;  /* prev attrib ALWAYS after */
+    _VT[type][tag[0]] = _SZ_PTR;    /* then first attrib in list ... */
+    for (ix = 1; tag[ix] != POA_none; ix++) { /* ... and so on */
         _VT[type][tag[ix]] = _VT[type][tag[ix-1]] + _sz[tag[ix-1]];
     }
+    /* The total size MUST be put into attrib POA_size, */
+    /*     or else ALL HELL breaks loose: */
+    _VT[type][POA_size] = _VT[type][tag[ix-1]] + _sz[tag[ix-1]];
 }
 
 int ustring_to_attrib(uchar *ustr) {
-	/*---- Right Ascension */
-	if (0 == ucscmp(ustr, u"RA")) return POA_RA;
-	if (0 == ucscmp(ustr, u"α")) return POA_RA;
-	/*---- Proper Motion Right Ascension */
-	if (0 == ucscmp(ustr, u"pmRA")) return POA_pmRA;
-	if (0 == ucscmp(ustr, u"μα·cos δ")) return POA_pmRA;
-	/*---- Declination */
-	if (0 == ucscmp(ustr, u"DE")) return POA_DE;
-	if (0 == ucscmp(ustr, u"δ")) return POA_DE;
-	/*---- Proper Motion Declination */
-	if (0 == ucscmp(ustr, u"pmDE")) return POA_pmDE;
-	if (0 == ucscmp(ustr, u"μδ")) return POA_pmDE;
+    if (!ustr) return POA_none;
+    /*---- Right Ascension */
+    if (0 == ucscmp(ustr, u"RA")) return POA_RA;
+    if (0 == ucscmp(ustr, u"α")) return POA_RA;
+    /*---- Proper Motion Right Ascension */
+    if (0 == ucscmp(ustr, u"pmRA")) return POA_pmRA;
+    if (0 == ucscmp(ustr, u"μα·cos δ")) return POA_pmRA;
+    if (0 == ucscmp(ustr, u"α'")) return POA_pmRA;
+    /*---- Declination */
+    if (0 == ucscmp(ustr, u"DE")) return POA_DE;
+    if (0 == ucscmp(ustr, u"δ")) return POA_DE;
+    /*---- Proper Motion Declination */
+    if (0 == ucscmp(ustr, u"pmDE")) return POA_pmDE;
+    if (0 == ucscmp(ustr, u"μδ")) return POA_pmDE;
+    if (0 == ucscmp(ustr, u"δ'")) return POA_pmDE;
 
-	/*---- Parallax */
-	if (0 == ucscmp(ustr, u"px")) return POA_PX;
-	if (0 == ucscmp(ustr, u"Plx")) return POA_PX;
-	if (0 == ucscmp(ustr, u"π")) return POA_PX;
-	/*---- Radial Velocity */
-	if (0 == ucscmp(ustr, u"RV")) return POA_RV;
+    /*---- Parallax */
+    if (0 == ucscmp(ustr, u"px")) return POA_PX;
+    if (0 == ucscmp(ustr, u"Plx")) return POA_PX;
+    if (0 == ucscmp(ustr, u"π")) return POA_PX;
+    /*---- Radial Velocity */
+    if (0 == ucscmp(ustr, u"RV")) return POA_RV;
 
-	/*---- Visual Magnitude */
-	if (0 == ucscmp(ustr, u"V")) return POA_V;
-	if (0 == ucscmp(ustr, u"Mᵥ")) return POA_V;
-	/*---- Max Visual Magnitude */
-	if (0 == ucscmp(ustr, u"Vmax")) return POA_V_max;
-	/*---- Min Visual Magnitude */
-	if (0 == ucscmp(ustr, u"Vmin")) return POA_V_min;
+    /*---- Visual Magnitude */
+    if (0 == ucscmp(ustr, u"V")) return POA_V;
+    if (0 == ucscmp(ustr, u"Mᵥ")) return POA_V;
+    /*---- Max Visual Magnitude */
+    if (0 == ucscmp(ustr, u"Vmax")) return POA_V_max;
+    /*---- Min Visual Magnitude */
+    if (0 == ucscmp(ustr, u"Vmin")) return POA_V_min;
 
-	/*==== Deep sky metrics */
-	/*---- Diameter (nebula size, apparent orbit etc.) */
-	if (0 == ucscmp(ustr, u"diam")) return POA_diam;
-	if (0 == ucscmp(ustr, u"∅")) return POA_diam;
-	/*---- Eccentricity */
-	if (0 == ucscmp(ustr, u"ecc")) return POA_ecc;
-	if (0 == ucscmp(ustr, u"e")) return POA_ecc;
-	/*---- Inclination */
-	if (0 == ucscmp(ustr, u"incl")) return POA_incl;
-	if (0 == ucscmp(ustr, u"i")) return POA_incl;
+    /*==== Deep sky metrics */
+    /*---- Diameter (nebula size, apparent orbit etc.) */
+    if (0 == ucscmp(ustr, u"diam")) return POA_diam;
+    if (0 == ucscmp(ustr, u"∅")) return POA_diam;
+    /*---- Eccentricity */
+    if (0 == ucscmp(ustr, u"ecc")) return POA_ecc;
+    if (0 == ucscmp(ustr, u"e")) return POA_ecc;
+    /*---- Inclination */
+    if (0 == ucscmp(ustr, u"incl")) return POA_incl;
+    if (0 == ucscmp(ustr, u"i")) return POA_incl;
 
-	/*==== Double star metrics */
-	/*---- Angular separation */
-	if (0 == ucscmp(ustr, u"rho")) return POA_angsep;
-	if (0 == ucscmp(ustr, u"ρ")) return POA_angsep;
-	/*---- Position angle */
-	if (0 == ucscmp(ustr, u"pos angle")) return POA_posang;
-	if (0 == ucscmp(ustr, u"theta")) return POA_posang;
-	if (0 == ucscmp(ustr, u"θ")) return POA_posang;
+    /*==== Double star metrics */
+    /*---- Angular separation */
+    if (0 == ucscmp(ustr, u"rho")) return POA_angsep;
+    if (0 == ucscmp(ustr, u"ρ")) return POA_angsep;
+    /*---- Position angle */
+    if (0 == ucscmp(ustr, u"pos angle")) return POA_posang;
+    if (0 == ucscmp(ustr, u"theta")) return POA_posang;
+    if (0 == ucscmp(ustr, u"θ")) return POA_posang;
 
-	/*==== Physics */
-	/*---- Spectrum */
-	if (0 == ucscmp(ustr, u"SP")) return POA_SP;
+    /*==== Physics */
+    /*---- Spectrum */
+    if (0 == ucscmp(ustr, u"SP")) return POA_SP;
 
-	/** ...INSERTME(PN_morph, gxy_morph, neb_class)... */
+    /** ...INSERTME(PN_morph, gxy_morph, neb_class)... */
 
-	/*---- Bayer/Flamsteed designation */
-	if (0 == ucscmp(ustr, u"Bayer")) return POA_desg;
-	if (0 == ucscmp(ustr, u"desg")) return POA_desg;
-	/*---- Hipparcos number */
-	if (0 == ucscmp(ustr, u"HIP")) return POA_HIP;
-	/*---- Henry Draper number */
-	if (0 == ucscmp(ustr, u"HD")) return POA_HD;
+    /*---- Bayer/Flamsteed designation */
+    if (0 == ucscmp(ustr, u"Bayer")) return POA_desg;
+    if (0 == ucscmp(ustr, u"desg")) return POA_desg;
+    /*---- Hipparcos number */
+    if (0 == ucscmp(ustr, u"HIP")) return POA_HIP;
+    /*---- Henry Draper number */
+    if (0 == ucscmp(ustr, u"HD")) return POA_HD;
 
-	/* No such parameter! */
+    /* No such parameter! */
     return POA_none;
 }
 
 void init_star_class(void) {
     int taglist[] = {
-        POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
+        POA_RA, POA_DE, POA_V, POA_HIP, POA_none
     };
     init_class(PO_STAR, taglist);
 }
 
 void init_star_class_2(void) {
     int taglist[] = {
-        POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
+        POA_RA, POA_DE, POA_V, POA_HIP, POA_none
+    };
+    uchar *taglist2[] = {
+        u"α", u"δ", u"Mᵥ", u"HIP", 0
     };
     init_class(PO_STAR, taglist);
 }
@@ -291,14 +303,14 @@ void dump_pointobj_view(FILE *stream, pointobj_view *SV) {
 
 double pointobj_attr_D(pointobj *pobj, int attr) {
     if (_sz[attr] == _SZ_DBL) {
-    	return _dget(pobj,_VT[obj_type(pobj)][attr]);
+        return _dget(pobj,_VT[obj_type(pobj)][attr]);
     }
     return -1;
 }
 
 int pointobj_attr_I(pointobj *pobj, int attr) {
     if (_sz[attr] == _SZ_INT) {
-    	return _iget(pobj,_VT[obj_type(pobj)][attr]);
+        return _iget(pobj,_VT[obj_type(pobj)][attr]);
     }
     return -1;
 }

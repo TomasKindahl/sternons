@@ -77,6 +77,9 @@ view: orion.svg
 ucliterals: ucliterals.c usio.c usio.h ucstr.c ucstr.h uctype.c $(STROBJS)
 	$(CC) -o $@ $< $(STROBJS)
 
+allstrings.o: allstrings.c
+	$(CC) -c $<
+
 #### For Windows:
 mkmap.exe: mkmap.c $(WOBJS)
 	$(CC) -o $@ $< $(WOBJS) -lm
