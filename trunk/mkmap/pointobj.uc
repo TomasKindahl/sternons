@@ -76,17 +76,19 @@ void init_method_tags(void) {
     _sz[POA_none] = 0;
     _sz[POA_prev] = _SZ_PTR;
     _sz[POA_RA] = _SZ_DBL;
-    _sz[POA_RA_delta] = _SZ_DBL;
+    _sz[POA_pmRA] = _SZ_DBL;
     _sz[POA_DE] = _SZ_DBL;
-    _sz[POA_DE_delta] = _SZ_DBL;
+    _sz[POA_pmDE] = _SZ_DBL;
     _sz[POA_PX] = _SZ_DBL;
     _sz[POA_RV] = _SZ_DBL;
     _sz[POA_V] = _SZ_DBL;
     _sz[POA_V_max] = _SZ_DBL;
     _sz[POA_V_min] = _SZ_DBL;
     _sz[POA_diam] = _SZ_DBL;
-    _sz[POA_ell] = _SZ_DBL;
-    _sz[POA_aspect] = _SZ_DBL;
+    _sz[POA_ecc] = _SZ_DBL;
+    _sz[POA_angsep] = _SZ_DBL;
+    _sz[POA_posang] = _SZ_DBL;
+    _sz[POA_magdiff] = _SZ_DBL;
     _sz[POA_SP] = _SZ_CH8;
     _sz[POA_PN_morph] = _SZ_CH8;
     _sz[POA_gxy_morph] = _SZ_CH8;
@@ -116,9 +118,70 @@ void init_star_class(void) {
 }
 
 int ustring_to_attrib(uchar *ustr) {
-	if (0 == ucscmp(ustr, u"RA"))   return POA_RA;
-	if (0 == ucscmp(ustr, u"R.A.")) return POA_RA;
-	if (0 == ucscmp(ustr, u"α"))    return POA_RA;
+
+	/*---- Right Ascension */
+	if (0 == ucscmp(ustr, u"RA")) return POA_RA;
+	if (0 == ucscmp(ustr, u"α")) return POA_RA;
+	/*---- Proper Motion Right Ascension */
+	if (0 == ucscmp(ustr, u"pmRA")) return POA_pmRA;
+	if (0 == ucscmp(ustr, u"μα·cos δ")) return POA_pmRA;
+	/*---- Declination */
+	if (0 == ucscmp(ustr, u"DE")) return POA_DE;
+	if (0 == ucscmp(ustr, u"δ")) return POA_DE;
+	/*---- Proper Motion Declination */
+	if (0 == ucscmp(ustr, u"pmDE")) return POA_pmDE;
+	if (0 == ucscmp(ustr, u"μδ")) return POA_pmDE;
+
+	/*---- Parallax */
+	if (0 == ucscmp(ustr, u"px")) return POA_PX;
+	if (0 == ucscmp(ustr, u"Plx")) return POA_PX;
+	if (0 == ucscmp(ustr, u"π")) return POA_PX;
+	/*---- Radial Velocity */
+	if (0 == ucscmp(ustr, u"RV")) return POA_RV;
+
+	/*---- Visual Magnitude */
+	if (0 == ucscmp(ustr, u"V")) return POA_V;
+	if (0 == ucscmp(ustr, u"Mᵥ")) return POA_V;
+	/*---- Max Visual Magnitude */
+	if (0 == ucscmp(ustr, u"Vmax")) return POA_V_max;
+	/*---- Min Visual Magnitude */
+	if (0 == ucscmp(ustr, u"Vmin")) return POA_V_min;
+
+	/*==== Deep sky metrics */
+	/*---- Diameter (nebula size, apparent orbit etc.) */
+	if (0 == ucscmp(ustr, u"diam")) return POA_diam;
+	if (0 == ucscmp(ustr, u"∅")) return POA_diam;
+	/*---- Eccentricity */
+	if (0 == ucscmp(ustr, u"ecc")) return POA_ecc;
+	if (0 == ucscmp(ustr, u"e")) return POA_ecc;
+	/*---- Inclination */
+	if (0 == ucscmp(ustr, u"incl")) return POA_incl;
+	if (0 == ucscmp(ustr, u"i")) return POA_incl;
+
+	/*==== Double star metrics */
+	/*---- Angular separation */
+	if (0 == ucscmp(ustr, u"rho")) return POA_angsep;
+	if (0 == ucscmp(ustr, u"ρ")) return POA_angsep;
+	/*---- Position angle */
+	if (0 == ucscmp(ustr, u"pos angle")) return POA_posang;
+	if (0 == ucscmp(ustr, u"theta")) return POA_posang;
+	if (0 == ucscmp(ustr, u"θ")) return POA_posang;
+
+	/*==== Physics */
+	/*---- Spectrum */
+	if (0 == ucscmp(ustr, u"SP")) return POA_SP;
+
+	/** ...INSERTME(PN_morph, gxy_morph, neb_class)... */
+
+	/*---- Bayer/Flamsteed designation */
+	if (0 == ucscmp(ustr, u"Bayer")) return POA_desg;
+	if (0 == ucscmp(ustr, u"desg")) return POA_desg;
+	/*---- Hipparcos number */
+	if (0 == ucscmp(ustr, u"HIP")) return POA_HIP;
+	/*---- Henry Draper number */
+	if (0 == ucscmp(ustr, u"HD")) return POA_HD;
+
+	/* No such parameter! */
     return POA_none;
 }
 

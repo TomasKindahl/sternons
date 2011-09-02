@@ -78,17 +78,19 @@ void init_method_tags(void) {
     _sz[POA_none] = 0;
     _sz[POA_prev] = _SZ_PTR;
     _sz[POA_RA] = _SZ_DBL;
-    _sz[POA_RA_delta] = _SZ_DBL;
+    _sz[POA_pmRA] = _SZ_DBL;
     _sz[POA_DE] = _SZ_DBL;
-    _sz[POA_DE_delta] = _SZ_DBL;
+    _sz[POA_pmDE] = _SZ_DBL;
     _sz[POA_PX] = _SZ_DBL;
     _sz[POA_RV] = _SZ_DBL;
     _sz[POA_V] = _SZ_DBL;
     _sz[POA_V_max] = _SZ_DBL;
     _sz[POA_V_min] = _SZ_DBL;
     _sz[POA_diam] = _SZ_DBL;
-    _sz[POA_ell] = _SZ_DBL;
-    _sz[POA_aspect] = _SZ_DBL;
+    _sz[POA_ecc] = _SZ_DBL;
+    _sz[POA_angsep] = _SZ_DBL;
+    _sz[POA_posang] = _SZ_DBL;
+    _sz[POA_magdiff] = _SZ_DBL;
     _sz[POA_SP] = _SZ_CH8;
     _sz[POA_PN_morph] = _SZ_CH8;
     _sz[POA_gxy_morph] = _SZ_CH8;
@@ -118,10 +120,231 @@ void init_star_class(void) {
 }
 
 int ustring_to_attrib(uchar *ustr) {
-	if (0 == ucscmp(ustr, _UC_RA))   return POA_RA;
-	if (0 == ucscmp(ustr, _UC_R_2E_A_2E_)) return POA_RA;
-	if (0 == ucscmp(ustr, _UC__3B1_))    return POA_RA;
+
+	/*---- Right Ascension */
+	if (0 == ucscmp(ustr, _UC_RA)) return POA_RA;
+	if (0 == ucscmp(ustr, _UC__3B1_)) return POA_RA;
+	/*---- Proper Motion Right Ascension */
+	if (0 == ucscmp(ustr, _UC_pmRA)) return POA_pmRA;
+	if (0 == ucscmp(ustr, _UC__3BC__3B1__B7_cos_20__3B4_)) return POA_pmRA;
+	/*---- Declination */
+	if (0 == ucscmp(ustr, _UC_DE)) return POA_DE;
+	if (0 == ucscmp(ustr, _UC__3B4_)) return POA_DE;
+	/*---- Proper Motion Declination */
+	if (0 == ucscmp(ustr, _UC_pmDE)) return POA_pmDE;
+	if (0 == ucscmp(ustr, _UC__3BC__3B4_)) return POA_pmDE;
+
+	/*---- Parallax */
+	if (0 == ucscmp(ustr, _UC_px)) return POA_PX;
+	if (0 == ucscmp(ustr, _UC_Plx)) return POA_PX;
+	if (0 == ucscmp(ustr, _UC__3C0_)) return POA_PX;
+	/*---- Radial Velocity */
+	if (0 == ucscmp(ustr, _UC_RV)) return POA_RV;
+
+	/*---- Visual Magnitude */
+	if (0 == ucscmp(ustr, _UC_V)) return POA_V;
+	if (0 == ucscmp(ustr, _UC_M_1D65_)) return POA_V;
+	/*---- Max Visual Magnitude */
+	if (0 == ucscmp(ustr, _UC_Vmax)) return POA_V_max;
+	/*---- Min Visual Magnitude */
+	if (0 == ucscmp(ustr, _UC_Vmin)) return POA_V_min;
+
+	/*==== Deep sky metrics */
+	/*---- Diameter (nebula size, apparent orbit etc.) */
+	if (0 == ucscmp(ustr, _UC_diam)) return POA_diam;
+	if (0 == ucscmp(ustr, _UC__2205_)) return POA_diam;
+	/*---- Eccentricity */
+	if (0 == ucscmp(ustr, _UC_ecc)) return POA_ecc;
+	if (0 == ucscmp(ustr, _UC_e)) return POA_ecc;
+	/*---- Inclination */
+	if (0 == ucscmp(ustr, _UC_incl)) return POA_incl;
+	if (0 == ucscmp(ustr, _UC_i)) return POA_incl;
+
+	/*==== Double star metrics */
+	/*---- Angular separation */
+	if (0 == ucscmp(ustr, _UC_rho)) return POA_angsep;
+	if (0 == ucscmp(ustr, _UC__3C1_)) return POA_angsep;
+	/*---- Position angle */
+	if (0 == ucscmp(ustr, _UC_pos_20_angle)) return POA_posang;
+	if (0 == ucscmp(ustr, _UC_theta)) return POA_posang;
+	if (0 == ucscmp(ustr, _UC__3B8_)) return POA_posang;
+
+	/*==== Physics */
+	/*---- Spectrum */
+	if (0 == ucscmp(ustr, _UC_SP)) return POA_SP;
+
+	/** ...INSERTME(PN_morph, gxy_morph, neb_class)... */
+
+	/*---- Bayer/Flamsteed designation */
+	if (0 == ucscmp(ustr, _UC_Bayer)) return POA_desg;
+	if (0 == ucscmp(ustr, _UC_desg)) return POA_desg;
+	/*---- Hipparcos number */
+	if (0 == ucscmp(ustr, _UC_HIP)) return POA_HIP;
+	/*---- Henry Draper number */
+	if (0 == ucscmp(ustr, _UC_HD)) return POA_HD;
+
+	/* No such parameter! */
     return POA_none;
+/*
+================================================================================
+       1  A1    ---     Catalog   [H] Catalogue (H=Hipparcos)               (H0)
+   3- 14  I6    ---     HIP       Identifier (HIP number)                   (H1)
+      16  A1    ---     Proxy     [HT] Proximity flag                       (H2)  --
+  18- 28  A11   ---     RAhms    *Right ascension in h m s, ICRS (Eq=J2000) (H3)  ★★
+  30- 40  A11   ---     DEdms    *Declination in deg ' ", ICRS (Eq=J2000)   (H4)  ★★
+  42- 46  F5.2  mag     Vmag      ? Magnitude in Johnson V                  (H5)  ★★
+      48  I1    ---     VarFlag  *[1,3]? Coarse variability flag            (H6)
+      50  A1    ---   r_Vmag     *[GHT] Source of magnitude                 (H7)
+  52- 63  F12.8 deg     RAdeg    *? alpha, degrees (ICRS, Eq=J2000)         (H8)  ★★
+  65- 76  F12.8 deg     DEdeg    *? delta, degrees (ICRS, Eq=J2000)         (H9)  ★★
+      78  A1    ---     AstroRef *[*+A-Z] Reference flag for astrometry    (H10)  --
+  80- 86  F7.2  mas     Plx       ? Trigonometric parallax                 (H11)  ★★
+  88- 95  F8.2 mas/yr   pmRA      ? Proper motion mu_alpha·cos(delta), ICRS(H12)  ★★
+  97-104  F8.2 mas/yr   pmDE      ? Proper motion mu_delta, ICRS           (H13)  ★★
+ 106-111  F6.2  mas   e_RAdeg     ? Standard error in RA*cos(DEdeg)        (H14)  --
+ 113-118  F6.2  mas   e_DEdeg     ? Standard error in DE                   (H15)  --
+ 120-125  F6.2  mas   e_Plx       ? Standard error in Plx                  (H16)  --
+ 127-132  F6.2 mas/yr e_pmRA      ? Standard error in pmRA                 (H17)  --
+ 134-139  F6.2 mas/yr e_pmDE      ? Standard error in pmDE                 (H18)  --
+ 141-145  F5.2  ---     DE:RA     [-1/1]? Correlation, DE/RA*cos(delta)    (H19)  --
+ 147-151  F5.2  ---     Plx:RA    [-1/1]? Correlation, Plx/RA*cos(delta)   (H20)  --
+ 153-157  F5.2  ---     Plx:DE    [-1/1]? Correlation, Plx/DE              (H21)  --
+ 159-163  F5.2  ---     pmRA:RA   [-1/1]? Correlation, pmRA/RA*cos(delta)  (H22)  --
+ 165-169  F5.2  ---     pmRA:DE   [-1/1]? Correlation, pmRA/DE             (H23)  --
+ 171-175  F5.2  ---     pmRA:Plx  [-1/1]? Correlation, pmRA/Plx            (H24)  --
+ 177-181  F5.2  ---     pmDE:RA   [-1/1]? Correlation, pmDE/RA*cos(delta)  (H25)  --
+ 183-187  F5.2  ---     pmDE:DE   [-1/1]? Correlation, pmDE/DE             (H26)  --
+ 189-193  F5.2  ---     pmDE:Plx  [-1/1]? Correlation, pmDE/Plx            (H27)  --
+ 195-199  F5.2  ---     pmDE:pmRA [-1/1]? Correlation, pmDE/pmRA           (H28)  --
+ 201-203  I3    %       F1        ? Percentage of rejected data            (H29)  --
+ 205-209  F5.2  ---     F2       *? Goodness-of-fit parameter              (H30)  --
+ 211-216  I6    ---     ---       HIP number (repetition)                  (H31)
+ 218-223  F6.3  mag     BTmag     ? Mean BT magnitude                      (H32)
+ 225-229  F5.3  mag   e_BTmag     ? Standard error on BTmag                (H33)  --
+ 231-236  F6.3  mag     VTmag     ? Mean VT magnitude                      (H34)
+ 238-242  F5.3  mag   e_VTmag     ? Standard error on VTmag                (H35)  --
+     244  A1    ---   m_BTmag    *[A-Z*-] Reference flag for BT and VTmag  (H36)  --
+ 246-251  F6.3  mag     B-V       ? Johnson B-V colour                     (H37)
+ 253-257  F5.3  mag   e_B-V       ? Standard error on B-V                  (H38)  --
+     259  A1    ---   r_B-V       [GT] Source of B-V from Ground or Tycho  (H39)  --
+ 261-264  F4.2  mag     V-I       ? Colour index in Cousins' system        (H40)
+ 266-269  F4.2  mag   e_V-I       ? Standard error on V-I                  (H41)  --
+     271  A1    ---   r_V-I      *[A-T] Source of V-I                      (H42)  --
+     273  A1    ---     CombMag   [*] Flag for combined Vmag, B-V, V-I     (H43)  --
+ 275-281  F7.4  mag     Hpmag    *? Median magnitude in Hipparcos system   (H44)  ★★
+ 283-288  F6.4  mag   e_Hpmag    *? Standard error on Hpmag                (H45)  --
+ 290-294  F5.3  mag     Hpscat    ? Scatter on Hpmag                       (H46)  --
+ 296-298  I3    ---   o_Hpmag     ? Number of observations for Hpmag       (H47)  --
+     300  A1    ---   m_Hpmag    *[A-Z*-] Reference flag for Hpmag         (H48)  --
+ 302-306  F5.2  mag     Hpmax     ? Hpmag at maximum (5th percentile)      (H49)  ★★
+ 308-312  F5.2  mag     HPmin     ? Hpmag at minimum (95th percentile)     (H50)  ★★
+ 314-320  F7.2  d       Period    ? Variability period (days)              (H51)
+     322  A1    ---     HvarType *[CDMPRU]? variability type               (H52)
+     324  A1    ---     moreVar  *[12] Additional data about variability   (H53)  --
+     326  A1    ---     morePhoto [ABC] Light curve Annex                  (H54)  --
+ 328-337  A10   ---     CCDM      CCDM identifier                          (H55)
+     339  A1    ---   n_CCDM     *[HIM] Historical status flag             (H56)  --
+ 341-342  I2    ---     Nsys      ? Number of entries with same CCDM       (H57)
+ 344-345  I2    ---     Ncomp     ? Number of components in this entry     (H58)
+     347  A1    ---     MultFlag *[CGOVX] Double/Multiple Systems flag     (H59)
+     349  A1    ---     Source   *[PFILS] Astrometric source flag          (H60)
+     351  A1    ---     Qual     *[ABCDS] Solution quality                 (H61)
+ 353-354  A2    ---   m_HIP       Component identifiers                    (H62)
+ 356-358  I3    deg     theta     ? Position angle between components      (H63)  ★★
+ 360-366  F7.3  arcsec  rho       ? Angular separation between components  (H64)  ★★
+ 368-372  F5.3  arcsec  e_rho     ? Standard error on rho                  (H65)  --
+ 374-378  F5.2  mag     dHp       ? Magnitude difference of components     (H66)
+ 380-383  F4.2  mag   e_dHp       ? Standard error on dHp                  (H67)
+     385  A1    ---     Survey    [S] Flag indicating a Survey Star        (H68)  --
+     387  A1    ---     Chart    *[DG] Identification Chart                (H69)
+     389  A1    ---     Notes    *[DGPWXYZ] Existence of notes             (H70)
+ 391-396  I6    ---     HD        [1/359083]? HD number <III/135>          (H71)
+ 398-407  A10   ---     BD        Bonner DM <I/119>, <I/122>               (H72)
+ 409-418  A10   ---     CoD       Cordoba Durchmusterung (DM) <I/114>      (H73)
+ 420-429  A10   ---     CPD       Cape Photographic DM <I/108>             (H74)
+ 431-434  F4.2  mag     (V-I)red  V-I used for reductions                  (H75)
+ 436-447  A12   ---     SpType    Spectral type                            (H76)
+     449  A1    ---   r_SpType   *[1234GKSX]? Source of spectral type      (H77)  --
+       1  A1    ---     Catalog   [H] Catalogue (H=Hipparcos)               (H0)
+   3- 14  I6    ---     HIP       Identifier (HIP number)                   (H1)
+      16  A1    ---     Proxy     [HT] Proximity flag                       (H2)
+  18- 28  A11   ---     RAhms    *Right ascension in h m s, ICRS (Eq=J2000) (H3)
+  30- 40  A11   ---     DEdms    *Declination in deg ' ", ICRS (Eq=J2000)   (H4)
+  42- 46  F5.2  mag     Vmag      ? Magnitude in Johnson V                  (H5)
+      48  I1    ---     VarFlag  *[1,3]? Coarse variability flag            (H6)
+      50  A1    ---   r_Vmag     *[GHT] Source of magnitude                 (H7)  --
+  52- 63  F12.8 deg     RAdeg    *? alpha, degrees (ICRS, Eq=J2000)         (H8)
+  65- 76  F12.8 deg     DEdeg    *? delta, degrees (ICRS, Eq=J2000)         (H9)
+      78  A1    ---     AstroRef *[*+A-Z] Reference flag for astrometry    (H10)  --
+  80- 86  F7.2  mas     Plx       ? Trigonometric parallax                 (H11)  ★★
+  88- 95  F8.2 mas/yr   pmRA      ? Proper motion mu_alpha·cos(delta), ICRS(H12)  ★★
+  97-104  F8.2 mas/yr   pmDE      ? Proper motion mu_delta, ICRS           (H13)  ★★
+ 106-111  F6.2  mas   e_RAdeg     ? Standard error in RA*cos(DEdeg)        (H14)  --
+ 113-118  F6.2  mas   e_DEdeg     ? Standard error in DE                   (H15)  --
+ 120-125  F6.2  mas   e_Plx       ? Standard error in Plx                  (H16)  --
+ 127-132  F6.2 mas/yr e_pmRA      ? Standard error in pmRA                 (H17)  --
+ 134-139  F6.2 mas/yr e_pmDE      ? Standard error in pmDE                 (H18)  --
+ 141-145  F5.2  ---     DE:RA     [-1/1]? Correlation, DE/RA*cos(delta)    (H19)  --
+ 147-151  F5.2  ---     Plx:RA    [-1/1]? Correlation, Plx/RA*cos(delta)   (H20)  --
+ 153-157  F5.2  ---     Plx:DE    [-1/1]? Correlation, Plx/DE              (H21)  --
+ 159-163  F5.2  ---     pmRA:RA   [-1/1]? Correlation, pmRA/RA*cos(delta)  (H22)  --
+ 165-169  F5.2  ---     pmRA:DE   [-1/1]? Correlation, pmRA/DE             (H23)  --
+ 171-175  F5.2  ---     pmRA:Plx  [-1/1]? Correlation, pmRA/Plx            (H24)  --
+ 177-181  F5.2  ---     pmDE:RA   [-1/1]? Correlation, pmDE/RA*cos(delta)  (H25)  --
+ 183-187  F5.2  ---     pmDE:DE   [-1/1]? Correlation, pmDE/DE             (H26)  --
+ 189-193  F5.2  ---     pmDE:Plx  [-1/1]? Correlation, pmDE/Plx            (H27)  --
+ 195-199  F5.2  ---     pmDE:pmRA [-1/1]? Correlation, pmDE/pmRA           (H28)  --
+ 201-203  I3    %       F1        ? Percentage of rejected data            (H29)  --
+ 205-209  F5.2  ---     F2       *? Goodness-of-fit parameter              (H30)  --
+ 211-216  I6    ---     ---       HIP number (repetition)                  (H31)
+ 218-223  F6.3  mag     BTmag     ? Mean BT magnitude                      (H32)
+ 225-229  F5.3  mag   e_BTmag     ? Standard error on BTmag                (H33)  --
+ 231-236  F6.3  mag     VTmag     ? Mean VT magnitude                      (H34)
+ 238-242  F5.3  mag   e_VTmag     ? Standard error on VTmag                (H35)  --
+     244  A1    ---   m_BTmag    *[A-Z*-] Reference flag for BT and VTmag  (H36)  --
+ 246-251  F6.3  mag     B-V       ? Johnson B-V colour                     (H37)
+ 253-257  F5.3  mag   e_B-V       ? Standard error on B-V                  (H38)  --
+     259  A1    ---   r_B-V       [GT] Source of B-V from Ground or Tycho  (H39)  --
+ 261-264  F4.2  mag     V-I       ? Colour index in Cousins' system        (H40)
+ 266-269  F4.2  mag   e_V-I       ? Standard error on V-I                  (H41)  --
+     271  A1    ---   r_V-I      *[A-T] Source of V-I                      (H42)  --
+     273  A1    ---     CombMag   [*] Flag for combined Vmag, B-V, V-I     (H43)  --
+ 275-281  F7.4  mag     Hpmag    *? Median magnitude in Hipparcos system   (H44)
+ 283-288  F6.4  mag   e_Hpmag    *? Standard error on Hpmag                (H45)  --
+ 290-294  F5.3  mag     Hpscat    ? Scatter on Hpmag                       (H46)  --
+ 296-298  I3    ---   o_Hpmag     ? Number of observations for Hpmag       (H47)  --
+     300  A1    ---   m_Hpmag    *[A-Z*-] Reference flag for Hpmag         (H48)  --
+ 302-306  F5.2  mag     Hpmax     ? Hpmag at maximum (5th percentile)      (H49)
+ 308-312  F5.2  mag     HPmin     ? Hpmag at minimum (95th percentile)     (H50)
+ 314-320  F7.2  d       Period    ? Variability period (days)              (H51)
+     322  A1    ---     HvarType *[CDMPRU]? variability type               (H52)
+     324  A1    ---     moreVar  *[12] Additional data about variability   (H53)  --
+     326  A1    ---     morePhoto [ABC] Light curve Annex                  (H54)  --
+ 328-337  A10   ---     CCDM      CCDM identifier                          (H55)
+     339  A1    ---   n_CCDM     *[HIM] Historical status flag             (H56)
+ 341-342  I2    ---     Nsys      ? Number of entries with same CCDM       (H57)
+ 344-345  I2    ---     Ncomp     ? Number of components in this entry     (H58)
+     347  A1    ---     MultFlag *[CGOVX] Double/Multiple Systems flag     (H59)
+     349  A1    ---     Source   *[PFILS] Astrometric source flag          (H60)  --
+     351  A1    ---     Qual     *[ABCDS] Solution quality                 (H61)  --
+ 353-354  A2    ---   m_HIP       Component identifiers                    (H62)
+ 356-358  I3    deg     theta     ? Position angle between components      (H63)
+ 360-366  F7.3  arcsec  rho       ? Angular separation between components  (H64)
+ 368-372  F5.3  arcsec  e_rho     ? Standard error on rho                  (H65)  --
+ 374-378  F5.2  mag     dHp       ? Magnitude difference of components     (H66)
+ 380-383  F4.2  mag   e_dHp       ? Standard error on dHp                  (H67)  --
+     385  A1    ---     Survey    [S] Flag indicating a Survey Star        (H68)  --
+     387  A1    ---     Chart    *[DG] Identification Chart                (H69)
+     389  A1    ---     Notes    *[DGPWXYZ] Existence of notes             (H70)  --
+ 391-396  I6    ---     HD        [1/359083]? HD number <III/135>          (H71)
+ 398-407  A10   ---     BD        Bonner DM <I/119>, <I/122>               (H72)
+ 409-418  A10   ---     CoD       Cordoba Durchmusterung (DM) <I/114>      (H73)
+ 420-429  A10   ---     CPD       Cape Photographic DM <I/108>             (H74)
+ 431-434  F4.2  mag     (V-I)red  V-I used for reductions                  (H75)
+ 436-447  A12   ---     SpType    Spectral type                            (H76)
+     449  A1    ---   r_SpType   *[1234GKSX]? Source of spectral type      (H77)  --
+================================================================================
+*/
 }
 
 pointobj *new_obj(int type, double RA, double DE, double V, pointobj *prev) {
