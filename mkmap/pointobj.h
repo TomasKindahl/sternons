@@ -56,21 +56,25 @@
 #define POA_none        0  /* for unrecognized attributes        */
 #define POA_size        1  /* INT size of object of class        */
 #define POA_prev        2  /* PTR previous same                  */
+/* POSITION/MOVEMENT */
 #define POA_RA          3  /* REAL right ascension               */
 #define POA_pmRA        4  /* REAL right ascension proper motion */
 #define POA_DE          5  /* REAL declination                   */
 #define POA_pmDE        6  /* REAL declination proper motion     */
 #define POA_PX          7  /* REAL parallax                      */
 #define POA_RV          8  /* REAL radial velocity               */
+/* MAGNITUDE */
 #define POA_V           9  /* REAL visual magnitude              */
 #define POA_V_max      10  /* REAL maximum visual magnitude      */
 #define POA_V_min      11  /* REAL minimum visual magnitude      */
+/* ORIENTATION */
 #define POA_diam       12  /* REAL diameter                      */
 #define POA_ecc        13  /* REAL object eccentricity           */
 #define POA_incl       14  /* REAL object inclination            */
 #define POA_angsep     15  /* REAL angular separation            */
 #define POA_posang     16  /* REAL position angle                */
-#define POA_magdiff    17  /* REAL magnitude difference          */
+#define POA_magdiff    17  /* REAL magnitude diff (dbl stars)    */
+/* PHYSICS */
 #define POA_SP         18  /* STR spectrum                       */
 #define POA_PN_morph   19  /* STR PN morphology                  */
 #define POA_gxy_morph  20  /* STR gxy morphology                 */

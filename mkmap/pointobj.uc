@@ -110,15 +110,7 @@ void init_class(int type, int tag[]) {
     }
 }
 
-void init_star_class(void) {
-    int taglist[] = {
-        POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
-    };
-    init_class(PO_STAR, taglist);
-}
-
 int ustring_to_attrib(uchar *ustr) {
-
 	/*---- Right Ascension */
 	if (0 == ucscmp(ustr, u"RA")) return POA_RA;
 	if (0 == ucscmp(ustr, u"α")) return POA_RA;
@@ -183,6 +175,20 @@ int ustring_to_attrib(uchar *ustr) {
 
 	/* No such parameter! */
     return POA_none;
+}
+
+void init_star_class(void) {
+    int taglist[] = {
+        POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
+    };
+    init_class(PO_STAR, taglist);
+}
+
+void init_star_class_2(void) {
+    int taglist[] = {
+        POA_prev, POA_RA, POA_DE, POA_V, POA_HIP, POA_size, POA_none
+    };
+    init_class(PO_STAR, taglist);
 }
 
 pointobj *new_obj(int type, double RA, double DE, double V, pointobj *prev) {
