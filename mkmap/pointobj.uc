@@ -118,62 +118,52 @@ void init_class(int type, int tag[]) {
 
 int ustring_to_attrib(uchar *ustr) {
     if (!ustr) return POA_none;
+
+	/*==== POSITION AND APPARENT MOVEMENT: */
     /*---- Right Ascension */
     if (0 == ucscmp(ustr, u"RA")) return POA_RA;
-    if (0 == ucscmp(ustr, u"α")) return POA_RA;
     /*---- Proper Motion Right Ascension */
     if (0 == ucscmp(ustr, u"pmRA")) return POA_pmRA;
-    if (0 == ucscmp(ustr, u"μα·cos δ")) return POA_pmRA;
-    if (0 == ucscmp(ustr, u"α'")) return POA_pmRA;
     /*---- Declination */
     if (0 == ucscmp(ustr, u"DE")) return POA_DE;
-    if (0 == ucscmp(ustr, u"δ")) return POA_DE;
     /*---- Proper Motion Declination */
     if (0 == ucscmp(ustr, u"pmDE")) return POA_pmDE;
-    if (0 == ucscmp(ustr, u"μδ")) return POA_pmDE;
-    if (0 == ucscmp(ustr, u"δ'")) return POA_pmDE;
 
+	/*==== DISTANCE AND DISTANCE CHANGE: */
     /*---- Parallax */
     if (0 == ucscmp(ustr, u"px")) return POA_PX;
-    if (0 == ucscmp(ustr, u"Plx")) return POA_PX;
-    if (0 == ucscmp(ustr, u"π")) return POA_PX;
     /*---- Radial Velocity */
     if (0 == ucscmp(ustr, u"RV")) return POA_RV;
 
+	/*==== BRIGHTNESS: */
     /*---- Visual Magnitude */
     if (0 == ucscmp(ustr, u"V")) return POA_V;
-    if (0 == ucscmp(ustr, u"Mᵥ")) return POA_V;
     /*---- Max Visual Magnitude */
     if (0 == ucscmp(ustr, u"Vmax")) return POA_V_max;
     /*---- Min Visual Magnitude */
     if (0 == ucscmp(ustr, u"Vmin")) return POA_V_min;
 
-    /*==== Deep sky metrics */
+    /*==== DEEP SKY METRICS: */
     /*---- Diameter (nebula size, apparent orbit etc.) */
     if (0 == ucscmp(ustr, u"diam")) return POA_diam;
-    if (0 == ucscmp(ustr, u"∅")) return POA_diam;
     /*---- Eccentricity */
     if (0 == ucscmp(ustr, u"ecc")) return POA_ecc;
-    if (0 == ucscmp(ustr, u"e")) return POA_ecc;
     /*---- Inclination */
     if (0 == ucscmp(ustr, u"incl")) return POA_incl;
-    if (0 == ucscmp(ustr, u"i")) return POA_incl;
 
-    /*==== Double star metrics */
+    /*==== DOUBLE STAR METRICS: */
     /*---- Angular separation */
     if (0 == ucscmp(ustr, u"rho")) return POA_angsep;
-    if (0 == ucscmp(ustr, u"ρ")) return POA_angsep;
     /*---- Position angle */
-    if (0 == ucscmp(ustr, u"pos angle")) return POA_posang;
     if (0 == ucscmp(ustr, u"theta")) return POA_posang;
-    if (0 == ucscmp(ustr, u"θ")) return POA_posang;
 
-    /*==== Physics */
+    /*==== ASTROPHYSICS */
     /*---- Spectrum */
     if (0 == ucscmp(ustr, u"SP")) return POA_SP;
 
     /** ...INSERTME(PN_morph, gxy_morph, neb_class)... */
 
+	/*==== NAMES AND DESIGNATIONS */
     /*---- Bayer/Flamsteed designation */
     if (0 == ucscmp(ustr, u"Bayer")) return POA_desg;
     if (0 == ucscmp(ustr, u"desg")) return POA_desg;
@@ -186,20 +176,22 @@ int ustring_to_attrib(uchar *ustr) {
     return POA_none;
 }
 
-void init_star_class(void) {
+void init_star_class_old(void) {
     int taglist[] = {
         POA_RA, POA_DE, POA_V, POA_HIP, POA_none
     };
     init_class(PO_STAR, taglist);
 }
 
-void init_star_class_2(void) {
-    int taglist[] = {
-        POA_RA, POA_DE, POA_V, POA_HIP, POA_none
+void init_star_class(void) {
+    int taglist[20];
+    uchar *utaglist[] = {
+        u"RA", u"DE", u"V", u"HIP", 0
     };
-    uchar *taglist2[] = {
-        u"α", u"δ", u"Mᵥ", u"HIP", 0
-    };
+	int ix;
+	for (ix = 0; utaglist[ix]; ix++)
+		taglist[ix] = ustring_to_attrib(utaglist[ix]);
+	taglist[ix] = POA_none;
     init_class(PO_STAR, taglist);
 }
 
