@@ -54,8 +54,8 @@ uchar _fgetuc(FILE *stream) {
 
     for (ix = 0; ix < 5; ix++) {
         res <<= 6;
-        if (feof (stream)) return REPLACEMENT_CHAR; /* premature eof (ERROR) */
-        res |= fgetc (stream)&0x3F;
+        if (feof(stream)) return REPLACEMENT_CHAR; /* premature eof (ERROR) */
+        res |= fgetc(stream)&0x3F;
         if (n<L[ix]) return mask[ix]&res;
     }
     return mask[ix] & res;
@@ -104,7 +104,7 @@ char *uctombs(char *dest, uchar src) {
     int S[]    = {0xC0, 0xE0, 0xF0, 0xF8, 0xFC};
     int mask[] = {0x1F, 0x0F, 0x07, 0x03, 0x01};
     int ix, jx, shf;
-      
+
     if (src < 0x80) {
         dest[0] = src; dest[1] = '\0';
         return dest;
