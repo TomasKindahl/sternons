@@ -87,15 +87,18 @@
 #define POA            27  /* number of parameters               */
 
 typedef struct _cpointobj_S {
-	struct _cpointobj_VT *VT;
+    struct _cpointobj_VT *VT;
 } cpointobj;
 
 typedef struct _pointobj_S {
-	int dum;
+    int dum;
 } pointobj;
 
 DEFVIEW(pointobj);
 
+void init_method_tags(void);
+void init_star_class(void);
+void init_named_class(int object_class, uchar **utags);
 void init_classes(void);
 pointobj *new_pointobj(
     int type, int HIP, double RA, double DE, double vmag, pointobj *prev

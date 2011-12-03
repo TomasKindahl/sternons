@@ -108,8 +108,8 @@ void init_class(int type, int tag[]) {
     for (ix = 0; ix < POA; ix++) {
         _VT[type][ix] = -1;
     }
-    _VT[type][POA_type] = 0;        /* type attrib ALWAYS on zeroth index */
-    _VT[type][POA_prev] = _SZ_INT;  /* prev attrib ALWAYS after */
+    _VT[type][POA_type] = 0;        /* _SZ_INT type attrib ALWAYS on zeroth index */
+    _VT[type][POA_prev] = _SZ_INT;  /* _SZ_PTR prev attrib ALWAYS after */
     _VT[type][tag[0]] = _SZ_PTR;    /* then first attrib in list ... */
     for (ix = 1; tag[ix] != POA_none; ix++) { /* ... and so on */
         _VT[type][tag[ix]] = _VT[type][tag[ix-1]] + _sz[tag[ix-1]];
@@ -187,7 +187,7 @@ void init_star_class_old(void) {
 }
 
 void init_star_class(void) {
-    int taglist[20];
+    int taglist[40];
     uchar *utaglist[] = {
         _UC_RA, _UC_DE, _UC_V, _UC_HIP, 0
     };
@@ -196,6 +196,15 @@ void init_star_class(void) {
 		taglist[ix] = ustring_to_attrib(utaglist[ix]);
 	taglist[ix] = POA_none;
     init_class(PO_STAR, taglist);
+}
+
+void init_named_class(int object_class, uchar **utags) {
+    int taglist[40];
+	int ix;
+	for (ix = 0; utags[ix]; ix++)
+		taglist[ix] = ustring_to_attrib(utags[ix]);
+	taglist[ix] = POA_none;
+    init_class(object_class, taglist);
 }
 
 pointobj *new_obj(int type, double RA, double DE, double V, pointobj *prev) {
