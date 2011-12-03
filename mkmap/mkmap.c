@@ -801,6 +801,10 @@ int main (int argc, char **argv) {
     program_state *pstat;
     lambert_proj *proj;
     image_struct *image;
+    uchar *star_data_tags[] = {
+        _UC_RA, _UC_DE, _UC_V, _UC_HIP, 0
+    };
+
 
     if (argc != 3) usage_exit();
     /* init: */
@@ -816,7 +820,9 @@ int main (int argc, char **argv) {
     /*>   A₄:     /dismissed/                                                           */
     /*>   A₅:   mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments         */
 
-    init_classes();
+	init_method_tags();
+	init_named_class(PO_STAR, star_data_tags);
+    /*init_classes();*/
     pstat = new_program_state(DEBUG, stderr);
 
     load_stars(argv[2], pstat);
