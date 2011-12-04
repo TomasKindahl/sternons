@@ -250,14 +250,14 @@ VIEW(pointobj) *new_pointobj_view(int size) {
 }
 
 VIEW(pointobj) *copy_pointobj_view(VIEW(pointobj) *POV) {
-	VIEW(pointobj) *res = new_pointobj_view(POV->size);
-	int ix;
-	res->size = POV->size;
-	res->next = POV->next;
-	for (ix = 0; ix < POV->next; ix++) {
-		res->S[ix] = POV->S[ix];
-	}
-	return res;
+    VIEW(pointobj) *res = new_pointobj_view(POV->size);
+    int ix;
+    res->size = POV->size;
+    res->next = POV->next;
+    for (ix = 0; ix < POV->next; ix++) {
+        res->S[ix] = POV->S[ix];
+    }
+    return res;
 }
 
 int append_pointobj(VIEW(pointobj) *SV, pointobj *S) {
