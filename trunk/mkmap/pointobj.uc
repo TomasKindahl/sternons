@@ -238,11 +238,22 @@ pointobj *new_pointobj(
     return res;
 }
 
-pointobj_view *new_pointobj_view(int size) {
-    pointobj_view *res = ALLOC(pointobj_view);
+VIEW(pointobj) *new_pointobj_view(int size) {
+    VIEW(pointobj) *res = ALLOC(VIEW(pointobj));
     res->size = size;
     res->next = 0;
     res->S = ALLOCN(pointobj *,size);
+    return res;
+}
+
+VIEW(pointobj) *copy_pointobj_view(VIEW(pointobj) *POV) {
+    VIEW(pointobj) *res = new_pointobj_view(POV->size);
+    int ix;
+    res->size = POV->size;
+    res->next = POV->next;
+    for (ix = 0; ix < POV->next; ix++) {
+        res->S[ix] = POV->S[ix];
+    }
     return res;
 }
 
@@ -293,7 +304,7 @@ void dump_pointobjs(FILE *stream, pointobj *S) {
     }
 }
 
-void dump_pointobj_view(FILE *stream, pointobj_view *SV) {
+void dump_pointobj_view(FILE *stream, VIEW(pointobj) *SV) {
     int ix;
     fprintf(stream, "stars_by_mag: size=%i, alloc=%i {\n", SV->next, SV->size);
     for(ix = 0; ix < SV->next; ix++) {

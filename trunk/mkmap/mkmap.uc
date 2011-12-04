@@ -34,89 +34,19 @@
 /* TD:  #include "parse.h"*/
 #include "pointobj.h"       /* star struct and DB views */
 
-/* ==================================================================== |
-     Known bugs and features:                                           |
-       F1: a λ₀ outside [0,360[ generates black declination sections in |
-           the map - avoid (in 2010-07-26)                              |
-       F2: a φ₁ or φ₂ outside [-90,90] generates a black map            |
-       F3: the declination circle dots become too tight ±70° and        |
-           polewards (in 2010-07-26)                                    |
-       F4:                                                              |
-   ==================================================================== */
-
-/* ================ LAMBERT CONFORMAL CONIC PROJECTION ================ |
-   (http://en.wikipedia.org/wiki/Lambert_conformal_conic_projection and |
-    http://mathworld.wolfram.com/LambertConformalConicProjection.html)  |
-                                                                        |
-| λ longitude, λ₀ reference longitude, (middle?)                        |
-| φ latitude, φ₀ reference latitude, (middle?)                          |
-| φ₁, φ₂ standard parallels    (chosen by map designer)                 |
-                                                                        |
-    n = ln(cos φ₁·sec φ₂)/ln(tan(¼π + ½φ₂)·cot(¼π + ½φ₁))               |
-    F = cos φ₁·tanⁿ(¼π + ½φ₁)/n                                         |
-    ρ = F·cotⁿ(¼π + ½φ)                                                 |
-    ρ₀ = F·cotⁿ(¼π + ½φ₀)                                               |
-                                                                        |
-    x = ρ·sin(n(λ - λ₀))                                                |
-    y = ρ₀ - ρ·cos(n(λ - λ₀))                                           |
-                                                                        |
-| where sec ν = 1/cos ν                                                 |
-                                                                        |
-| The inverse computation (Javascript or OpenGL implementation):        |
-    ρ = sign(n)√(x²+(ρ₀-y)²)                                            |
-    θ = tan⁻¹(x/(ρ₀-y))                                                 |
-                                                                        |
-    φ = 2·tan⁻¹((F/ρ) ^ (1/n))-½π                                       |
-    λ = λ₀ + θ/n                                                        |
-| ===================================================================== */
-
-double cot(double x) { return 1/tan(x); }
-double sec(double x) { return 1/cos(x); }
-double deg2rad(double x) { return M_PI * x / 180.0; }
-double rad2deg(double x) { return 180.0 * x / M_PI; }
-
 #define NO_DEBUG 0
 #define DEBUG 1
 
-typedef struct _lambert_proj_S {
-    double F;
-    double lambda0;
-    double n;
-    /* double phi0, phi1, phi2; */
-    double rho0;
-} lambert_proj;
-
-double pi_itv(double nu) {
-    int K = nu/M_PI;
-    return nu-K*M_PI*2;
-}
-
-lambert_proj *init_Lambert(double lambda0, double phi0, double phi1, double phi2) {
-    lambert_proj *res = ALLOC(lambert_proj);
-    res->lambda0 = lambda0;
-    /* res->phi0 = phi0; res->phi1 = phi1; res->phi2 = phi2; */
-    res->n = log(cos(phi1)*sec(phi2))/log(tan(M_PI_4+phi2/2)*cot(M_PI_4+phi1/2));
-    res->F = cos(phi1)*pow(tan(M_PI_4+phi1/2),res->n)/res->n;
-    res->rho0 = res->F*pow(cot(M_PI_4+phi0/2),res->n);
-    return res;
-}
-
-lambert_proj *init_Lambert_deg(double l0, double p0, double p1, double p2) {
-    return init_Lambert(deg2rad(l0), deg2rad(p0), deg2rad(p1), deg2rad(p2));
-}
-
-void Lambert(double *x, double *y, double phi, double lambda, lambert_proj *LCCP) {
-    double rho = LCCP->F*pow(cot(M_PI_4 + phi/2),LCCP->n);
-    double n_lambda_D = LCCP->n*(pi_itv(lambda - LCCP->lambda0));
-    *x = rho*sin(n_lambda_D);
-    *y = LCCP->rho0 - rho*cos(n_lambda_D);
-}
+#include "mathx.h"
+#include "projection.h"
 
 typedef struct _image_struct_S {
     uchar *name;
     int width, height, dim;
     double scale;
-    lambert_proj *proj;
+    /* INSERTME: */
+        /* colorings, magnitude limits, magnitude scalings ... other */
+    proj *projection;
 } image_struct;
 
 image_struct *new_image(uchar *name, int width, int height, double scale) {
@@ -129,8 +59,8 @@ image_struct *new_image(uchar *name, int width, int height, double scale) {
     return res;
 }
 
-image_struct *image_set_projection(image_struct *image, lambert_proj *proj) {
-    image->proj = proj;
+image_struct *image_set_projection(image_struct *image, proj *LCCP) {
+    image->projection = LCCP;
     return image;
 }
 
@@ -250,7 +180,8 @@ typedef struct _program_state_S {
     /* hard-coded feature data */
         /* physical objects */
             pointobj *latest_star;
-            VIEW(pointobj) **stars;
+            VIEW(pointobj) **stars; /* sorted lists pointing to individual */
+                                     /* latest_star:s */
         /* virtual objects */
             /* asterism lines */
             line *latest_line;
@@ -265,12 +196,12 @@ typedef struct _program_state_S {
     image_struct *image;
     FILE *out_file;
     int debug;
+    struct _program_state_S *prev;
 } program_state;
 
-program_state *new_program_state(int debug, FILE *debug_out) {
+program_state *new_program_state(int debug, FILE *outerr) {
     program_state *res = ALLOC(program_state);
     res->latest_star = 0;
-    res->debug = debug;
     res->stars = ALLOCN(VIEW(pointobj) *,2);
     res->stars[BY_VMAG] = new_pointobj_view(1024);
     res->stars[BY_HIP] = new_pointobj_view(1024);
@@ -282,14 +213,39 @@ program_state *new_program_state(int debug, FILE *debug_out) {
         res->last_const = 0;
     /* labels */
         res->latest_star_label = 0;
+	res->image = 0;
+	res->out_file = 0;
+    res->debug = debug;
+	res->prev = 0;
     return res;
 }
 
-/* TBD:
-program_state *clone_program_state(program_state *PS) {
-    
+program_state *program_push(program_state *PS, FILE *outerr) {
+    program_state * res = new_program_state(PS->debug, outerr);
+	res->latest_star = PS->latest_star;
+    res->debug = PS->debug;
+    res->stars = ALLOCN(VIEW(pointobj) *,2);
+    res->stars[BY_VMAG] = copy_pointobj_view(PS->stars[BY_VMAG]);
+    res->stars[BY_HIP] = copy_pointobj_view(PS->stars[BY_HIP]);
+    /* asterism lines */
+        res->latest_line = PS->latest_line;
+        res->latest_bound = PS->latest_bound;
+    /* delportian areas */
+        res->first_const = PS->first_const;
+        res->last_const = PS->last_const;
+    /* labels */
+        res->latest_star_label = PS->latest_star_label;
+	res->image = PS->image;
+	res->out_file = PS->out_file;
+    res->debug = PS->debug;
+	res->prev = PS;
+	return res;
 }
-*/
+
+program_state *program_pop(program_state *PS, FILE *outerr) {
+	/** FREE PS! and relevant contents **/
+	return PS->prev;
+}
 
 image_struct *program_set_image(program_state *prog, image_struct *image) {
     prog->image = image;
@@ -328,10 +284,11 @@ uchar *next_field_ustr(uchar **pos) {
     return ucsndup(*pos,pos2-(*pos));
 }
 
-void sort_pointobj_view(program_state *pstat, VIEW(pointobj) *view, 
+void sort_pointobj_view(program_state *pstat, VIEW(pointobj) *view,
 						int compare(const void *, const void *))
 {
-    /* quicksort the point objects in 'view' by function 'compare' */
+    /* quicksort the point objects in 'view' by function 'compare',
+       currently the 'compares' used reside in pointobj.[ch] */
 	qsort((void *)view->S, view->next, sizeof(pointobj *), compare);
 }
 
@@ -560,7 +517,7 @@ void draw_grid(program_state *pstat) {
     double X, Y;
     double x, y;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
+    proj *projection = image->projection;
     FILE *out = pstat->out_file;
 
     W = image->width; W2 = W/2;
@@ -575,7 +532,7 @@ void draw_grid(program_state *pstat) {
     }
     for (ra = 0; ra < 360; ra+=0.5) {
         for (ix = 0; ix < NUM_DE; ix++) {
-            Lambert(&X, &Y, des[ix], deg2rad(ra), proj);
+            project(&X, &Y, des[ix], deg2rad(ra), projection);
             if (pos_in_frame(&x, &y, X, Y, image)) {
                 fprintf(out, "    <circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\"\n", x, y);
                 fprintf(out, "            style=\"opacity:1;fill:#880088;");
@@ -590,7 +547,7 @@ void draw_grid(program_state *pstat) {
     }
     for (de = -80; de <= 80; de+=0.5) {
         for (iy = 0; iy < NUM_RA; iy++) {
-            Lambert(&X, &Y, deg2rad(de), ras[iy], proj);
+            project(&X, &Y, deg2rad(de), ras[iy], projection);
             if (pos_in_frame(&x, &y, X, Y, image)) {
                 fprintf(out, "    <circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\"\n", x, y);
                 fprintf(out, "            style=\"opacity:1;fill:#880088;");
@@ -614,7 +571,7 @@ void draw_stars(program_state *pstat) {
     double X, Y, size;
     double x, y;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
+    proj *projection = image->projection;
     FILE *out = pstat->out_file;
     pointobj *S = 0;
 
@@ -626,7 +583,7 @@ void draw_stars(program_state *pstat) {
         RA = pointobj_attr_D(S,POA_RA);
         vmag = pointobj_attr_D(S,POA_V);
         HIP = pointobj_attr_I(S,POA_HIP);
-        Lambert(&X, &Y, deg2rad(DE), deg2rad(RA), proj);
+        project(&X, &Y, deg2rad(DE), deg2rad(RA), projection);
         if(pos_in_frame(&x, &y, X, Y, image)) {
             size = (6.8-vmag)*0.8*image->scale;
             fprintf(out, "    <circle title=\"HIP %i\" cx=\"%.2f\" cy=\"%.2f\" r=\"%g\"\n",
@@ -643,14 +600,14 @@ void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
     double X1, Y1, X2, Y2;
     double x1, y1, x2, y2;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
+    proj *projection = image->projection;
     FILE *out = pstat->out_file;
     char buf[256];
 
     for (L = line_set; L; L = L->prev) {
     	if (id && 0 != ucscmp(id,L->asterism)) continue;
-        Lambert(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), proj);
-        Lambert(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), proj);
+        project(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), projection);
+        project(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), projection);
         if (pos_in_frame(&x1, &y1, X1, Y1, image)
           | pos_in_frame(&x2, &y2, X2, Y2, image)) {
             char *color;
@@ -682,7 +639,7 @@ void draw_bounds(program_state *pstat) {
 void draw_delportian_area(program_state *pstat, uchar *id) {
     polygon_set *PS;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
+    proj *projection = image->projection;
     FILE *out = pstat->out_file;
 
     for (PS = pstat->first_const; PS; PS = PS->next) {
@@ -698,11 +655,11 @@ void draw_delportian_area(program_state *pstat, uchar *id) {
             fprintf(out, "style=\"stroke:#0088AA; stroke-width: 1px; ");
             fprintf(out, "fill: #000022\"\n");
             P = PS->poly;
-            Lambert(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), proj);
+            project(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), projection);
             pos_in_frame(&x, &y, X, Y, image);
             fprintf(out, "          d=\"M %.2f,%.2f\n", x, y);
             for (P = P->prev; P; P = P->prev) {
-                Lambert(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), proj);
+                project(&X, &Y, deg2rad(P->DE), deg2rad(P->RA), projection);
                 pos_in_frame(&x, &y, X, Y, image);
                 fprintf(out, "             L %.2f,%.2f\n", x, y);
             }
@@ -712,17 +669,17 @@ void draw_delportian_area(program_state *pstat, uchar *id) {
     }
 }
 
-void draw_labels(program_state *pstat, uchar *id) {
+void draw_labels(program_state *pstat, uchar *NOTUSEDYET) {
     label *L;
     image_struct *image = pstat->image;
-    lambert_proj *proj = image->proj;
+    proj *projection = image->projection;
     FILE *out = pstat->out_file;
 
     for (L = pstat->latest_star_label; L; L = L->prev) {
         double X, Y;
         double x, y;
         char buf[256], *anchor;
-        Lambert(&X, &Y, deg2rad(L->DE), deg2rad(L->RA), proj);
+        project(&X, &Y, deg2rad(L->DE), deg2rad(L->RA), projection);
         if (pos_in_frame(&x, &y, X, Y, image)) {
         	switch (L->anchor) {
         	  	case 1: anchor = "start"; break;
@@ -796,12 +753,9 @@ void tok_dump(int debug, token *tok) {
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat;
-    lambert_proj *proj;
+    proj *projection;
     image_struct *image;
-    uchar *star_data_tags[] = {
-        u"RA", u"DE", u"V", u"HIP", 0
-    };
-
+    uchar *star_data_tags[] = { u"RA", u"DE", u"V", u"HIP", 0 };
 
     if (argc != 3) usage_exit();
     /* init: */
@@ -826,16 +780,18 @@ int main (int argc, char **argv) {
     load_stars(argv[2], pstat);
     load_star_lines("lines.db", pstat);             /* dependent on load_stars */
     load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
-    load_star_labels("orion-labels.db", pstat);
+    load_star_labels("orion-labels.db", pstat);     /** IMPROPER: constellation
+        labels should be loaded in constellation context, in root context only
+        all sky lists should be loaded. */
 
-    proj = init_Lambert_deg(82.5, 5, 15, 25);
+    projection = init_Lambert(82.5, 5, 15, 25);
     image = new_image(u"Orion", 500, 500, 1.4);
     program_set_image(pstat, image);
-    image_set_projection(image, proj);
+    image_set_projection(image, projection);
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
-        /* pstat = program_save(pstat); */
+        /* pstat = program_push(pstat); */
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
@@ -849,19 +805,19 @@ int main (int argc, char **argv) {
         draw_debug_info(pstat);
         draw_foot(pstat);
         close_file(pstat);
-        /* pstat = program_restore(pstat); */
+        /* pstat = program_pop(pstat); */
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
     }
 
-    proj = init_Lambert_deg(106, 0, 10, 20);
+    projection = init_Lambert(106, 0, 10, 20);
     image = new_image(u"Monoceros", 600, 550, 1.4);
     program_set_image(pstat, image);
-    image_set_projection(image, proj);
+    image_set_projection(image, projection);
 
     if (open_file("monoceros.svg", pstat)) {
-        /* pstat = program_save(pstat); */
+        /* pstat = program_push(pstat); */
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
@@ -873,7 +829,7 @@ int main (int argc, char **argv) {
         draw_debug_info(pstat);
         draw_foot(pstat);
         close_file(pstat);
-        /* pstat = program_restore(pstat); */
+        /* pstat = program_pop(pstat); */
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");

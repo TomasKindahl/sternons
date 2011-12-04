@@ -23,10 +23,10 @@ CC 		= gcc -g -Wall --pedantic-error
 UCCVT	= ./ucliterals
 MAPS 	= star.db
 STROBJS	= token.o ucstr.o uctype.o usio.o
-OBJS 	= $(STROBJS) pointobj.o allstrings.o
+OBJS 	= $(STROBJS) pointobj.o allstrings.o mathx.o projection.o
 OBJSP 	= $(OBJS) parse.o
 SWOBJS	= token.obj ucstr.obj uctype.obj usio.obj
-WOBJS 	= $(SWOBJS) pointobj.obj allstrings.obj
+WOBJS 	= $(SWOBJS) pointobj.obj allstrings.obj mathx.obj projection.obj
 WOBJSP 	= $(WOBJS) parse.obj
 
 all: img

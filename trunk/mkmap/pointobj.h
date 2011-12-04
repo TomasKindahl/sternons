@@ -103,12 +103,13 @@ void init_classes(void);
 pointobj *new_pointobj(
     int type, int HIP, double RA, double DE, double vmag, pointobj *prev
 );
-pointobj_view *new_pointobj_view(int size);
-int append_pointobj(pointobj_view *SV, pointobj *S);
+VIEW(pointobj) *new_pointobj_view(int size);
+VIEW(pointobj) *copy_pointobj_view(VIEW(pointobj) *POV);
+int append_pointobj(VIEW(pointobj) *SV, pointobj *S);
 int pointobj_cmp_by_V(const void *P1, const void *P2);
 int pointobj_cmp_by_HIP(const void *P1, const void *P2);
 void dump_pointobjs(FILE *stream, pointobj *S);
-void dump_pointobj_view(FILE *stream, pointobj_view *SV);
+void dump_pointobj_view(FILE *stream, VIEW(pointobj) *SV);
 int obj_type(pointobj *obj);
 double pointobj_attr_D(pointobj *S, int attr);
 int pointobj_attr_I(pointobj *S, int attr);
