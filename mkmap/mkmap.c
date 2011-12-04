@@ -255,8 +255,6 @@ image_struct *program_set_image(program_state *prog, image_struct *image) {
     return image;
 }
 
-#define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
-
 int pos_in_frame(double *x, double *y, double X, double Y, image_struct *frame) {
     *x = frame->width/2-frame->dim*X*frame->scale;
     *y = frame->height/2-frame->dim*Y*frame->scale;
@@ -783,7 +781,7 @@ int main (int argc, char **argv) {
     load_stars(argv[2], pstat);
     load_star_lines("lines.db", pstat);             /* dependent on load_stars */
     load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
-    load_star_labels("orion-labels.db", pstat);     /** IMPROPER: constellation
+    /*load_star_labels("orion-labels.db", pstat);*/     /** IMPROPER: constellation
         labels should be loaded in constellation context, in root context only
         all sky lists should be loaded. */
 
@@ -794,7 +792,8 @@ int main (int argc, char **argv) {
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
-        /* pstat = program_push(pstat); */
+        pstat = program_push(pstat, stderr);
+		load_star_labels("orion-labels.db", pstat);
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
@@ -808,7 +807,7 @@ int main (int argc, char **argv) {
         draw_debug_info(pstat);
         draw_foot(pstat);
         close_file(pstat);
-        /* pstat = program_pop(pstat); */
+        pstat = program_pop(pstat, stderr);
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
@@ -820,7 +819,8 @@ int main (int argc, char **argv) {
     image_set_projection(image, projection);
 
     if (open_file("monoceros.svg", pstat)) {
-        /* pstat = program_push(pstat); */
+        pstat = program_push(pstat, stderr);
+		load_star_labels("monoceros-labels.db", pstat);
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
@@ -832,7 +832,7 @@ int main (int argc, char **argv) {
         draw_debug_info(pstat);
         draw_foot(pstat);
         close_file(pstat);
-        /* pstat = program_pop(pstat); */
+        pstat = program_pop(pstat, stderr);
     }
     else {
         fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");

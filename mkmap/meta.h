@@ -1,6 +1,9 @@
 #ifndef _META_H
 #define _META_H
 
+/* Arithmetic */
+#define BETW(LB,X,UB) (((LB)<(X))&&((X)<(UB)))
+
 /* Allocation */
 #define ALLOC(TYPE) (TYPE *)malloc(sizeof(TYPE))
 #define ALLOCN(TYPE,NUM) (TYPE *)malloc(sizeof(TYPE)*(NUM))
