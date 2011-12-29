@@ -1,0 +1,79 @@
+########################################################################
+#  Copyright (C) 2010 Tomas Kindahl                                    #
+########################################################################
+#  This file is part of mkmap                                          #
+#                                                                      #
+#  mkmap is free software: you can redistribute it and/or modify it    #
+#  under the terms of the GNU Lesser General Public License as         #
+#  published by the Free Software Foundation, either version 3 of the  #
+#  License, or (at your option) any later version.                     #
+#                                                                      #
+#  mkmap is distributed in the hope that it will be useful,            #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of      #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       #
+#  GNU Lesser General Public License for more details.                 #
+#                                                                      #
+#  You should have received a copy of the GNU Lesser General Public    #
+#  License along with mkmap. If not, see                               #
+#  <http://www.gnu.org/licenses/>.                                     #
+########################################################################
+
+orion() {
+    ## procedure for the heavenly hunter 
+    border += load “ori_b.db”;
+    labels += [pos: [x: middle, y: bottom], 
+               string: “Orion”,
+               justify: middle];
+    projection [type: Lambert_conic, α: 5ʰ20ᵐ, δ: 10°, Δδ: 10°];
+    frame [height: 500px, width: 500px];
+}
+monoceros() {
+    ## procedure for the heavenly unicorn
+    border += load “mon_b.db”;
+    labels += [pos: [x: middle, y: bottom], 
+               string: “Monoceros”,
+               justify: middle];
+    projection [type: Lambert_conic, α: 7ʰ10ᵐ, δ: 10°, Δδ: 10°];
+    frame [height: 500px, width: 600px];
+}
+main() {
+    ## ‘layer’ declares the layers wherein the program puts
+    ## objects, when executing an ‘out’ all layers are drawn
+    ## with stored objects one by one, background first, then
+    ## border, aso. to at last map_labels. What layers that
+    ## are to be used, is up to the programmer and the naming 
+    ## is free by programmer choice:
+
+    layer background;    # background: no projections, just one frame
+    layer border;        # border: given in αδ* as line loops →
+                         #   coorsys change, projection, frame
+    layer grid;          # grid: given in αδ* as lines →
+                         #   coorsys change, projection, frame
+    layer nebulae;       # nebulae: given in αδ → coorsys change,
+                         #   coorsys change, projection, frame
+    layer stars;         # stars: given in αδ → coorsys change,
+                         #   coorsys change, projection, frame
+    layer labels;        # labels: given in αδ → x₀y₀ + xy offset ???
+
+    in background set no projection;
+    in labels set no projection;
+
+    ## That achieved, data is created and put into the layers:
+
+    background += infinite [color: [r: x00, g: x00, b: x40]];
+    grid       += grid [α: 1ʰ, δ: 10°];
+    stars      += load “stars.db”;
+    labels     += align stars with “stardesg.db”;
+    nebulae    += load “nebulae.db”;
+    labels     += align nebulae with “nebdesg.db”;
+    { # a stacklike block for loading local data
+        orion; # run procedure ‘orion’
+        out “orion.svg”;
+      # dropped here.
+    }
+    {
+        monoceros; # run procedure ‘monoceros’
+        out “monoceros.svg”;
+    }
+}
+

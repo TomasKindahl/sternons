@@ -1,7 +1,5 @@
-(* THIS FILE COUNTERPARTS mkmap.uc main() AS OF 2011-12-28 *)
-
 main {
-	declare star = {RA, DE, V, HIP}, 
+	declare star = {RA, DE, V, HIP},
 	declare line = {boldness, asterism, RA₁, DE₁, RA₂, DE₂},
 	declare hline = {boldness, asterism, HIP₁, HIP₂},
 	declare line ← hline = {
@@ -15,7 +13,20 @@ main {
 	load line ← hline from "line.db",
 	load bound from "bounds.db",
 
-	image orion = {
+	image constellation = { (* PATTERN FOR CONSTELLATION DRAWING *)
+	  initial:
+	  init_drawing:
+		draw header,
+		draw background,
+	  imagimetrical:
+	  real_objects:
+		draw stars,
+	  final:
+		draw debug_info,
+		draw footer
+	}
+
+	constellation orion = {
 		set name = "Orion",
 		set size = [500px, 500px],
 		set scale = 1.4,
@@ -23,9 +34,6 @@ main {
 
 	  initial:
 		load labels from "orion-labels.db",
-	  init_drawing:
-		draw header,
-		draw background,
 	  imagimetrical:
 		draw all bound,
 		draw all delportian_area "Ori",
@@ -34,16 +42,11 @@ main {
 		draw all lines "Ori Arm",
 		draw all lines "Ori Shd",
 		draw all labels "Ori",
-	  real_objects:
-		draw stars,
-	  final:
-		draw debug_info,
-		draw footer
 	}
 
 	draw orion to "orion.svg",
 
-	image monoceros = {
+	constellation monoceros = {
 		set name = "Monoceros",
 		set size = [500px, 500px],
 		set scale = 1.4,
@@ -51,20 +54,12 @@ main {
 
 	  initial:
 		load labels from "monoceros-labels.db",
-	  init_drawing:
-		draw header,
-		draw background,
 	  imagimetrical:
 		draw bounds,
 		draw delportian_area "Mon",
 		draw grid,
 		draw lines "Mon Bdy",
 		draw labels "Mon",
-	  real_objects:
-		draw stars,
-	  final:
-		draw debug_info,
-		draw footer
 	}
 
 	draw monoceros to "monoceros.svg"
