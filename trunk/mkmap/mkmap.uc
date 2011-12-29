@@ -775,12 +775,9 @@ int main (int argc, char **argv) {
 
     pstat = new_program_state(DEBUG, stderr);
 
-    load_stars(argv[2], pstat);
+    load_stars("star.db", pstat);
     load_star_lines("lines.db", pstat);             /* dependent on load_stars */
     load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
-    /*load_star_labels("orion-labels.db", pstat);*/     /** IMPROPER: constellation
-        labels should be loaded in constellation context, in root context only
-        all sky lists should be loaded. */
 
     projection = init_Lambert(82.5, 5, 15, 25);
     image = new_image(u"Orion", 500, 500, 1.4);

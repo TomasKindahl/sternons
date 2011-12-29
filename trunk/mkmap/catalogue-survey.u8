@@ -119,7 +119,7 @@ BD:
     +89 to -01°
 
 SD:
-    The Southern Durchmusterung - SD, Schoenfeld
+    The Southern Durchmusterung - SD, Schoenfeld 
     1886, Becker 1949, Schmidt 1967 - is a visual
     survey of stars in the declination zones -02 to
     -23°
@@ -135,3 +135,25 @@ CPD:
    of southern stars in the declination range -18°
    to -90°
 
+HISTORY AND ACCURATE POSITIONS FOR THE NGC/IC OBJECTS  (CORWIN, 2004)
+
+http://cdsarc.u-strasbg.fr/viz-bin/Cat?VII/239A
+
+(http://www.ngcicproject.org/)
+
+Note (2):
+   Objects other than galaxies have their types noted as:
+     GC = globular cluster
+     OC = open cluster
+     PN = planetary nebula
+     BN = bipolar nebula
+     DN = diffuse (bright) nebula
+     EN = emission nebula
+     RN = reflection nebula
+    HII = HII region
+    SNR = supernova remnant
+     SA = stellar association
+     SC = star cloud
+      * = star, ** = double star, ... n* (n being a number) = asterism
+   and a 'p' is appended if the NGC or IC number applies to part of an
+   object only.
