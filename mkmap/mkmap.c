@@ -255,6 +255,20 @@ image_struct *program_set_image(program_state *prog, image_struct *image) {
     return image;
 }
 
+image_struct *program_new_image
+	(program_state *prog, uchar *name, int width, int height, double scale)
+{
+	image_struct *image = new_image(name, width, height, scale);
+    return program_set_image(prog, image);
+}
+
+image_struct *program_image_set_Lambert
+	(program_state *prog, double l0, double p0, double p1, double p2)
+{
+	proj *projection = init_Lambert(l0, p0, p1, p2);
+	return image_set_projection(prog->image, projection);
+}
+
 int pos_in_frame(double *x, double *y, double X, double Y, image_struct *frame) {
     *x = frame->width/2-frame->dim*X*frame->scale;
     *y = frame->height/2-frame->dim*Y*frame->scale;
@@ -427,7 +441,7 @@ int load_constellation_bounds(char *fname, program_state *pstat) {
     return 1;
 }
 
-int load_star_labels(char *fname, program_state *pstat) {
+int load_star_labels(program_state *pstat, char *fname) {
     int HIP, anchor;
     double distance, direction, RA, DE;
     uchar line[1024], *pos, *label;
@@ -782,15 +796,20 @@ int main (int argc, char **argv) {
     load_star_lines("lines.db", pstat);             /* dependent on load_stars */
     load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
 
-    projection = init_Lambert(82.5, 5, 15, 25);
+	/*
     image = new_image(_UC_Orion, 500, 500, 1.4);
-    program_set_image(pstat, image);
+    projection = init_Lambert(82.5, 5, 15, 25);
     image_set_projection(image, projection);
+    program_set_image(pstat, image);
+	*/
+
+	program_new_image(pstat, _UC_Orion, 500, 500, 1.4);
+	program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
         pstat = program_push(pstat, stderr);
-		load_star_labels("orion-labels.db", pstat);
+		load_star_labels(pstat, "orion-labels.db");
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
@@ -810,14 +829,19 @@ int main (int argc, char **argv) {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
     }
 
+	/*
     projection = init_Lambert(106, 0, 10, 20);
     image = new_image(_UC_Monoceros, 600, 550, 1.4);
     program_set_image(pstat, image);
     image_set_projection(image, projection);
+	*/
+
+	program_new_image(pstat, _UC_Monoceros, 600, 550, 1.4);
+	program_image_set_Lambert(pstat, 106, 0, 10, 20);
 
     if (open_file("monoceros.svg", pstat)) {
         pstat = program_push(pstat, stderr);
-		load_star_labels("monoceros-labels.db", pstat);
+		load_star_labels(pstat, "monoceros-labels.db");
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);

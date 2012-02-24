@@ -46,6 +46,9 @@ pointobj.c: pointobj.uc $(UCCVT)
 parse_program: parse_program.c $(OBJSP)
 	$(CC) -o $@ $< $(OBJSP) -lm
 
+parse_prog2: parse_prog2.c $(OBJS)
+	$(CC) -o $@ $< $(OBJS) -lm
+
 .c.o:
 	$(CC) -c $<
 
