@@ -305,7 +305,7 @@ void sort_pointobj_view(program_state *pstat, VIEW(pointobj) *view,
     qsort((void *)view->S, view->next, sizeof(pointobj *), compare);
 }
 
-int load_stars(char *fname, program_state *pstat) {
+int load_stars(program_state *pstat, char *fname) {
     /*
     DROP TABLE _cmap;
     SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
@@ -351,7 +351,7 @@ pointobj *find_star_by_HIP(int HIP, program_state *pstat) {
     return res;
 }
 
-int load_star_lines(char *fname, program_state *pstat) {
+int load_star_lines(program_state *pstat, char *fname) {
     int boldness, HIP1, HIP2;
     double RA1, DE1;
     double RA2, DE2;
@@ -400,7 +400,7 @@ int load_star_lines(char *fname, program_state *pstat) {
     return 1;
 }
 
-int load_constellation_bounds(char *fname, program_state *pstat) {
+int load_constellation_bounds(program_state *pstat, char *fname) {
     int boldness;
     double RA1, DE1;
     double RA2, DE2;
@@ -766,8 +766,6 @@ void tok_dump(int debug, token *tok) {
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat;
-    proj *projection;
-    image_struct *image;
     uchar *star_data_tags[] = { u"RA", u"DE", u"V", u"HIP", 0 };
 
     if (argc != 3) usage_exit();
@@ -790,9 +788,9 @@ int main (int argc, char **argv) {
 
     pstat = new_program_state(DEBUG, stderr);
 
-    load_stars("star.db", pstat);
-    load_star_lines("lines.db", pstat);             /* dependent on load_stars */
-    load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
+    load_stars(pstat, "star.db");
+    load_star_lines(pstat, "lines.db");             /* dependent on load_stars */
+    load_constellation_bounds(pstat, "bounds.db");  /* dependent on nothing */
 
     program_new_image(pstat, u"Orion", 500, 500, 1.4);
     program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
