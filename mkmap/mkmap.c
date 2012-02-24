@@ -121,7 +121,7 @@ polygon_set *new_polygon_set(uchar *name, polygon_set *next) {
 }
 
 polygon_set *add_point(uchar *name, double RA, double DE, polygon_set *current) {
-	polygon_set *res;
+    polygon_set *res;
     if (!current) {
         res = new_polygon_set(name, 0);
     }
@@ -157,7 +157,8 @@ typedef struct _label_S {
 } label;
 
 label *new_label(int HIP, uchar *text, double distance, double direction,
-		         int anchor, label *prev) {
+                 int anchor, label *prev)
+{
     label *res = ALLOC(label);
     res->HIP = HIP;
     res->text = ucsdup(text);
@@ -194,7 +195,7 @@ typedef struct _program_state_S {
             /* delportian constellation areas */
             polygon_set *first_const;
             polygon_set *last_const;
-			label *latest_star_label;
+            label *latest_star_label;
     /* hard-coded image data */
     image_struct *image;
     FILE *out_file;
@@ -216,16 +217,16 @@ program_state *new_program_state(int debug, FILE *outerr) {
         res->last_const = 0;
     /* labels */
         res->latest_star_label = 0;
-	res->image = 0;
-	res->out_file = 0;
+    res->image = 0;
+    res->out_file = 0;
     res->debug = debug;
-	res->prev = 0;
+    res->prev = 0;
     return res;
 }
 
 program_state *program_push(program_state *PS, FILE *outerr) {
     program_state * res = new_program_state(PS->debug, outerr);
-	res->latest_star = PS->latest_star;
+    res->latest_star = PS->latest_star;
     res->debug = PS->debug;
     res->stars = ALLOCN(VIEW(pointobj) *,2);
     res->stars[BY_VMAG] = copy_pointobj_view(PS->stars[BY_VMAG]);
@@ -238,16 +239,16 @@ program_state *program_push(program_state *PS, FILE *outerr) {
         res->last_const = PS->last_const;
     /* labels */
         res->latest_star_label = PS->latest_star_label;
-	res->image = PS->image;
-	res->out_file = PS->out_file;
+    res->image = PS->image;
+    res->out_file = PS->out_file;
     res->debug = PS->debug;
-	res->prev = PS;
-	return res;
+    res->prev = PS;
+    return res;
 }
 
 program_state *program_pop(program_state *PS, FILE *outerr) {
-	/** FREE PS! and relevant contents **/
-	return PS->prev;
+    /** FREE PS! and relevant contents **/
+    return PS->prev;
 }
 
 image_struct *program_set_image(program_state *prog, image_struct *image) {
@@ -256,17 +257,17 @@ image_struct *program_set_image(program_state *prog, image_struct *image) {
 }
 
 image_struct *program_new_image
-	(program_state *prog, uchar *name, int width, int height, double scale)
+    (program_state *prog, uchar *name, int width, int height, double scale)
 {
-	image_struct *image = new_image(name, width, height, scale);
+    image_struct *image = new_image(name, width, height, scale);
     return program_set_image(prog, image);
 }
 
 image_struct *program_image_set_Lambert
-	(program_state *prog, double l0, double p0, double p1, double p2)
+    (program_state *prog, double l0, double p0, double p1, double p2)
 {
-	proj *projection = init_Lambert(l0, p0, p1, p2);
-	return image_set_projection(prog->image, projection);
+    proj *projection = init_Lambert(l0, p0, p1, p2);
+    return image_set_projection(prog->image, projection);
 }
 
 int pos_in_frame(double *x, double *y, double X, double Y, image_struct *frame) {
@@ -300,14 +301,14 @@ uchar *next_field_ustr(uchar **pos) {
 }
 
 void sort_pointobj_view(program_state *pstat, VIEW(pointobj) *view,
-						int compare(const void *, const void *))
+                        int compare(const void *, const void *))
 {
     /* quicksort the point objects in 'view' by function 'compare',
        currently the 'compares' used reside in pointobj.[ch] */
-	qsort((void *)view->S, view->next, sizeof(pointobj *), compare);
+    qsort((void *)view->S, view->next, sizeof(pointobj *), compare);
 }
 
-int load_stars(char *fname, program_state *pstat) {
+int load_stars(program_state *pstat, char *fname) {
     /*
     DROP TABLE _cmap;
     SELECT hip, ra, de, vmag, _bv, _hvartype, _multflag, _sptype into _cmap 
@@ -330,7 +331,7 @@ int load_stars(char *fname, program_state *pstat) {
         DE = next_field_double(&pos);
         vmag = next_field_double(&pos);
         pstat->latest_star =
-        	new_pointobj(PO_STAR, HIP, RA, DE, vmag, pstat->latest_star);
+            new_pointobj(PO_STAR, HIP, RA, DE, vmag, pstat->latest_star);
         append_pointobj(pstat->stars[BY_VMAG], pstat->latest_star);
         append_pointobj(pstat->stars[BY_HIP], pstat->latest_star);
     }
@@ -353,7 +354,7 @@ pointobj *find_star_by_HIP(int HIP, program_state *pstat) {
     return res;
 }
 
-int load_star_lines(char *fname, program_state *pstat) {
+int load_star_lines(program_state *pstat, char *fname) {
     int boldness, HIP1, HIP2;
     double RA1, DE1;
     double RA2, DE2;
@@ -402,7 +403,7 @@ int load_star_lines(char *fname, program_state *pstat) {
     return 1;
 }
 
-int load_constellation_bounds(char *fname, program_state *pstat) {
+int load_constellation_bounds(program_state *pstat, char *fname) {
     int boldness;
     double RA1, DE1;
     double RA2, DE2;
@@ -457,7 +458,7 @@ int load_star_labels(program_state *pstat, char *fname) {
         direction = next_field_double(&pos);
         anchor = next_field_int(&pos);
         pstat->latest_star_label = new_label(HIP, label, distance, direction,
-        									 anchor, pstat->latest_star_label);
+                                             anchor, pstat->latest_star_label);
         S = find_star_by_HIP(HIP, pstat);
         if (S) {
             double dir = deg2rad(direction);
@@ -485,13 +486,13 @@ void draw_head(program_state *pstat) {
     W = image->width;
     H = image->height;
     fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" "
-    		     "standalone=\"no\"?>\n");
+                 "standalone=\"no\"?>\n");
     fprintf(out, "<svg width=\"%i\" height=\"%i\"\n"
                  "     xmlns=\"http://www.w3.org/2000/svg\"\n"
                  "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
                  "     >\n", W, H);
     fprintf(out, "     <title>%s</title>\n",
-    		     ucstombs(buf, pstat->image->name, 256));
+                 ucstombs(buf, pstat->image->name, 256));
 }
 
 void draw_background(program_state *pstat) {
@@ -620,7 +621,7 @@ void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
     char buf[256];
 
     for (L = line_set; L; L = L->prev) {
-    	if (id && 0 != ucscmp(id,L->asterism)) continue;
+        if (id && 0 != ucscmp(id,L->asterism)) continue;
         project(&X1, &Y1, deg2rad(L->DE_1), deg2rad(L->RA_1), projection);
         project(&X2, &Y2, deg2rad(L->DE_2), deg2rad(L->RA_2), projection);
         if (pos_in_frame(&x1, &y1, X1, Y1, image)
@@ -634,7 +635,7 @@ void draw_line_set(program_state *pstat, uchar *id, line *line_set) {
                 default: color = "220000"; break;
             }
             if (pstat->debug)
-            	fprintf(out, "    <!-- LINE FOR %s -->\n", ucstombs(buf, L->asterism, 256));
+                fprintf(out, "    <!-- LINE FOR %s -->\n", ucstombs(buf, L->asterism, 256));
             fprintf(out, "    <path ");
             fprintf(out, "style=\"stroke:#%s; stroke-width: 1px\"\n", color);
             fprintf(out, "          d=\"M %.2f,%.2f L %.2f,%.2f\"/>\n",
@@ -665,7 +666,7 @@ void draw_delportian_area(program_state *pstat, uchar *id) {
             char buf[256];
 
             if (pstat->debug) 
-            	fprintf(out, "    <!-- bounds for %s -->\n", ucstombs(buf,PS->name,256));
+                fprintf(out, "    <!-- bounds for %s -->\n", ucstombs(buf,PS->name,256));
             fprintf(out, "    <path ");
             fprintf(out, "style=\"stroke:#0088AA; stroke-width: 1px; ");
             fprintf(out, "fill: #000022\"\n");
@@ -696,18 +697,18 @@ void draw_labels(program_state *pstat, uchar *NOTUSEDYET) {
         char buf[256], *anchor;
         project(&X, &Y, deg2rad(L->DE), deg2rad(L->RA), projection);
         if (pos_in_frame(&x, &y, X, Y, image)) {
-        	switch (L->anchor) {
-        	  	case 1: anchor = "start"; break;
-        	  	case 2: anchor = "middle"; break;
-        	  	case 3: anchor = "end"; break;
-        	  	default: anchor = "end"; break;
-        	}
+            switch (L->anchor) {
+                  case 1: anchor = "start"; break;
+                  case 2: anchor = "middle"; break;
+                  case 3: anchor = "end"; break;
+                  default: anchor = "end"; break;
+            }
             if (pstat->debug) 
-            	fprintf(out, "    <!-- label \"%s\" for HIP %i -->\n",
-            			ucstombs(buf,L->text,256),
-            			L->HIP);
+                fprintf(out, "    <!-- label \"%s\" for HIP %i -->\n",
+                        ucstombs(buf,L->text,256),
+                        L->HIP);
             fprintf(out, "    <text x=\"%.2f\" y=\"%.2f\" "
-            		     "style=\"fill:#CC0000; text-anchor: %s;"
+                         "style=\"fill:#CC0000; text-anchor: %s;"
                          "font-size:13px;%s\">%s</text>\n",
                     x, y, anchor, FONT_STYLE, ucstombs(buf,L->text,256));
         }
@@ -768,8 +769,6 @@ void tok_dump(int debug, token *tok) {
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat;
-    proj *projection;
-    image_struct *image;
     uchar *star_data_tags[] = { _UC_RA, _UC_DE, _UC_V, _UC_HIP, 0 };
 
     if (argc != 3) usage_exit();
@@ -786,30 +785,23 @@ int main (int argc, char **argv) {
     /*>   A₄:     /dismissed/                                                           */
     /*>   A₅:   mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments         */
 
-	/* Init classes: */
-	init_method_tags();
-	init_named_class(PO_STAR, star_data_tags);
+    /* Init classes: */
+    init_method_tags();
+    init_named_class(PO_STAR, star_data_tags);
 
     pstat = new_program_state(DEBUG, stderr);
 
-    load_stars("star.db", pstat);
-    load_star_lines("lines.db", pstat);             /* dependent on load_stars */
-    load_constellation_bounds("bounds.db", pstat);  /* dependent on nothing */
+    load_stars(pstat, "star.db");
+    load_star_lines(pstat, "lines.db");             /* dependent on load_stars */
+    load_constellation_bounds(pstat, "bounds.db");  /* dependent on nothing */
 
-	/*
-    image = new_image(_UC_Orion, 500, 500, 1.4);
-    projection = init_Lambert(82.5, 5, 15, 25);
-    image_set_projection(image, projection);
-    program_set_image(pstat, image);
-	*/
-
-	program_new_image(pstat, _UC_Orion, 500, 500, 1.4);
-	program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
+    program_new_image(pstat, _UC_Orion, 500, 500, 1.4);
+    program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
 
     /* generate one output map: */
     if (open_file("orion.svg", pstat)) {
         pstat = program_push(pstat, stderr);
-		load_star_labels(pstat, "orion-labels.db");
+        load_star_labels(pstat, "orion-labels.db");
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);
@@ -829,19 +821,12 @@ int main (int argc, char **argv) {
         fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
     }
 
-	/*
-    projection = init_Lambert(106, 0, 10, 20);
-    image = new_image(_UC_Monoceros, 600, 550, 1.4);
-    program_set_image(pstat, image);
-    image_set_projection(image, projection);
-	*/
-
-	program_new_image(pstat, _UC_Monoceros, 600, 550, 1.4);
-	program_image_set_Lambert(pstat, 106, 0, 10, 20);
+    program_new_image(pstat, _UC_Monoceros, 600, 550, 1.4);
+    program_image_set_Lambert(pstat, 106, 0, 10, 20);
 
     if (open_file("monoceros.svg", pstat)) {
         pstat = program_push(pstat, stderr);
-		load_star_labels(pstat, "monoceros-labels.db");
+        load_star_labels(pstat, "monoceros-labels.db");
         draw_head(pstat);
         draw_background(pstat);
         draw_bounds(pstat);

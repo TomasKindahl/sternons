@@ -14,11 +14,11 @@ main {
     load bound from "bounds.db",
 
     image constellation = { (* PATTERN FOR CONSTELLATION DRAWING *)
-      initial:
+      particular_load:
       init_drawing:
         draw header,
         draw background,
-      imagimetrical:
+      support_drawing:
       real_objects:
         draw stars,
       final:
@@ -32,9 +32,9 @@ main {
         set scale = 1.4,
         set projection = {Lambert, 82.5, 5, 15, 25},
 
-      initial:
+      particular_load:
         load labels from "orion-labels.db",
-      imagimetrical:
+      support_drawing:
         draw all bound,
         draw all delportian_area "Ori",
         draw all grid,
@@ -52,9 +52,9 @@ main {
         set scale = 1.4,
         set projection = {Lambert, 106, 0, 10, 20},
 
-      initial:
+      particular_load:
         load labels from "monoceros-labels.db",
-      imagimetrical:
+      support_drawing:
         draw bounds,
         draw delportian_area "Mon",
         draw grid,
