@@ -1,68 +1,67 @@
 main {
-	declare star = {RA, DE, V, HIP},
-	declare line = {boldness, asterism, RA₁, DE₁, RA₂, DE₂},
-	declare hline = {boldness, asterism, HIP₁, HIP₂},
-	declare line ← hline = {
-		set boldness = boldness,
-		set asterism = asterism,
-		set RA₁ = HIP₁.RA, set DE₁ = HIP₁.DE,
-		set RA₂ = HIP₂.RA, set DE₂ = HIP₂.DE
-	}
-	declare bound = line;
-	load star from "star.db" {HIP, RA, DE, V, ...},
-	load line ← hline from "line.db",
-	load bound from "bounds.db",
+    declare star = {RA, DE, V, HIP},
+    declare line = {boldness, asterism, RA₁, DE₁, RA₂, DE₂},
+    declare hline = {boldness, asterism, HIP₁, HIP₂},
+    declare line ← hline = {
+        set boldness ← boldness,
+        set asterism ← asterism,
+        set RA₁ ← HIP₁.RA, set DE₁ ← HIP₁.DE,
+        set RA₂ ← HIP₂.RA, set DE₂ ← HIP₂.DE
+    },
+    declare bound = line;
+    load star from "star.db" {HIP, RA, DE, V, ...},
+    load line ← hline from "line.db",
+    load bound from "bounds.db",
 
-	image constellation = { (* PATTERN FOR CONSTELLATION DRAWING *)
-	  initial:
-	  init_drawing:
-		draw header,
-		draw background,
-	  imagimetrical:
-	  real_objects:
-		draw stars,
-	  final:
-		draw debug_info,
-		draw footer
-	}
+    image constellation = { (* PATTERN FOR CONSTELLATION DRAWING *)
+      initial:
+      init_drawing:
+        draw header,
+        draw background,
+      imagimetrical:
+      real_objects:
+        draw stars,
+      final:
+        draw debug_info,
+        draw footer
+    }
 
-	constellation orion = {
-		set name = "Orion",
-		set size = [500px, 500px],
-		set scale = 1.4,
-		set projection = {Lambert, 82.5, 5, 15, 25},
+    constellation orion = {
+        set name = "Orion",
+        set size = [500px, 500px],
+        set scale = 1.4,
+        set projection = {Lambert, 82.5, 5, 15, 25},
 
-	  initial:
-		load labels from "orion-labels.db",
-	  imagimetrical:
-		draw all bound,
-		draw all delportian_area "Ori",
-		draw all grid,
-		draw all lines "Ori Bdy",
-		draw all lines "Ori Arm",
-		draw all lines "Ori Shd",
-		draw all labels "Ori",
-	}
+      initial:
+        load labels from "orion-labels.db",
+      imagimetrical:
+        draw all bound,
+        draw all delportian_area "Ori",
+        draw all grid,
+        draw all lines "Ori Bdy",
+        draw all lines "Ori Arm",
+        draw all lines "Ori Shd",
+        draw all labels "Ori",
+    }
 
-	draw orion to "orion.svg",
+    draw orion to "orion.svg",
 
-	constellation monoceros = {
-		set name = "Monoceros",
-		set size = [500px, 500px],
-		set scale = 1.4,
-		set projection = {Lambert, 106, 0, 10, 20},
+    constellation monoceros = {
+        set name = "Monoceros",
+        set size = [500px, 500px],
+        set scale = 1.4,
+        set projection = {Lambert, 106, 0, 10, 20},
 
-	  initial:
-		load labels from "monoceros-labels.db",
-	  imagimetrical:
-		draw bounds,
-		draw delportian_area "Mon",
-		draw grid,
-		draw lines "Mon Bdy",
-		draw labels "Mon",
-	}
+      initial:
+        load labels from "monoceros-labels.db",
+      imagimetrical:
+        draw bounds,
+        draw delportian_area "Mon",
+        draw grid,
+        draw lines "Mon Bdy",
+        draw labels "Mon",
+    }
 
-	draw monoceros to "monoceros.svg"
-
+    draw monoceros to "monoceros.svg"
 }
 
