@@ -46,4 +46,8 @@ int isunum(uchar uch) {
     return 0;
 }
 
+int isualnum(uchar uch) {
+    return isualpha(uch) || isunum(uch);
+}
+
 /* uchar string functions (cygwin has a UTF-16 wchar_t, we assume UTF-32 - int) */
