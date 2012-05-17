@@ -21,7 +21,10 @@
 #define _SCAN_H
 
 typedef enum {
-    TOK_NONE, TOK_STR, TOK_KW, TOK_OP, TOK_LPAR, TOK_RPAR, TOK_NUM
+    TOK_NONE, TOK_ID, TOK_OP, TOK_NUM,
+    TOK_VERSION,
+    TOK_CSTR, TOK_USTR, /* string types */
+    TOK_LPAR, TOK_RPAR  /* left/right parentheses */
 } token_type;
 
 typedef enum {
@@ -31,7 +34,10 @@ typedef enum {
 
 typedef struct _token_S {
     token_type type;
-    uchar *ustr;
+    union {
+        uchar *ustr;
+        char *cstr;
+    } V;
     int line_num;
     /* for numbers only: */
     uchar *unit;
@@ -45,6 +51,7 @@ typedef struct _token_file_S {
 } token_file;
 
 /** Stream methods **/
+    /* RENAME THESE: tok_X */
 token_file *tokfopen(char *fname);                    /* open token stream   */
 int tokfclose(token_file *tok_stream);                /* close token stream  */
 token *scan(token_file *tok_stream);                  /* scan a token        */
@@ -52,13 +59,16 @@ int unscan(token *value, token_file *tok_stream);     /* unscan it           */
 int tokfeof(token_file *tok_stream);                  /* detect if as at end */
 
 /** Type checking methods **/
+    /* RENAME THESE: tok_has_X, tok_equals_X, tok_isa_X and such */
 int is_type(token *tok, token_type type);             /* item has spec type? */
 int is_str(token *tok, uchar *op);                    /* any item w expected */
                                                        /* string?             */
 int is_num(token *tok);                               /* any number?         */
 int is_any_kw(token *tok);                            /* any keyword?        */
+int is_none(token *tok);                              /* the null token      */
 
 /** Type and content checking methods **/
+    /* RENAME THESE: tok_has_X, tok_equals_X, tok_isa_X and such */
 int is_item(token *tok, uchar *op, token_type type);  /* item w expected     */
                                                        /* string and type?    */
 int is_op(token *tok, uchar *op);                     /* operator w exp str? */
@@ -66,12 +76,15 @@ int is_kw(token *tok, uchar *op);                     /* keyword w exp str?  */
 int is_lpar(token *tok, uchar *op);                   /* left paren w str?   */
 int is_rpar(token *tok, uchar *op);                   /* or a right?         */
 
-char *tok_type_str(token *tok);
-uchar *tok_ustr(token *tok);
-char *tok_str(char *buf, token *tok, int size);
-char *tok_unit(char *buf, token *tok, int size);
-char *tok_base_name(token *tok);
-void tok_free(token *tok);
+    /* RENAME THESE: tok_get_X */
+char *tok_type_str(token *tok);                       /* get a string from the type of the token */
+uchar *tok_ustr(token *tok);                          /*  */
+char *tok_str(char *buf, token *tok, int size);       /*  */
+char *tok_unit(char *buf, token *tok, int size);      /*  */
+char *tok_base_name(token *tok);                      /*  */
+void tok_free(token *tok);                            /*  */
+
+char *type_str(token_type type);
 
 #endif /* _SCAN_H */
 

@@ -32,7 +32,8 @@ WOBJSP 	= $(WOBJS) parse.obj
 all: img
 
 img: mkmap maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm $(MAPS)
+	./$<
+#	./$< maps/orion.mkm
 
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
@@ -41,6 +42,9 @@ mkmap.c: mkmap.uc $(UCCVT)
 	$(UCCVT) $<
 
 pointobj.c: pointobj.uc $(UCCVT)
+	$(UCCVT) $<
+
+parse_prog2.c: parse_prog2.uc $(UCCVT)
 	$(UCCVT) $<
 
 parse_program: parse_program.c $(OBJSP)
@@ -53,10 +57,10 @@ parse_prog2: parse_prog2.c $(OBJS)
 	$(CC) -c $<
 
 orion.svg: mkmap maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm $(MAPS)
+	./$< maps/orion.mkm
 
 monoceros.svg: mkmap maps/monoceros.mkm $(MAPS)
-	./$< maps/monoceros.mkm $(MAPS)
+	./$< maps/monoceros.mkm
 
 orion.png: orion.svg 
 	inkscape --export-png=$@ $<
