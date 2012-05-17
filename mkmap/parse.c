@@ -58,7 +58,10 @@ void tok_dump(token *tok, program_state *pstat) {
     static num = 0;
 
     switch (tok->type) {
-      case TOK_STR:
+      case TOK_CSTR:
+        fprintf(pstat->debug_out, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
+        break;
+      case TOK_USTR:
         fprintf(pstat->debug_out, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
         break;
       case TOK_NUM:

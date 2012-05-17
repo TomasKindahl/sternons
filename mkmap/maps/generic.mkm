@@ -1,3 +1,5 @@
+(%mkm 2.0%)
+
 main {
     declare star = {RA, DE, V, HIP},
     declare line = {boldness, asterism, RA₁, DE₁, RA₂, DE₂},
@@ -9,16 +11,18 @@ main {
         set RA₂ ← HIP₂.RA, set DE₂ ← HIP₂.DE
     },
     declare bound = line;
-    load star from "star.db" {HIP, RA, DE, V, ...},
-    load line ← hline from "line.db",
-    load bound from "bounds.db",
+    load star from 'star.db' {HIP, RA, DE, V, ...},
+    load line ← hline from 'line.db',
+    load bound from 'bounds.db',
 
-    image constellation = { (* PATTERN FOR CONSTELLATION DRAWING *)
-      particular_load:
+    image constellation_image { (* PATTERN FOR CONSTELLATION DRAWING *)
+      image_setup:
+		(* PLACEHOLDER *)
       init_drawing:
         draw header,
         draw background,
       support_drawing:
+		(* PLACEHOLDER *)
       real_objects:
         draw stars,
       final:
@@ -26,42 +30,42 @@ main {
         draw footer
     }
 
-    constellation orion = {
+    image orion is constellation_image {
         set name = "Orion",
         set size = [500px, 500px],
         set scale = 1.4,
         set projection = {Lambert, 82.5, 5, 15, 25},
 
-      particular_load:
-        load labels from "orion-labels.db",
+      image_setup:
+        load labels from 'orion-labels.db',
       support_drawing:
         draw all bound,
-        draw all delportian_area "Ori",
+        draw delportian_area labeled "Ori",
         draw all grid,
-        draw all lines "Ori Bdy",
-        draw all lines "Ori Arm",
-        draw all lines "Ori Shd",
-        draw all labels "Ori",
+        draw lines labeled "Ori Bdy",
+        draw lines labeled "Ori Arm",
+        draw lines labeled "Ori Shd",
+        draw labels labeled "Ori",
     }
 
-    draw orion to "orion.svg",
+    draw orion to 'orion.svg',
 
-    constellation monoceros = {
+    image monoceros is constellation_image {
         set name = "Monoceros",
         set size = [500px, 500px],
         set scale = 1.4,
         set projection = {Lambert, 106, 0, 10, 20},
 
-      particular_load:
-        load labels from "monoceros-labels.db",
+      image_setup:
+        load labels from 'monoceros-labels.db',
       support_drawing:
-        draw bounds,
-        draw delportian_area "Mon",
-        draw grid,
-        draw lines "Mon Bdy",
-        draw labels "Mon",
+        draw all bound,
+        draw delportian_area labeled "Mon",
+        draw all grid,
+        draw lines labeled "Mon Bdy",
+        draw labels labeled "Mon",
     }
 
-    draw monoceros to "monoceros.svg"
+    draw monoceros to 'monoceros.svg'
 }
 

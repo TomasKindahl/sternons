@@ -751,8 +751,11 @@ void tok_dump(int debug, token *tok) {
     char buf[1024], buf2[1024];
 
     switch (tok->type) {
-      case TOK_STR:
+      case TOK_USTR:
         fprintf(stderr, "⟨%s⟩“%s”", tok_type_str(tok), tok_str(buf, tok, 1023));
+        break;
+      case TOK_CSTR:
+        fprintf(stderr, "⟨%s⟩‘%s’", tok_type_str(tok), tok_str(buf, tok, 1023));
         break;
       case TOK_NUM:
         fprintf(stderr, "⟨%s⟩%s(%s)", tok_type_str(tok),
@@ -763,12 +766,15 @@ void tok_dump(int debug, token *tok) {
     }
 }
 
+int parse_first_map_format(char *fname) {
+    return 0;
+}
+
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat;
     uchar *star_data_tags[] = { u"RA", u"DE", u"V", u"HIP", 0 };
 
-    if (argc != 3) usage_exit();
     /* init: */
     /*TBD: if (!parse_program(argv[1], pstat))
         usage_exit();*/
@@ -782,63 +788,87 @@ int main (int argc, char **argv) {
     /*>   A₄:     /dismissed/                                                           */
     /*>   A₅:   mkmap /prog/ /arg₁/ ...     -- make the 2++ arg real arguments         */
 
-    /* Init classes: */
-    init_method_tags();
-    init_named_class(PO_STAR, star_data_tags);
+    if (argc >= 2) {
+        int aix;
 
-    pstat = new_program_state(DEBUG, stderr);
+        init_method_tags();
+        init_named_class(PO_STAR, star_data_tags);
+        pstat = new_program_state(DEBUG, stderr);
 
-    load_stars(pstat, "star.db");
-    load_star_lines(pstat, "lines.db");             /* dependent on load_stars */
-    load_constellation_bounds(pstat, "bounds.db");  /* dependent on nothing */
+        for (aix = 1; aix < argc; aix++) {
+            char *ext = strrchr(argv[aix],'.');
 
-    program_new_image(pstat, u"Orion", 500, 500, 1.4);
-    program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
-
-    /* generate one output map: */
-    if (open_file("orion.svg", pstat)) {
-        pstat = program_push(pstat, stderr);
-        load_star_labels(pstat, "orion-labels.db");
-        draw_head(pstat);
-        draw_background(pstat);
-        draw_bounds(pstat);
-        draw_delportian_area(pstat, u"Ori");
-        draw_grid(pstat);
-        draw_lines(pstat, u"Ori Bdy");
-        draw_lines(pstat, u"Ori Arm");
-        draw_lines(pstat, u"Ori Shd");
-        draw_labels(pstat, u"Ori");
-        draw_stars(pstat);
-        draw_debug_info(pstat);
-        draw_foot(pstat);
-        close_file(pstat);
-        pstat = program_pop(pstat, stderr);
-    }
-    else {
-        fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
+            if(0 == strcmp(ext, ".ma1")) {
+                /* FIRST MAP FORMAT */
+                
+            }
+            else {
+                printf("WARNING: ignoring file '%s' in unrecognized map "
+                       "format '%s'\n", argv[aix], ext);
+            }
+        }
     }
 
-    program_new_image(pstat, u"Monoceros", 600, 550, 1.4);
-    program_image_set_Lambert(pstat, 106, 0, 10, 20);
+    if (1 && argc == 1) {
+        /* IF NO ARGUMENTS ARE GIVEN, ORION AND MONOCEROS ARE GENERATED */
 
-    if (open_file("monoceros.svg", pstat)) {
-        pstat = program_push(pstat, stderr);
-        load_star_labels(pstat, "monoceros-labels.db");
-        draw_head(pstat);
-        draw_background(pstat);
-        draw_bounds(pstat);
-        draw_delportian_area(pstat, u"Mon");
-        draw_grid(pstat);
-        draw_labels(pstat, u"Mon");
-        draw_lines(pstat, u"Mon Bdy");
-        draw_stars(pstat);
-        draw_debug_info(pstat);
-        draw_foot(pstat);
-        close_file(pstat);
-        pstat = program_pop(pstat, stderr);
-    }
-    else {
-        fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
+        /* Init classes: */
+        init_method_tags();
+        init_named_class(PO_STAR, star_data_tags);
+        pstat = new_program_state(DEBUG, stderr);
+
+        load_stars(pstat, "star.db");
+        load_star_lines(pstat, "lines.db");             /* dependent on load_stars */
+        load_constellation_bounds(pstat, "bounds.db");  /* dependent on nothing */
+
+        program_new_image(pstat, u"Orion", 500, 500, 1.4);
+        program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
+
+        /* generate one output map: */
+        if (open_file("orion.svg", pstat)) {
+            pstat = program_push(pstat, stderr);
+            load_star_labels(pstat, "orion-labels.db");
+            draw_head(pstat);
+            draw_background(pstat);
+            draw_bounds(pstat);
+            draw_delportian_area(pstat, u"Ori");
+            draw_grid(pstat);
+            draw_lines(pstat, u"Ori Bdy");
+            draw_lines(pstat, u"Ori Arm");
+            draw_lines(pstat, u"Ori Shd");
+            draw_labels(pstat, u"Ori");
+            draw_stars(pstat);
+            draw_debug_info(pstat);
+            draw_foot(pstat);
+            close_file(pstat);
+            pstat = program_pop(pstat, stderr);
+        }
+        else {
+            fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
+        }
+
+        program_new_image(pstat, u"Monoceros", 600, 550, 1.4);
+        program_image_set_Lambert(pstat, 106, 0, 10, 20);
+
+        if (open_file("monoceros.svg", pstat)) {
+            pstat = program_push(pstat, stderr);
+            load_star_labels(pstat, "monoceros-labels.db");
+            draw_head(pstat);
+            draw_background(pstat);
+            draw_bounds(pstat);
+            draw_delportian_area(pstat, u"Mon");
+            draw_grid(pstat);
+            draw_labels(pstat, u"Mon");
+            draw_lines(pstat, u"Mon Bdy");
+            draw_stars(pstat);
+            draw_debug_info(pstat);
+            draw_foot(pstat);
+            close_file(pstat);
+            pstat = program_pop(pstat, stderr);
+        }
+        else {
+            fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
+        }
     }
 
     return 0;

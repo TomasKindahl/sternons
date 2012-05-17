@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "meta.h"
 #include "defs.h"
 #include "ucstr.h"
@@ -40,32 +41,38 @@ int tokfclose(token_file *tok_stream) {
     return u8fclose(tok_file);
 }
 
-token *_new_token(token_type type, uchar *ustr, int line_num) {
+token *_new_token_raw(token_type type, int line_num) {
     token *res = ALLOC(token);
     res->type = type;
-    res->ustr = ucsdup(ustr);
     res->unit = 0;
     res->line_num = line_num;
+    return res;
+}
+
+token *_new_token(token_type type, uchar *ustr, int line_num) {
+    token *res = _new_token_raw(type, line_num);
+    res->V.ustr = ucsdup(ustr);
+    return res;
+}
+
+token *_new_token_cstr(char *str, int line_num) {
+    token *res = _new_token_raw(TOK_CSTR, line_num);
+    res->V.cstr = strdup(str);
     return res;
 }
 
 token *_new_token_num(token_type type, uchar *ustr, uchar *unit, base_mode base, int line_num) {
-    token *res = ALLOC(token);
-    res->type = type;
-    res->ustr = ucsdup(ustr);
+    token *res = _new_token_raw(type, line_num);
+    res->V.ustr = ucsdup(ustr);
     res->unit = ucsdup(unit);
     res->base = base;
-    res->line_num = line_num;
     return res;
 }
 
 token *_new_token_uchar(token_type type, uchar uc, int line_num) {
-    token *res = ALLOC(token);
-    res->type = type;
-    res->ustr = ALLOCN(uchar,2);
-    res->ustr[0] = uc; res->ustr[1] = L'\0';
-    res->unit = 0;
-    res->line_num = line_num;
+    token *res = _new_token_raw(type, line_num);
+    res->V.ustr = ALLOCN(uchar,2);
+    res->V.ustr[0] = uc; res->V.ustr[1] = L'\0';
     return res;
 }
 
@@ -117,6 +124,7 @@ base_mode scan_mode(uchar *ustr) {
 token *_scan(utf8_file *stream) {
     uchar ustr[256], uunit[32];
     uchar uch;
+    char cstr[256];
     int ix, jx, lno;
 
     while (isuws(uch = fgetuc(stream)));
@@ -140,7 +148,64 @@ token *_scan(utf8_file *stream) {
             }
         }
         ustr[ix-1] = L'\0';
-        return _new_token(TOK_STR, ustr, lno);
+        return _new_token(TOK_USTR, ustr, lno);
+    }
+    else if (uch == L'"') {
+        int slev = 1;
+
+        ix = 0;
+        while (slev > 0) {
+            uch = fgetuc(stream);
+            ustr[ix] = uch;
+            ix ++;
+            if (uch == L'"') {
+                slev++; break;
+            }
+        }
+        ustr[ix-1] = L'\0';
+        return _new_token(TOK_USTR, ustr, lno);
+    }
+    else if (uch == L'(') {
+        int slev = 1;
+        int nuch;
+
+        nuch = fgetuc(stream);
+        if (nuch != L'%') {
+            fungetuc(nuch, stream);
+            return _new_token_uchar(TOK_LPAR, uch, lno);
+        }
+
+        ix = 0;
+        while (slev > 0) {
+            uch = fgetuc(stream);
+            ustr[ix] = uch;
+            ix ++;
+            if (uch == L'%') {
+                nuch = fgetuc(stream);
+                if (nuch != L')') {
+                    fungetuc(nuch, stream); continue;
+                } else {
+                    slev++; break;
+                }
+            }
+        }
+        ustr[ix-1] = L'\0';
+        return _new_token(TOK_VERSION, ustr, lno);
+    }
+    else if (uch == L'\'') {
+        int slev = 1;
+
+        ix = 0;
+        while (slev > 0) {
+            uch = fgetuc(stream);
+            cstr[ix] = (char)uch;
+            ix ++;
+            if (uch == L'\'') {
+                  slev++; break;
+            }
+        }
+        cstr[ix-1] = '\0';
+        return _new_token_cstr(cstr, lno);
     }
     else if (isunum(uch)) {
         /* NUMBER WITH SCALE FACTOR AND UNIT */
@@ -170,23 +235,29 @@ token *_scan(utf8_file *stream) {
     else if (isualpha(uch)) {
         ustr[0] = uch;
         ix = 0;
-        while (isualpha(uch)) {
+        while (isualnum(uch)) {
             ix ++;
             uch = fgetuc(stream);
             ustr[ix] = uch;
         }
         fungetuc(uch, stream);
         ustr[ix] = L'\0';
-        return _new_token(TOK_KW, ustr, lno);
+        return _new_token(TOK_ID, ustr, lno);
     }
     else if (!isualpha(uch)) {
         token_type T;
-        if (uch == L'{' || uch == L'[' || uch == L'(')
+        if (uch == L'{' || uch == L'[' || uch == L'(') {
             T = TOK_LPAR;
-        else if (uch == L'}' || uch == L']' || uch == L')')
+        }
+        else if (uch == L'}' || uch == L']' || uch == L')') {
             T = TOK_RPAR;
-        else
+        }
+        else if (uch == -1) {
+            return _new_token(TOK_NONE, 0, lno);
+        }
+        else {
             T = TOK_OP;
+        }
         return _new_token_uchar(T, uch, lno);
     }
     return _new_token(TOK_NONE, 0, lno);
@@ -217,42 +288,73 @@ int is_type(token *tok, token_type type) {
 }
 
 int is_str(token *tok, uchar *op) {
-    if (0 != ucscmp(tok->ustr, op)) return 0;
+    if (0 != ucscmp(tok->V.ustr, op)) return 0;
     return 1;
 }
 
 int is_item(token *tok, uchar *op, token_type type) {
-    return is_str(tok,op) && is_type(tok, type);
+    return is_str(tok, op) && is_type(tok, type);
 }
 
 int is_num(token *tok) { return is_type(tok, TOK_NUM); }
-int is_any_kw(token *tok) { return is_type(tok, TOK_KW); }
+int is_any_kw(token *tok) { return is_type(tok, TOK_ID); }
+int is_none(token *tok) { return is_type(tok, TOK_NONE); }
 
 int is_op(token *tok, uchar *op)   { return is_item(tok, op, TOK_OP);   }
-int is_kw(token *tok, uchar *op)   { return is_item(tok, op, TOK_KW);   }
+int is_kw(token *tok, uchar *op)   { return is_item(tok, op, TOK_ID);   }
 int is_lpar(token *tok, uchar *op) { return is_item(tok, op, TOK_LPAR); }
 int is_rpar(token *tok, uchar *op) { return is_item(tok, op, TOK_RPAR); }
 
-char *tok_type_str(token *tok) {
-    switch(tok->type) {
+char *type_str(token_type type) {
+    switch(type) {
         case TOK_NONE: return "ERR";
-        case TOK_STR:  return "STR";
-        case TOK_KW:   return "KW";
-        case TOK_OP:   return "OP";
+        case TOK_ID: return "IDENT";
+        case TOK_OP: return "OP";
+        case TOK_NUM: return "NUM";
+
+        case TOK_VERSION: return "VERSION";
+
+        case TOK_CSTR: return "CSTR";
+        case TOK_USTR: return "USTR";
+
         case TOK_LPAR: return "LPAR";
         case TOK_RPAR: return "RPAR";
-        case TOK_NUM:  return "NUM";
-        default:       return "unknown";
+        default: return "unknown";
     }
     return "unknown";
 }
 
+char *tok_type_str(token *tok) {
+    return type_str(tok->type);
+    /*switch(tok->type) {
+        case TOK_NONE: return "ERR";
+        case TOK_ID: return "IDENT";
+        case TOK_OP: return "OP";
+        case TOK_NUM: return "NUM";
+
+        case TOK_VERSION: return "VERSION";
+
+        case TOK_CSTR: return "CSTR";
+        case TOK_USTR: return "USTR";
+
+        case TOK_LPAR: return "LPAR";
+        case TOK_RPAR: return "RPAR";
+        default: return "unknown";
+    }
+    return "unknown";*/
+}
+
+uchar empty[] = {0};
+
 uchar *tok_ustr(token *tok) {
-    return tok->ustr;
+    if (tok->type == TOK_CSTR) return empty;
+    return tok->V.ustr;
 }
 
 char *tok_str(char *buf, token *tok, int size) {
-    return ucstombs(buf, tok->ustr, size);
+    if (tok->type == TOK_CSTR)
+        return strncpy(buf, tok->V.cstr, size);
+    return ucstombs(buf, tok->V.ustr, size);
 }
 
 char *tok_unit(char *buf, token *tok, int size) {
@@ -278,7 +380,10 @@ char *tok_base_name(token *tok) {
 }
 
 void tok_free(token *tok) {
-    free(tok->ustr);
+    if (tok->type == TOK_CSTR)
+        free(tok->V.cstr);
+    else
+        free(tok->V.ustr);
     free(tok->unit);
     free(tok);
 }
