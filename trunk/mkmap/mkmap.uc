@@ -22,6 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>           /* For time stamping the images in debug mode */
+#include <values.h>
 /* General program defs */
 #include "defs.h"
 /* Uchar literal conversion */
@@ -174,6 +175,95 @@ label *label_set_pos(label *L, double RA, double DE) {
     return L;
 }
 
+#define VS_INT 0
+#define VS_DBL 1
+#define VS_USTR 2
+#define VS_CSTR 3
+
+typedef struct _valstack_S {
+    int type;
+    union {
+        int int_val;
+        double dbl_val;
+        uchar *ustr_val;
+        char *cstr_val;
+    } V;
+    struct _valstack_S *prev;
+} valstack;
+
+valstack *VS_push_int(int int_val, valstack *prev) {
+    valstack *res = ALLOC(valstack);
+    res->type = VS_INT;
+    res->V.int_val = int_val;
+    res->prev = prev;
+    return res;
+}
+
+valstack *VS_push_dbl(double dbl_val, valstack *prev) {
+    valstack *res = ALLOC(valstack);
+    res->type = VS_DBL;
+    res->V.dbl_val = dbl_val;
+    res->prev = prev;
+    return res;
+}
+
+valstack *VS_push_ustr(uchar *ustr_val, valstack *prev) {
+    valstack *res = ALLOC(valstack);
+    res->type = VS_USTR;
+    res->V.ustr_val = ustr_val;
+    res->prev = prev;
+    return res;
+}
+
+valstack *VS_push_cstr(char *cstr_val, valstack *prev) {
+    valstack *res = ALLOC(valstack);
+    res->type = VS_USTR;
+    res->V.cstr_val = cstr_val;
+    res->prev = prev;
+    return res;
+}
+
+valstack *VS_pop(valstack *vstack) {
+    return vstack->prev;
+}
+
+int VS_is_int(valstack *vstack) { return vstack->type == VS_INT; }
+int VS_is_dbl(valstack *vstack) { return vstack->type == VS_DBL; }
+int VS_is_ustr(valstack *vstack) { return vstack->type == VS_USTR; }
+int VS_is_cstr(valstack *vstack) { return vstack->type == VS_CSTR; }
+
+int VS_int(valstack *vstack) {
+    if(!VS_is_int(vstack)) {
+        fprintf(stderr, "FATAL: vstack bottom is not int\n");
+        exit(-1);
+    }
+    return vstack->V.int_val;
+}
+
+double VS_dbl(valstack *vstack) {
+    if(!VS_is_dbl(vstack)) {
+        fprintf(stderr, "FATAL: vstack bottom is not dbl\n");
+        exit(-1);
+    }
+    return vstack->V.dbl_val;
+}
+
+uchar *VS_ustr(valstack *vstack) {
+    if(!VS_is_ustr(vstack)) {
+        fprintf(stderr, "FATAL: vstack bottom is not ustr\n");
+        exit(-1);
+    }
+    return vstack->V.ustr_val;
+}
+
+char *VS_cstr(valstack *vstack) {
+    if(!VS_is_cstr(vstack)) {
+        fprintf(stderr, "FATAL: vstack bottom is not cstr\n");
+        exit(-1);
+    }
+    return vstack->V.cstr_val;
+}
+
 #define BY_VMAG 0
 #define BY_HIP 1
 
@@ -196,12 +286,15 @@ typedef struct _program_state_S {
     /* hard-coded image data */
     image_struct *image;
     FILE *out_file;
+    /* program state data */
     int debug;
+    valstack *vstack;
     struct _program_state_S *prev;
 } program_state;
 
 program_state *new_program_state(int debug, FILE *outerr) {
     program_state *res = ALLOC(program_state);
+
     res->latest_star = 0;
     res->stars = ALLOCN(VIEW(pointobj) *,2);
     res->stars[BY_VMAG] = new_pointobj_view(1024);
@@ -214,10 +307,13 @@ program_state *new_program_state(int debug, FILE *outerr) {
         res->last_const = 0;
     /* labels */
         res->latest_star_label = 0;
-    res->image = 0;
-    res->out_file = 0;
-    res->debug = debug;
-    res->prev = 0;
+    /* image var */
+        res->image = 0;
+        res->out_file = 0;
+    /* program state */
+        res->debug = debug;
+        res->vstack = 0;
+        res->prev = 0;
     return res;
 }
 
@@ -265,6 +361,61 @@ image_struct *program_image_set_Lambert
 {
     proj *projection = init_Lambert(l0, p0, p1, p2);
     return image_set_projection(prog->image, projection);
+}
+
+void _P_check_stack_empty(program_state *prog) {
+    if(prog->vstack == 0) {
+        fprintf(stderr, "FATAL: vstack underflow\n");
+        exit(-1);
+    }
+}
+
+int P_pop_int(program_state *prog) {
+    int res;
+    _P_check_stack_empty(prog);
+    res = VS_int(prog->vstack);
+    prog->vstack = VS_pop(prog->vstack);
+    return res;
+}
+
+double P_pop_dbl(program_state *prog) {
+    double res;
+    _P_check_stack_empty(prog);
+    res = VS_dbl(prog->vstack);
+    prog->vstack = VS_pop(prog->vstack);
+    return res;
+}
+
+uchar *P_pop_ustr(program_state *prog) {
+    uchar *res;
+    _P_check_stack_empty(prog);
+    res = VS_ustr(prog->vstack);
+    prog->vstack = VS_pop(prog->vstack);
+    return res;
+}
+
+char *P_pop_cstr(program_state *prog) {
+    char *res;
+    _P_check_stack_empty(prog);
+    res = VS_cstr(prog->vstack);
+    prog->vstack = VS_pop(prog->vstack);
+    return res;
+}
+
+void P_push_int(program_state *prog, int int_val) {
+    prog->vstack = VS_push_int(int_val, prog->vstack);
+}
+
+void P_push_dbl(program_state *prog, double dbl_val) {
+    prog->vstack = VS_push_dbl(dbl_val, prog->vstack);
+}
+
+void P_push_ustr(program_state *prog, uchar *ustr_val) {
+    prog->vstack = VS_push_ustr(ustr_val, prog->vstack);
+}
+
+void P_push_cstr(program_state *prog, char *cstr_val) {
+    prog->vstack = VS_push_cstr(cstr_val, prog->vstack);
 }
 
 int pos_in_frame(double *x, double *y, double X, double Y, image_struct *frame) {
@@ -770,6 +921,32 @@ int parse_first_map_format(char *fname) {
     return 0;
 }
 
+/* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
+
+int VM_new_img(program_state *prog) {
+    char *opcode_name = "NEWIMG";
+    uchar *name; int width, height; double scale;
+    scale = P_pop_dbl(prog);
+    height = P_pop_int(prog);
+    width = P_pop_int(prog);
+    name = P_pop_ustr(prog);
+    program_new_image(prog, name, width, height, scale);
+    return 1;
+}
+
+int VM_img_Lambert(program_state *prog) {
+    char *opcode_name = "IMGLAMBERT";
+    double l0, p0, p1, p2;
+    p2 = P_pop_dbl(prog);
+    p1 = P_pop_dbl(prog);
+    p0 = P_pop_dbl(prog);
+    l0 = P_pop_dbl(prog);
+    program_image_set_Lambert(prog, l0, p0, p1, p2);
+    return 1;
+}
+
+/* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
+
 int main (int argc, char **argv) {
     /* dummy setup: */
     program_state *pstat;
@@ -847,8 +1024,18 @@ int main (int argc, char **argv) {
             fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
         }
 
-        program_new_image(pstat, u"Monoceros", 600, 550, 1.4);
-        program_image_set_Lambert(pstat, 106, 0, 10, 20);
+        /*program_new_image(pstat, u"Monoceros", 600, 550, 1.4);*/
+        P_push_ustr(pstat, u"Monoceros");
+        P_push_int(pstat, 600);
+        P_push_int(pstat, 550);
+        P_push_dbl(pstat, 1.4);
+        VM_new_img(pstat);
+        /*program_image_set_Lambert(pstat, 106, 0, 10, 20);*/
+        P_push_dbl(pstat, 106);
+        P_push_dbl(pstat, 0);
+        P_push_dbl(pstat, 10);
+        P_push_dbl(pstat, 20);
+        VM_img_Lambert(pstat);
 
         if (open_file("monoceros.svg", pstat)) {
             pstat = program_push(pstat, stderr);
