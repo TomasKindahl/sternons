@@ -31,6 +31,7 @@
 #include "usio.h"
 #include "ucstr.h"
 #include "token.h"
+#include "valstack.h"
 /* Application libraries */
 /* TD:  #include "parse.h"*/
 #include "pointobj.h"       /* star struct and DB views */
@@ -174,8 +175,6 @@ label *label_set_pos(label *L, double RA, double DE) {
     L->RA = RA; L->DE = DE;
     return L;
 }
-
-#include "valstack.h"
 
 #define BY_VMAG 0
 #define BY_HIP 1
