@@ -317,7 +317,7 @@ program_state *new_program_state(int debug, FILE *outerr) {
     return res;
 }
 
-program_state *program_push(program_state *PS, FILE *outerr) {
+program_state *PS_push(program_state *PS, FILE *outerr) {
     program_state * res = new_program_state(PS->debug, outerr);
     res->latest_star = PS->latest_star;
     res->debug = PS->debug;
@@ -332,89 +332,92 @@ program_state *program_push(program_state *PS, FILE *outerr) {
         res->last_const = PS->last_const;
     /* labels */
         res->latest_star_label = PS->latest_star_label;
-    res->image = PS->image;
-    res->out_file = PS->out_file;
-    res->debug = PS->debug;
-    res->prev = PS;
+    /* image var */
+        res->image = PS->image;
+        res->out_file = PS->out_file;
+    /* program state */
+        res->debug = PS->debug;
+        res->vstack = 0;
+        res->prev = PS;
     return res;
 }
 
-program_state *program_pop(program_state *PS, FILE *outerr) {
+program_state *PS_pop(program_state *PS, FILE *outerr) {
     /** FREE PS! and relevant contents **/
     return PS->prev;
 }
 
-image_struct *program_set_image(program_state *prog, image_struct *image) {
+image_struct *PS_set_img(program_state *prog, image_struct *image) {
     prog->image = image;
     return image;
 }
 
-image_struct *program_new_image
+image_struct *PS_new_img
     (program_state *prog, uchar *name, int width, int height, double scale)
 {
     image_struct *image = new_image(name, width, height, scale);
-    return program_set_image(prog, image);
+    return PS_set_img(prog, image);
 }
 
-image_struct *program_image_set_Lambert
+image_struct *PS_img_set_Lambert
     (program_state *prog, double l0, double p0, double p1, double p2)
 {
     proj *projection = init_Lambert(l0, p0, p1, p2);
     return image_set_projection(prog->image, projection);
 }
 
-void _P_check_stack_empty(program_state *prog) {
+void _PS_check_stack_empty(program_state *prog) {
     if(prog->vstack == 0) {
         fprintf(stderr, "FATAL: vstack underflow\n");
         exit(-1);
     }
 }
 
-int P_pop_int(program_state *prog) {
+int PS_pop_int(program_state *prog) {
     int res;
-    _P_check_stack_empty(prog);
+    _PS_check_stack_empty(prog);
     res = VS_int(prog->vstack);
     prog->vstack = VS_pop(prog->vstack);
     return res;
 }
 
-double P_pop_dbl(program_state *prog) {
+double PS_pop_dbl(program_state *prog) {
     double res;
-    _P_check_stack_empty(prog);
+    _PS_check_stack_empty(prog);
     res = VS_dbl(prog->vstack);
     prog->vstack = VS_pop(prog->vstack);
     return res;
 }
 
-uchar *P_pop_ustr(program_state *prog) {
+uchar *PS_pop_ustr(program_state *prog) {
     uchar *res;
-    _P_check_stack_empty(prog);
+    _PS_check_stack_empty(prog);
     res = VS_ustr(prog->vstack);
     prog->vstack = VS_pop(prog->vstack);
     return res;
 }
 
-char *P_pop_cstr(program_state *prog) {
+char *PS_pop_cstr(program_state *prog) {
     char *res;
-    _P_check_stack_empty(prog);
+    _PS_check_stack_empty(prog);
     res = VS_cstr(prog->vstack);
     prog->vstack = VS_pop(prog->vstack);
     return res;
 }
 
-void P_push_int(program_state *prog, int int_val) {
+void PS_push_int(program_state *prog, int int_val) {
     prog->vstack = VS_push_int(int_val, prog->vstack);
 }
 
-void P_push_dbl(program_state *prog, double dbl_val) {
+void PS_push_dbl(program_state *prog, double dbl_val) {
     prog->vstack = VS_push_dbl(dbl_val, prog->vstack);
 }
 
-void P_push_ustr(program_state *prog, uchar *ustr_val) {
+void PS_push_ustr(program_state *prog, uchar *ustr_val) {
     prog->vstack = VS_push_ustr(ustr_val, prog->vstack);
 }
 
-void P_push_cstr(program_state *prog, char *cstr_val) {
+void PS_push_cstr(program_state *prog, char *cstr_val) {
     prog->vstack = VS_push_cstr(cstr_val, prog->vstack);
 }
 
@@ -926,22 +929,22 @@ int parse_first_map_format(char *fname) {
 int VM_new_img(program_state *prog) {
     char *opcode_name = "NEWIMG";
     uchar *name; int width, height; double scale;
-    scale = P_pop_dbl(prog);
-    height = P_pop_int(prog);
-    width = P_pop_int(prog);
-    name = P_pop_ustr(prog);
-    program_new_image(prog, name, width, height, scale);
+    scale = PS_pop_dbl(prog);
+    height = PS_pop_int(prog);
+    width = PS_pop_int(prog);
+    name = PS_pop_ustr(prog);
+    PS_new_img(prog, name, width, height, scale);
     return 1;
 }
 
 int VM_img_Lambert(program_state *prog) {
     char *opcode_name = "IMGLAMBERT";
     double l0, p0, p1, p2;
-    p2 = P_pop_dbl(prog);
-    p1 = P_pop_dbl(prog);
-    p0 = P_pop_dbl(prog);
-    l0 = P_pop_dbl(prog);
-    program_image_set_Lambert(prog, l0, p0, p1, p2);
+    p2 = PS_pop_dbl(prog);
+    p1 = PS_pop_dbl(prog);
+    p0 = PS_pop_dbl(prog);
+    l0 = PS_pop_dbl(prog);
+    PS_img_set_Lambert(prog, l0, p0, p1, p2);
     return 1;
 }
 
@@ -998,12 +1001,12 @@ int main (int argc, char **argv) {
         load_star_lines(pstat, "lines.db");             /* dependent on load_stars */
         load_constellation_bounds(pstat, "bounds.db");  /* dependent on nothing */
 
-        program_new_image(pstat, u"Orion", 500, 500, 1.4);
-        program_image_set_Lambert(pstat, 82.5, 5, 15, 25);
+        PS_new_img(pstat, u"Orion", 500, 500, 1.4);
+        PS_img_set_Lambert(pstat, 82.5, 5, 15, 25);
 
         /* generate one output map: */
         if (open_file("orion.svg", pstat)) {
-            pstat = program_push(pstat, stderr);
+            pstat = PS_push(pstat, stderr);
             load_star_labels(pstat, "orion-labels.db");
             draw_head(pstat);
             draw_background(pstat);
@@ -1018,27 +1021,27 @@ int main (int argc, char **argv) {
             draw_debug_info(pstat);
             draw_foot(pstat);
             close_file(pstat);
-            pstat = program_pop(pstat, stderr);
+            pstat = PS_pop(pstat, stderr);
         }
         else {
             fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
         }
 
-        /*program_new_image(pstat, u"Monoceros", 600, 550, 1.4);*/
-        P_push_ustr(pstat, u"Monoceros");
-        P_push_int(pstat, 600);
-        P_push_int(pstat, 550);
-        P_push_dbl(pstat, 1.4);
+        /*PS_new_img(pstat, u"Monoceros", 600, 550, 1.4);*/
+        PS_push_ustr(pstat, u"Monoceros");
+        PS_push_int(pstat, 600);
+        PS_push_int(pstat, 550);
+        PS_push_dbl(pstat, 1.4);
         VM_new_img(pstat);
-        /*program_image_set_Lambert(pstat, 106, 0, 10, 20);*/
-        P_push_dbl(pstat, 106);
-        P_push_dbl(pstat, 0);
-        P_push_dbl(pstat, 10);
-        P_push_dbl(pstat, 20);
+        /*PS_img_set_Lambert(pstat, 106, 0, 10, 20);*/
+        PS_push_dbl(pstat, 106);
+        PS_push_dbl(pstat, 0);
+        PS_push_dbl(pstat, 10);
+        PS_push_dbl(pstat, 20);
         VM_img_Lambert(pstat);
 
         if (open_file("monoceros.svg", pstat)) {
-            pstat = program_push(pstat, stderr);
+            pstat = PS_push(pstat, stderr);
             load_star_labels(pstat, "monoceros-labels.db");
             draw_head(pstat);
             draw_background(pstat);
@@ -1051,7 +1054,7 @@ int main (int argc, char **argv) {
             draw_debug_info(pstat);
             draw_foot(pstat);
             close_file(pstat);
-            pstat = program_pop(pstat, stderr);
+            pstat = PS_pop(pstat, stderr);
         }
         else {
             fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
