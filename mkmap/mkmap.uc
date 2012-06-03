@@ -83,6 +83,27 @@ int parse_first_map_format(char *fname) {
 
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
 
+int VM_load_stars(progstat *prog) {
+	char *opcode_name = "LOADSTARS";
+	char *fname = PS_pop_cstr(prog);
+	load_stars(prog, fname);
+    return 1;
+}
+
+int VM_load_star_lines(progstat *prog) {
+	char *opcode_name = "LOADSTARLINES";
+	char *fname = PS_pop_cstr(prog);
+	load_star_lines(prog, fname);
+    return 1;
+}
+
+int VM_load_const_bounds(progstat *prog) {
+	char *opcode_name = "LOADCONSTBOUNDS";
+	char *fname = PS_pop_cstr(prog);
+	load_constellation_bounds(prog, fname);
+    return 1;
+}
+
 int VM_new_image(progstat *prog) {
     char *opcode_name = "NEWIMG";
     uchar *name; int width, height; double scale;
@@ -102,6 +123,41 @@ int VM_img_Lambert(progstat *prog) {
     p0 = PS_pop_dbl(prog);
     l0 = PS_pop_dbl(prog);
     PS_img_set_Lambert(prog, l0, p0, p1, p2);
+    return 1;
+}
+
+int VM_open_file(progstat *prog) {
+	char *opcode_name = "OPENFILE";
+	char *fname = PS_pop_cstr(prog);
+	PS_open_file(fname, prog);
+    return 1;
+}
+
+int VM_load_labels(progstat *prog) {
+	char *opcode_name = "LOADLABELS";
+	char *fname = PS_pop_cstr(prog);
+	load_star_labels(prog, fname);
+    return 1;
+}
+
+int VM_draw_delportian_area(progstat *prog) {
+	char *opcode_name = "DELPORTE";
+	uchar *tag_selected = PS_pop_ustr(prog);
+	draw_delportian_area(prog, tag_selected);
+    return 1;
+}
+
+int VM_draw_lines(progstat *prog) {
+	char *opcode_name = "DRAWLINES";
+	uchar *tag_selected = PS_pop_ustr(prog);
+	draw_lines(prog, tag_selected);
+    return 1;
+}
+
+int VM_draw_labels(progstat *prog) {
+	char *opcode_name = "DRAWLABELS";
+	uchar *tag_selected = PS_pop_ustr(prog);
+	draw_labels(prog, tag_selected);
     return 1;
 }
 
@@ -154,9 +210,16 @@ int main (int argc, char **argv) {
         init_named_class(PO_STAR, star_data_tags);
         pstat = new_progstat(DEBUG, stderr);
 
-        load_stars(pstat, "star.db");
-        load_star_lines(pstat, "lines.db");             /* dependent on load_stars */
-        load_constellation_bounds(pstat, "bounds.db");  /* dependent on nothing */
+		/** ALL-SKY DATABASES LOAD **/
+		/*load_stars(pstat, "star.db");*/
+		PS_push_cstr(pstat, "star.db");
+        VM_load_stars(pstat);
+        /*load_star_lines(pstat, "lines.db"); */ /* dependent on load_stars */
+		PS_push_cstr(pstat, "lines.db");
+		VM_load_star_lines(pstat);
+        /*load_constellation_bounds(pstat, "bounds.db");*/ /* dependent on nothing */
+		PS_push_cstr(pstat, "bounds.db");
+		VM_load_const_bounds(pstat);
 
         /*PS_new_image(pstat, u"Orion", 500, 500, 1.4);*/
         PS_push_ustr(pstat, u"Orion");
@@ -172,18 +235,32 @@ int main (int argc, char **argv) {
         VM_img_Lambert(pstat);
 
         /* generate one output map: */
-        if (PS_open_file("orion.svg", pstat)) {
+		PS_push_cstr(pstat, "orion.svg");
+		if (VM_open_file(pstat)) {
+        /*if (PS_open_file("orion.svg", pstat)) {*/
             pstat = PS_push(pstat, stderr);
-            load_star_labels(pstat, "orion-labels.db");
+            /*load_star_labels(pstat, "orion-labels.db");*/
+	        PS_push_cstr(pstat, "orion-labels.db");
+			VM_load_labels(pstat); /*  */
             draw_head(pstat);
             draw_background(pstat);
             draw_bounds(pstat);
-            draw_delportian_area(pstat, u"Ori");
+            /*draw_delportian_area(pstat, u"Ori");*/
+			PS_push_ustr(pstat, u"Ori");
+			VM_draw_delportian_area(pstat); /*  */
             draw_grid(pstat);
-            draw_lines(pstat, u"Ori Bdy");
-            draw_lines(pstat, u"Ori Arm");
-            draw_lines(pstat, u"Ori Shd");
-            draw_labels(pstat, u"Ori");
+            /*draw_lines(pstat, u"Ori Bdy");*/
+			PS_push_ustr(pstat, u"Ori Bdy");
+			VM_draw_lines(pstat);
+            /*draw_lines(pstat, u"Ori Arm");*/
+			PS_push_ustr(pstat, u"Ori Arm");
+			VM_draw_lines(pstat);
+            /*draw_lines(pstat, u"Ori Shd");*/
+			PS_push_ustr(pstat, u"Ori Shd");
+			VM_draw_lines(pstat);
+            /*draw_labels(pstat, u"Ori");*/
+			PS_push_ustr(pstat, u"Ori");
+			VM_draw_labels(pstat);
             draw_stars(pstat);
             draw_debug_info(pstat);
             draw_foot(pstat);
@@ -207,16 +284,26 @@ int main (int argc, char **argv) {
         PS_push_dbl(pstat, 20);
         VM_img_Lambert(pstat);
 
-        if (PS_open_file("monoceros.svg", pstat)) {
+		PS_push_cstr(pstat, "monoceros.svg");
+		if (VM_open_file(pstat)) {
+        /*if (PS_open_file("monoceros.svg", pstat)) {*/
             pstat = PS_push(pstat, stderr);
-            load_star_labels(pstat, "monoceros-labels.db");
+            /*load_star_labels(pstat, "monoceros-labels.db");*/
+	        PS_push_cstr(pstat, "monoceros-labels.db");
+			VM_load_labels(pstat); /*  */
             draw_head(pstat);
             draw_background(pstat);
             draw_bounds(pstat);
-            draw_delportian_area(pstat, u"Mon");
+            /*draw_delportian_area(pstat, u"Mon");*/
+			PS_push_ustr(pstat, u"Mon");
+			VM_draw_delportian_area(pstat); /*  */
             draw_grid(pstat);
-            draw_labels(pstat, u"Mon");
-            draw_lines(pstat, u"Mon Bdy");
+            /*draw_lines(pstat, u"Mon Bdy");*/
+			PS_push_ustr(pstat, u"Mon Bdy");
+			VM_draw_lines(pstat);
+            /*draw_labels(pstat, u"Mon");*/
+			PS_push_ustr(pstat, u"Mon");
+			VM_draw_labels(pstat);
             draw_stars(pstat);
             draw_debug_info(pstat);
             draw_foot(pstat);

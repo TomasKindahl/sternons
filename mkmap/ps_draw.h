@@ -17,8 +17,8 @@
  *  along with mkmap. If not, see <http://www.gnu.org/licenses/>.       *
  ************************************************************************/
 
-#ifndef _DEFS_H
-#define _DEFS_H
+#ifndef _PS_DRAW_H
+#define _PS_DRAW_H
 
 void draw_head(progstat *pstat);
 void draw_background(progstat *pstat);
@@ -33,4 +33,4 @@ void draw_debug_info(progstat *pstat);
 void draw_foot(progstat *pstat);
 int close_file(progstat *pstat);
 
-#endif /* _DEFS_H */
+#endif /* _PS_DRAW_H */
