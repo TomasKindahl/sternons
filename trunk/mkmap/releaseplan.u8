@@ -1,28 +1,28 @@
 Release plan:
 
-	alpha:
-		0.0.1 - can generate the 88 constellations through proper
-			use of map programs, download available,
-		0.0.2 - documentation phase started, build instructions,
-			stubs for techman and userman, a task management
-			system erected,
-		0.0.3 - cleanup refactoring, h-file commenting,
-		0.0.4 - error testing, test apparatus set up,
-		0.0.5 - ...
+    alpha:
+        0.0.1 - can generate the 88 constellations through proper
+            use of map programs, download available,
+        0.0.2 - documentation phase started, build instructions,
+            stubs for techman and userman, a task management
+            system erected,
+        0.0.3 - cleanup refactoring, h-file commenting,
+        0.0.4 - error testing, test apparatus set up,
+        0.0.5 - ...
 
-	farther future:
-		0.1.0 - a state-of-the-art build system,
-		0.2.0 - fairly extensive documentation, including a web
-			version available at sternons blog,
-		0.3.0 - ...
+    farther future:
+        0.1.0 - a state-of-the-art build system,
+        0.2.0 - fairly extensive documentation, including a web
+            version available at sternons blog,
+        0.3.0 - ...
 
-	first beta:
-		0.9.0 - extensive bug cleanup: only features and oddities
-			remaining,
-		0.9.1 - ...
+    first beta:
+        0.9.0 - extensive bug cleanup: only features and oddities
+            remaining,
+        0.9.1 - ...
 
-	gamma:
-		1.0.0 - a functional mkmap that works as intended and that
-			generates comprehensible error messages on syntax and
-			usage error, without core dumping
-		2.0.0 - ...
+    gamma:
+        1.0.0 - a functional mkmap that works as intended and that
+            generates comprehensible error messages on syntax and
+            usage error, without core dumping
+        2.0.0 - ...

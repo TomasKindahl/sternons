@@ -119,3 +119,6 @@ diff.u8:
 status:
 	svn status | grep -v '.png' | grep -v '.svg'
 
+formats: formats.c
+	$(CC) -std=c99 -o $@ $< -lm
+
