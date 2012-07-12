@@ -1,0 +1,12 @@
+(%mkm 1.0%)
+
+main {
+    load star from 'star.db';
+    load line from 'lines.db';
+    load bound from 'bounds.db';
+
+    image orion is constellation_image {
+        set name = "Orion"
+	}
+}
+

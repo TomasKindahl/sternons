@@ -83,29 +83,57 @@ int parse_first_map_format(char *fname) {
 
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
 
+#define VM_NULL                   0
+
+#define VM_CSTR                   1 /* up to VM_NULL */
+#define VM_USTR                   2 /* up to VM_NULL */
+#define VM_INT                    3 /* 1 int */
+#define VM_REAL                   4 /* 2 ints */
+
+#define VM_BEGIN                 10
+#define VM_END                   11
+#define VM_LOAD_STARS            12
+#define VM_LOAD_STAR_LINES       13
+#define VM_LOAD_CONST_BOUNDS     14
+#define VM_NEW_IMAGE             15
+#define VM_IMG_LAMBERT           16
+#define VM_OPEN_FILE             17
+#define VM_LOAD_LABELS           18
+#define VM_DRAW_DELPORTIAN_AREA  19
+#define VM_DRAW_LINES            20
+#define VM_DRAW_LABELS           21
+#define VM_DRAW_HEAD             22
+#define VM_DRAW_BACKGROUND       23
+#define VM_DRAW_BOUNDS           24
+#define VM_DRAW_GRID             25
+#define VM_DRAW_STARS            26
+#define VM_DRAW_DEBUG_INFO       27
+#define VM_DRAW_FOOT             28
+#define VM_CLOSE_FILE            29
+
 int VM_load_stars(progstat *prog) {
-	char *opcode_name = "LOADSTARS";
-	char *fname = PS_pop_cstr(prog);
-	load_stars(prog, fname);
+    /*char *opcode_name = "LOADSTARS";*/
+    char *fname = PS_pop_cstr(prog);
+    load_stars(prog, fname);
     return 1;
 }
 
 int VM_load_star_lines(progstat *prog) {
-	char *opcode_name = "LOADSTARLINES";
-	char *fname = PS_pop_cstr(prog);
-	load_star_lines(prog, fname);
+    /*char *opcode_name = "LOADSTARLINES";*/
+    char *fname = PS_pop_cstr(prog);
+    load_star_lines(prog, fname);
     return 1;
 }
 
 int VM_load_const_bounds(progstat *prog) {
-	char *opcode_name = "LOADCONSTBOUNDS";
-	char *fname = PS_pop_cstr(prog);
-	load_constellation_bounds(prog, fname);
+    /*char *opcode_name = "LOADCONSTBOUNDS";*/
+    char *fname = PS_pop_cstr(prog);
+    load_constellation_bounds(prog, fname);
     return 1;
 }
 
 int VM_new_image(progstat *prog) {
-    char *opcode_name = "NEWIMG";
+    /*char *opcode_name = "NEWIMG";*/
     uchar *name; int width, height; double scale;
     scale = PS_pop_dbl(prog);
     height = PS_pop_int(prog);
@@ -116,7 +144,7 @@ int VM_new_image(progstat *prog) {
 }
 
 int VM_img_Lambert(progstat *prog) {
-    char *opcode_name = "IMGLAMBERT";
+    /*char *opcode_name = "IMGLAMBERT";*/
     double l0, p0, p1, p2;
     p2 = PS_pop_dbl(prog);
     p1 = PS_pop_dbl(prog);
@@ -127,37 +155,109 @@ int VM_img_Lambert(progstat *prog) {
 }
 
 int VM_open_file(progstat *prog) {
-	char *opcode_name = "OPENFILE";
-	char *fname = PS_pop_cstr(prog);
-	PS_open_file(fname, prog);
+    /*char *opcode_name = "OPENFILE";*/
+    char *fname = PS_pop_cstr(prog);
+    PS_open_file(fname, prog);
     return 1;
 }
 
 int VM_load_labels(progstat *prog) {
-	char *opcode_name = "LOADLABELS";
-	char *fname = PS_pop_cstr(prog);
-	load_star_labels(prog, fname);
+    /*char *opcode_name = "LOADLABELS";*/
+    char *fname = PS_pop_cstr(prog);
+    load_star_labels(prog, fname);
     return 1;
 }
 
 int VM_draw_delportian_area(progstat *prog) {
-	char *opcode_name = "DELPORTE";
-	uchar *tag_selected = PS_pop_ustr(prog);
-	draw_delportian_area(prog, tag_selected);
+    /*char *opcode_name = "DELPORTE";*/
+    uchar *tag_selected = PS_pop_ustr(prog);
+    draw_delportian_area(prog, tag_selected);
     return 1;
 }
 
 int VM_draw_lines(progstat *prog) {
-	char *opcode_name = "DRAWLINES";
-	uchar *tag_selected = PS_pop_ustr(prog);
-	draw_lines(prog, tag_selected);
+    /*char *opcode_name = "DRAWLINES";*/
+    uchar *tag_selected = PS_pop_ustr(prog);
+    draw_lines(prog, tag_selected);
     return 1;
 }
 
 int VM_draw_labels(progstat *prog) {
-	char *opcode_name = "DRAWLABELS";
-	uchar *tag_selected = PS_pop_ustr(prog);
-	draw_labels(prog, tag_selected);
+    /*char *opcode_name = "DRAWLABELS";*/
+    uchar *tag_selected = PS_pop_ustr(prog);
+    draw_labels(prog, tag_selected);
+    return 1;
+}
+
+int VM_exec(int op, progstat *prog) {
+    switch (op) {
+        case VM_LOAD_STARS:
+            return VM_load_stars(prog);
+        case VM_LOAD_STAR_LINES:
+            return VM_load_star_lines(prog);
+        case VM_LOAD_CONST_BOUNDS:
+            return VM_load_const_bounds(prog);
+        case VM_NEW_IMAGE:
+            return VM_new_image(prog);
+        case VM_IMG_LAMBERT:
+            return VM_img_Lambert(prog);
+        case VM_OPEN_FILE:
+            return VM_open_file(prog);
+        case VM_LOAD_LABELS:
+            return VM_load_labels(prog);
+        case VM_DRAW_DELPORTIAN_AREA:
+            return VM_draw_delportian_area(prog);
+        case VM_DRAW_LINES:
+            return VM_draw_lines(prog);
+        case VM_DRAW_LABELS:
+            return VM_draw_labels(prog);
+        case VM_DRAW_HEAD:
+            draw_head(prog);
+            return 1;
+        case VM_DRAW_BACKGROUND:
+            draw_background(prog);
+            return 1;
+        case VM_DRAW_BOUNDS:
+            draw_bounds(prog);
+            return 1;
+        case VM_DRAW_GRID:
+            draw_grid(prog);
+            return 1;
+        case VM_DRAW_STARS:
+            draw_stars(prog);
+            return 1;
+        case VM_DRAW_DEBUG_INFO:
+            draw_debug_info(prog);
+            return 1;
+        case VM_DRAW_FOOT:
+            draw_foot(prog);
+            return 1;
+        case VM_CLOSE_FILE:
+            close_file(prog);
+            return 1;
+        default:
+            fprintf(stderr, "ERROR: unknown op code '%i'\n", op);
+            return 0;
+    }
+    return 1;
+}
+
+int VM_do(int *op_list, progstat *pstat) {
+    int PC = 0;
+
+    for (PC = 0; op_list[PC] != 0; PC++) {
+        if (op_list[PC] == VM_CSTR) {
+            PC++;
+            PS_push_cstr(pstat, (char *)op_list[PC]);
+        }
+        else if (op_list[PC] == VM_USTR) {
+            PC++;
+            PS_push_ustr(pstat, (uchar *)op_list[PC]);
+        }
+        else {
+            VM_exec(op_list[PC], pstat);
+        }
+    }
     return 1;
 }
 
@@ -196,13 +296,17 @@ int main (int argc, char **argv) {
                 
             }
             else {
-                printf("WARNING: ignoring file '%s' in unrecognized map "
-                       "format '%s'\n", argv[aix], ext);
+                fprintf(stderr, "WARNING: ignoring file '%s' in unrecognized"
+                                " map format '%s'\n", argv[aix], ext);
             }
         }
     }
 
     if (1 && argc == 1) {
+        /** PROG MUST BE LOADED:                  */
+        /** 1. load it raw                        */
+        /** 2. resolve constants, address them(?) */
+
         /* IF NO ARGUMENTS ARE GIVEN, ORION AND MONOCEROS ARE GENERATED */
 
         /* Init classes: */
@@ -210,110 +314,122 @@ int main (int argc, char **argv) {
         init_named_class(PO_STAR, star_data_tags);
         pstat = new_progstat(DEBUG, stderr);
 
-		/** ALL-SKY DATABASES LOAD **/
-		/*load_stars(pstat, "star.db");*/
-		PS_push_cstr(pstat, "star.db");
-        VM_load_stars(pstat);
+        /** ALL-SKY DATABASES LOAD **/
+        /*load_stars(pstat, "star.db");*/
+        PS_push_cstr(pstat, "star.db");
+        VM_exec(VM_LOAD_STARS, pstat);
         /*load_star_lines(pstat, "lines.db"); */ /* dependent on load_stars */
-		PS_push_cstr(pstat, "lines.db");
-		VM_load_star_lines(pstat);
+        PS_push_cstr(pstat, "lines.db");
+        VM_exec(VM_LOAD_STAR_LINES, pstat);
         /*load_constellation_bounds(pstat, "bounds.db");*/ /* dependent on nothing */
-		PS_push_cstr(pstat, "bounds.db");
-		VM_load_const_bounds(pstat);
+        PS_push_cstr(pstat, "bounds.db");
+        VM_exec(VM_LOAD_CONST_BOUNDS, pstat);
 
-        /*PS_new_image(pstat, u"Orion", 500, 500, 1.4);*/
-        PS_push_ustr(pstat, u"Orion");
-        PS_push_int(pstat, 500);
-        PS_push_int(pstat, 500);
-        PS_push_dbl(pstat, 1.4);
-        VM_new_image(pstat);
-        /*PS_img_set_Lambert(pstat, 82.5, 5, 15, 25);*/
-        PS_push_dbl(pstat, 82.5);
-        PS_push_dbl(pstat, 5);
-        PS_push_dbl(pstat, 15);
-        PS_push_dbl(pstat, 25);
-        VM_img_Lambert(pstat);
+        { /* image orion */
+            /*PS_new_image(pstat, u"Orion", 500, 500, 1.4);*/
+            PS_push_ustr(pstat, u"Orion");
+            PS_push_int(pstat, 500);
+            PS_push_int(pstat, 500);
+            PS_push_dbl(pstat, 1.4);
+            VM_exec(VM_NEW_IMAGE, pstat);
+            /*PS_img_set_Lambert(pstat, 82.5, 5, 15, 25);*/
+            PS_push_dbl(pstat, 82.5);
+            PS_push_dbl(pstat, 5);
+            PS_push_dbl(pstat, 15);
+            PS_push_dbl(pstat, 25);
+            VM_exec(VM_IMG_LAMBERT, pstat);
 
-        /* generate one output map: */
-		PS_push_cstr(pstat, "orion.svg");
-		if (VM_open_file(pstat)) {
-        /*if (PS_open_file("orion.svg", pstat)) {*/
-            pstat = PS_push(pstat, stderr);
-            /*load_star_labels(pstat, "orion-labels.db");*/
-	        PS_push_cstr(pstat, "orion-labels.db");
-			VM_load_labels(pstat); /*  */
-            draw_head(pstat);
-            draw_background(pstat);
-            draw_bounds(pstat);
-            /*draw_delportian_area(pstat, u"Ori");*/
-			PS_push_ustr(pstat, u"Ori");
-			VM_draw_delportian_area(pstat); /*  */
-            draw_grid(pstat);
-            /*draw_lines(pstat, u"Ori Bdy");*/
-			PS_push_ustr(pstat, u"Ori Bdy");
-			VM_draw_lines(pstat);
-            /*draw_lines(pstat, u"Ori Arm");*/
-			PS_push_ustr(pstat, u"Ori Arm");
-			VM_draw_lines(pstat);
-            /*draw_lines(pstat, u"Ori Shd");*/
-			PS_push_ustr(pstat, u"Ori Shd");
-			VM_draw_lines(pstat);
-            /*draw_labels(pstat, u"Ori");*/
-			PS_push_ustr(pstat, u"Ori");
-			VM_draw_labels(pstat);
-            draw_stars(pstat);
-            draw_debug_info(pstat);
-            draw_foot(pstat);
-            close_file(pstat);
-            pstat = PS_pop(pstat, stderr);
+            /* generate one output map: */
+            PS_push_cstr(pstat, "orion.svg");
+            if (VM_open_file(pstat)) {
+                int image_setup_code[] = {
+                    VM_CSTR, (int)"orion-labels.db", VM_LOAD_LABELS, 0
+                };
+                int init_drawing_code[] = {
+                    VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
+                };
+                int support_drawing_code[] = {
+                    VM_DRAW_BOUNDS, 
+                    VM_USTR, (int)u"Ori", VM_DRAW_DELPORTIAN_AREA,
+                    VM_DRAW_GRID,
+                    VM_USTR, (int)u"Ori Bdy", VM_DRAW_LINES,
+                    VM_USTR, (int)u"Ori Arm", VM_DRAW_LINES,
+                    VM_USTR, (int)u"Ori Shd", VM_DRAW_LINES,
+                    VM_USTR, (int)u"Ori", VM_DRAW_LABELS,
+                    0
+                };
+                int real_objects_code[] = {
+                    VM_DRAW_STARS, 0
+                };
+                int final_code[] = {
+                    VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
+                };
+
+                pstat = PS_push(pstat, stderr);
+                VM_do(image_setup_code, pstat);
+                VM_do(init_drawing_code, pstat);
+                VM_do(support_drawing_code, pstat);
+                VM_do(real_objects_code, pstat);
+                VM_do(final_code, pstat);
+                pstat = PS_pop(pstat, stderr);
+            }
+            else {
+                fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
+            }
         }
-        else {
-            fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
-        }
 
-        /*PS_new_image(pstat, u"Monoceros", 600, 550, 1.4);*/
-        PS_push_ustr(pstat, u"Monoceros");
-        PS_push_int(pstat, 600);
-        PS_push_int(pstat, 550);
-        PS_push_dbl(pstat, 1.4);
-        VM_new_image(pstat);
-        /*PS_img_set_Lambert(pstat, 106, 0, 10, 20);*/
-        PS_push_dbl(pstat, 106);
-        PS_push_dbl(pstat, 0);
-        PS_push_dbl(pstat, 10);
-        PS_push_dbl(pstat, 20);
-        VM_img_Lambert(pstat);
+        {
+            /*PS_new_image(pstat, u"Monoceros", 600, 550, 1.4);*/
+            PS_push_ustr(pstat, u"Monoceros");
+            PS_push_int(pstat, 600);
+            PS_push_int(pstat, 550);
+            PS_push_dbl(pstat, 1.4);
+            VM_new_image(pstat);
+            /*PS_img_set_Lambert(pstat, 106, 0, 10, 20);*/
+            PS_push_dbl(pstat, 106);
+            PS_push_dbl(pstat, 0);
+            PS_push_dbl(pstat, 10);
+            PS_push_dbl(pstat, 20);
+            VM_img_Lambert(pstat);
 
-		PS_push_cstr(pstat, "monoceros.svg");
-		if (VM_open_file(pstat)) {
-        /*if (PS_open_file("monoceros.svg", pstat)) {*/
-            pstat = PS_push(pstat, stderr);
-            /*load_star_labels(pstat, "monoceros-labels.db");*/
-	        PS_push_cstr(pstat, "monoceros-labels.db");
-			VM_load_labels(pstat); /*  */
-            draw_head(pstat);
-            draw_background(pstat);
-            draw_bounds(pstat);
-            /*draw_delportian_area(pstat, u"Mon");*/
-			PS_push_ustr(pstat, u"Mon");
-			VM_draw_delportian_area(pstat); /*  */
-            draw_grid(pstat);
-            /*draw_lines(pstat, u"Mon Bdy");*/
-			PS_push_ustr(pstat, u"Mon Bdy");
-			VM_draw_lines(pstat);
-            /*draw_labels(pstat, u"Mon");*/
-			PS_push_ustr(pstat, u"Mon");
-			VM_draw_labels(pstat);
-            draw_stars(pstat);
-            draw_debug_info(pstat);
-            draw_foot(pstat);
-            close_file(pstat);
-            pstat = PS_pop(pstat, stderr);
-        }
-        else {
-            fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
+            PS_push_cstr(pstat, "monoceros.svg");
+            if (VM_open_file(pstat)) {
+                int image_setup_code[] = {
+                    VM_CSTR, (int)"monoceros-labels.db", VM_LOAD_LABELS, 0
+                };
+                int init_drawing_code[] = {
+                    VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
+                };
+                int support_drawing_code[] = {
+                    VM_DRAW_BOUNDS, 
+                    VM_USTR, (int)u"Mon", VM_DRAW_DELPORTIAN_AREA,
+                    VM_DRAW_GRID,
+                    VM_USTR, (int)u"Mon Bdy", VM_DRAW_LINES,
+                    VM_USTR, (int)u"Mon", VM_DRAW_LABELS,
+                    0
+                };
+                int real_objects_code[] = {
+                    VM_DRAW_STARS, 0
+                };
+                int final_code[] = {
+                    VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
+                };
+
+                pstat = PS_push(pstat, stderr);
+                VM_do(image_setup_code, pstat);
+                VM_do(init_drawing_code, pstat);
+                VM_do(support_drawing_code, pstat);
+                VM_do(real_objects_code, pstat);
+                VM_do(final_code, pstat);
+                pstat = PS_pop(pstat, stderr);
+            }
+            else {
+                fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
+            }
         }
     }
 
     return 0;
 }
+
+/* :mode=c: */
