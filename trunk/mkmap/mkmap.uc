@@ -88,7 +88,7 @@ int parse_first_map_format(char *fname) {
 #define VM_CSTR                   1 /* up to VM_NULL */
 #define VM_USTR                   2 /* up to VM_NULL */
 #define VM_INT                    3 /* 1 int */
-#define VM_REAL                   4 /* 2 ints */
+#define VM_DBL                    4 /* 2 ints */
 
 #define VM_BEGIN                 10
 #define VM_END                   11
@@ -242,6 +242,15 @@ int VM_exec(int op, progstat *prog) {
     return 1;
 }
 
+double to_double(int L0, int L1) {
+    union {
+        double D;
+        int L[2];
+    } res;
+    res.L[0] = L1; res.L[1] = L0;
+    return res.D;
+}
+
 int VM_do(int *op_list, progstat *pstat) {
     int PC = 0;
 
@@ -253,6 +262,19 @@ int VM_do(int *op_list, progstat *pstat) {
         else if (op_list[PC] == VM_USTR) {
             PC++;
             PS_push_ustr(pstat, (uchar *)op_list[PC]);
+        }
+        else if (op_list[PC] == VM_INT) {
+            PC++;
+            PS_push_int(pstat, op_list[PC]);
+        }
+        else if (op_list[PC] == VM_DBL) {
+            double R;
+            /*printf("op_list[%i] = %i\n", PC, op_list[PC]); fflush(stdout);*/
+            PC++;
+            R = to_double(op_list[PC], op_list[PC+1]);
+            /*printf("R = %f (%x %x)\n", R, op_list[PC], op_list[PC+1]); fflush(stdout);*/
+            PC++;
+            PS_push_dbl(pstat, R);
         }
         else {
             VM_exec(op_list[PC], pstat);
@@ -326,18 +348,22 @@ int main (int argc, char **argv) {
         VM_exec(VM_LOAD_CONST_BOUNDS, pstat);
 
         { /* image orion */
-            /*PS_new_image(pstat, u"Orion", 500, 500, 1.4);*/
-            PS_push_ustr(pstat, u"Orion");
-            PS_push_int(pstat, 500);
-            PS_push_int(pstat, 500);
-            PS_push_dbl(pstat, 1.4);
-            VM_exec(VM_NEW_IMAGE, pstat);
-            /*PS_img_set_Lambert(pstat, 82.5, 5, 15, 25);*/
-            PS_push_dbl(pstat, 82.5);
-            PS_push_dbl(pstat, 5);
-            PS_push_dbl(pstat, 15);
-            PS_push_dbl(pstat, 25);
-            VM_exec(VM_IMG_LAMBERT, pstat);
+            int set_name_code[] = {
+                VM_USTR, (int)u"Orion",
+                VM_INT, 500,
+                VM_INT, 500,
+                VM_DBL, 0x3ff66666, 0x66666666, /* = 1.4 */
+                VM_NEW_IMAGE, 0
+            };
+            int set_projection_code[] = {
+                VM_DBL, 0x4054a000, 0x00000000, /* = 82.5 */
+                VM_DBL, 0x40140000, 0x00000000, /* = 5    */
+                VM_DBL, 0x402e0000, 0x00000000, /* = 15   */
+                VM_DBL, 0x40390000, 0x00000000, /* = 25   */
+                VM_IMG_LAMBERT, 0
+            };
+            VM_do(set_name_code, pstat);
+            VM_do(set_projection_code, pstat);
 
             /* generate one output map: */
             PS_push_cstr(pstat, "orion.svg");
