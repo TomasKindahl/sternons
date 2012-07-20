@@ -317,6 +317,10 @@ int main (int argc, char **argv) {
                 /* FIRST MAP FORMAT */
                 
             }
+            else if(0 == strcmp(ext, ".mbf")) {
+                /* MAP BYTE FORMAT */
+                
+            }
             else {
                 fprintf(stderr, "WARNING: ignoring file '%s' in unrecognized"
                                 " map format '%s'\n", argv[aix], ext);
@@ -405,18 +409,22 @@ int main (int argc, char **argv) {
         }
 
         {
-            /*PS_new_image(pstat, u"Monoceros", 600, 550, 1.4);*/
-            PS_push_ustr(pstat, u"Monoceros");
-            PS_push_int(pstat, 600);
-            PS_push_int(pstat, 550);
-            PS_push_dbl(pstat, 1.4);
-            VM_new_image(pstat);
-            /*PS_img_set_Lambert(pstat, 106, 0, 10, 20);*/
-            PS_push_dbl(pstat, 106);
-            PS_push_dbl(pstat, 0);
-            PS_push_dbl(pstat, 10);
-            PS_push_dbl(pstat, 20);
-            VM_img_Lambert(pstat);
+            int set_name_code[] = {
+                VM_USTR, (int)u"Monoceros",
+                VM_INT, 600,
+                VM_INT, 550,
+                VM_DBL, 0x3ff66666, 0x66666666, /* = 1.4 */
+                VM_NEW_IMAGE, 0
+            };
+            int set_projection_code[] = {
+                VM_DBL, 0x405a8000, 0x00000000, /* = 106  */
+                VM_DBL, 0x00000000, 0x00000000, /* = 0    */
+                VM_DBL, 0x40240000, 0x00000000, /* = 10   */
+                VM_DBL, 0x40340000, 0x00000000, /* = 20   */
+                VM_IMG_LAMBERT, 0
+            };
+            VM_do(set_name_code, pstat);
+            VM_do(set_projection_code, pstat);
 
             PS_push_cstr(pstat, "monoceros.svg");
             if (VM_open_file(pstat)) {
