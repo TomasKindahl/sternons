@@ -352,49 +352,50 @@ int main (int argc, char **argv) {
         VM_exec(VM_LOAD_CONST_BOUNDS, pstat);
 
         { /* image orion */
-            int set_name_code[] = {
+            int set_settings_code[] = {
+                /**set name = "Orion";*/
                 VM_USTR, (int)u"Orion",
+                /**set size = [500, 500];*/
                 VM_INT, 500,
                 VM_INT, 500,
+                /**set scale = 1.4;*/
                 VM_DBL, 0x3ff66666, 0x66666666, /* = 1.4 */
-                VM_NEW_IMAGE, 0
-            };
-            int set_projection_code[] = {
+                VM_NEW_IMAGE,
+                /**set projection = [Lambert, 82.5, 5, 15, 25];*/
                 VM_DBL, 0x4054a000, 0x00000000, /* = 82.5 */
                 VM_DBL, 0x40140000, 0x00000000, /* = 5    */
                 VM_DBL, 0x402e0000, 0x00000000, /* = 15   */
                 VM_DBL, 0x40390000, 0x00000000, /* = 25   */
                 VM_IMG_LAMBERT, 0
             };
-            VM_do(set_name_code, pstat);
-            VM_do(set_projection_code, pstat);
+            int image_setup_code[] = {
+                VM_CSTR, (int)"orion-labels.db", VM_LOAD_LABELS, 0
+            };
+            int init_drawing_code[] = {
+                VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
+            };
+            int support_drawing_code[] = {
+                VM_DRAW_BOUNDS,
+                VM_USTR, (int)u"Ori", VM_DRAW_DELPORTIAN_AREA,
+                VM_DRAW_GRID,
+                VM_USTR, (int)u"Ori Bdy", VM_DRAW_LINES,
+                VM_USTR, (int)u"Ori Arm", VM_DRAW_LINES,
+                VM_USTR, (int)u"Ori Shd", VM_DRAW_LINES,
+                VM_USTR, (int)u"Ori", VM_DRAW_LABELS,
+                0
+            };
+            int real_objects_code[] = {
+                VM_DRAW_STARS, 0
+            };
+            int final_code[] = {
+                VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
+            };
+
+            VM_do(set_settings_code, pstat);
 
             /* generate one output map: */
             PS_push_cstr(pstat, "orion.svg");
             if (VM_open_file(pstat)) {
-                int image_setup_code[] = {
-                    VM_CSTR, (int)"orion-labels.db", VM_LOAD_LABELS, 0
-                };
-                int init_drawing_code[] = {
-                    VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
-                };
-                int support_drawing_code[] = {
-                    VM_DRAW_BOUNDS, 
-                    VM_USTR, (int)u"Ori", VM_DRAW_DELPORTIAN_AREA,
-                    VM_DRAW_GRID,
-                    VM_USTR, (int)u"Ori Bdy", VM_DRAW_LINES,
-                    VM_USTR, (int)u"Ori Arm", VM_DRAW_LINES,
-                    VM_USTR, (int)u"Ori Shd", VM_DRAW_LINES,
-                    VM_USTR, (int)u"Ori", VM_DRAW_LABELS,
-                    0
-                };
-                int real_objects_code[] = {
-                    VM_DRAW_STARS, 0
-                };
-                int final_code[] = {
-                    VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
-                };
-
                 pstat = PS_push(pstat, stderr);
                 VM_do(image_setup_code, pstat);
                 VM_do(init_drawing_code, pstat);
@@ -409,46 +410,47 @@ int main (int argc, char **argv) {
         }
 
         {
-            int set_name_code[] = {
+            int set_settings_code[] = {
+                /**set name = "Monoceros";*/
                 VM_USTR, (int)u"Monoceros",
+                /**set size = [500, 500];*/
                 VM_INT, 600,
                 VM_INT, 550,
+                /**set scale = 1.4;*/
                 VM_DBL, 0x3ff66666, 0x66666666, /* = 1.4 */
-                VM_NEW_IMAGE, 0
-            };
-            int set_projection_code[] = {
+                VM_NEW_IMAGE,
+                /**set projection = [Lambert, 106, 0, 10, 20];*/
                 VM_DBL, 0x405a8000, 0x00000000, /* = 106  */
                 VM_DBL, 0x00000000, 0x00000000, /* = 0    */
                 VM_DBL, 0x40240000, 0x00000000, /* = 10   */
                 VM_DBL, 0x40340000, 0x00000000, /* = 20   */
                 VM_IMG_LAMBERT, 0
             };
-            VM_do(set_name_code, pstat);
-            VM_do(set_projection_code, pstat);
+            int image_setup_code[] = {
+                VM_CSTR, (int)"monoceros-labels.db", VM_LOAD_LABELS, 0
+            };
+            int init_drawing_code[] = {
+                VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
+            };
+            int support_drawing_code[] = {
+                VM_DRAW_BOUNDS, 
+                VM_USTR, (int)u"Mon", VM_DRAW_DELPORTIAN_AREA,
+                VM_DRAW_GRID,
+                VM_USTR, (int)u"Mon Bdy", VM_DRAW_LINES,
+                VM_USTR, (int)u"Mon", VM_DRAW_LABELS,
+                0
+            };
+            int real_objects_code[] = {
+                VM_DRAW_STARS, 0
+            };
+            int final_code[] = {
+                VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
+            };
+
+            VM_do(set_settings_code, pstat);
 
             PS_push_cstr(pstat, "monoceros.svg");
             if (VM_open_file(pstat)) {
-                int image_setup_code[] = {
-                    VM_CSTR, (int)"monoceros-labels.db", VM_LOAD_LABELS, 0
-                };
-                int init_drawing_code[] = {
-                    VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
-                };
-                int support_drawing_code[] = {
-                    VM_DRAW_BOUNDS, 
-                    VM_USTR, (int)u"Mon", VM_DRAW_DELPORTIAN_AREA,
-                    VM_DRAW_GRID,
-                    VM_USTR, (int)u"Mon Bdy", VM_DRAW_LINES,
-                    VM_USTR, (int)u"Mon", VM_DRAW_LABELS,
-                    0
-                };
-                int real_objects_code[] = {
-                    VM_DRAW_STARS, 0
-                };
-                int final_code[] = {
-                    VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
-                };
-
                 pstat = PS_push(pstat, stderr);
                 VM_do(image_setup_code, pstat);
                 VM_do(init_drawing_code, pstat);
