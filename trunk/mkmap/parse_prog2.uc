@@ -26,8 +26,9 @@
 #include "allstrings.h"
 #include "ucstr.h"
 #include "token.h"
+#include "vmcodes.h"
 
-/* LISPIAN TOKEN LISTSTREAM */
+/* LISPIAN TOKEN LISTSTREAM */                            
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
 typedef struct _token_liststream_S {
     int is_file;
@@ -76,12 +77,13 @@ token_liststream *get_next(token_liststream *TS) {
     return TS->V.ref.next;
 }
 
-int expect(token_liststream **TLSP, token_type type) {
+int expect(token_liststream **TLSP, token **tokfound, token_type type) {
     token_liststream *tlsp = *TLSP;
     token *tok = get_token(tlsp);
     char buf[1024];
     printf("expect %s (%s)\n", tok_type_str(tok), tok_str(buf, tok, 1023));
     if(is_type(tok, type)) {
+		*tokfound = tok;
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
         return 1;
     }
@@ -221,8 +223,9 @@ value* get_value(uchar *var_name, def *def_list) {
 
 int parse_version(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
+    token *dum;
 
-    if(expect(&tlsp, TOK_VERSION)) {
+    if(expect(&tlsp, &dum, TOK_VERSION)) {
         *TLSP = tlsp;
         return 1;
     }
@@ -232,11 +235,12 @@ int parse_version(token_liststream **TLSP) {
 
 int parse_load_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
+	token *dbname, *filename;
 
     if(expect_str(&tlsp, u"load", TOK_ID)
-    && expect(&tlsp, TOK_ID) /* the database name */
+    && expect(&tlsp, &dbname, TOK_ID) /* the database name */
     && expect_str(&tlsp, u"from", TOK_ID)
-    && expect(&tlsp, TOK_CSTR)) /* the file name */
+    && expect(&tlsp, &filename, TOK_CSTR)) /* the file name */
     {
         *TLSP = tlsp;
         return 1;
@@ -247,13 +251,18 @@ int parse_load_stmt(token_liststream **TLSP) {
 
 int parse_set_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
+    token *varname, *ustring;
 
     /* ⟨set statement⟩ ::= ‘set’ ⟨ID⟩ ‘=’ ⟨USTR⟩ */
     if(expect_str(&tlsp, u"set", TOK_ID)
-    && expect(&tlsp, TOK_ID) /* the variable name */
+    && expect(&tlsp, &varname, TOK_ID) /* the variable name */
     && expect_ch(&tlsp, L'=', TOK_OP)
-    && expect(&tlsp, TOK_USTR)) /* a string value */
+    && expect(&tlsp, &ustring, TOK_USTR)) /* a string value */
     {
+        char buf1[100], buf2[100];
+        printf("VM_USTR u\"%s\" VM_IMG_SET_%s\n",
+               ucstombs(buf1,tok_ustr(ustring),100),
+               ucstombs(buf2,tok_ustr(varname),100));
         *TLSP = tlsp;
         return 1;
     }
@@ -287,13 +296,14 @@ int parse_image_stmt_seq(token_liststream **TLSP) {
 
 int parse_image_defn(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
+    token *imgname, *momimgname;
 
     /* ‘image’ ⟨name⟩ ‘is’ ⟨name of inherited image⟩ ‘{’ ⟨image sequence⟩ ‘}’ */
     /** also allow a variant with no image inheritance */
     if(expect_str(&tlsp, u"image", TOK_ID)
-    && expect(&tlsp, TOK_ID) /* the image name */
+    && expect(&tlsp, &imgname, TOK_ID) /* the image name */
     && expect_str(&tlsp, u"is", TOK_ID)
-    && expect(&tlsp, TOK_ID) /* inherited image name */
+    && expect(&tlsp, &momimgname, TOK_ID) /* inherited image name */
     && expect_ch(&tlsp, L'{', TOK_LPAR)
     && parse_image_stmt_seq(&tlsp)
     && expect_ch(&tlsp, L'}', TOK_RPAR))
@@ -401,4 +411,3 @@ int main (int argc, char **argv) {
 
     return 0;
 }
-

@@ -7,6 +7,6 @@ main {
 
     image orion is constellation_image {
         set name = "Orion"
-	}
+    }
 }
 

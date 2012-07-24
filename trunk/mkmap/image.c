@@ -24,14 +24,30 @@
 #include "projection.h"
 #include "image.h"
 
-image *new_image(uchar *name, int width, int height, double scale) {
+image *new_image() {
     image *res = ALLOC(image);
-    res->name = ucsdup(name);
-    res->width = width;
-    res->height = height;
-    if(width > height) res->dim = width; else res->dim = height;
-    res->scale = scale;
+    res->name = 0;
+    res->width = 0;
+    res->height = 0;
+    res->scale = 0;
     return res;
+}
+
+image *IMG_set_name(image *img, uchar *name) {
+    img->name = name;
+    return img;
+}
+
+image *IMG_set_size(image *img, int width, int height) {
+    img->width = width;
+    img->height = height;
+    if(width > height) img->dim = width; else img->dim = height;
+    return img;
+}
+
+image *IMG_set_scale(image *img, double scale) {
+    img->scale = scale;
+    return img;
 }
 
 image *IMG_set_projection(image *img, proj *LCCP) {

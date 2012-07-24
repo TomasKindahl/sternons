@@ -20,17 +20,17 @@
 #ifndef _PS_DRAW_H
 #define _PS_DRAW_H
 
-void draw_head(progstat *pstat);
-void draw_background(progstat *pstat);
-void draw_grid(progstat *pstat);
-void draw_stars(progstat *pstat);
-void draw_line_set(progstat *pstat, uchar *id, line *line_set);
-void draw_lines(progstat *pstat, uchar *id);
-void draw_bounds(progstat *pstat);
-void draw_delportian_area(progstat *pstat, uchar *id);
-void draw_labels(progstat *pstat, uchar *NOTUSEDYET);
-void draw_debug_info(progstat *pstat);
-void draw_foot(progstat *pstat);
+int draw_head(progstat *pstat);
+int draw_background(progstat *pstat);
+int draw_grid(progstat *pstat);
+int draw_stars(progstat *pstat);
+int draw_line_set(progstat *pstat, uchar *id, line *line_set);
+int draw_lines(progstat *pstat, uchar *id);
+int draw_bounds(progstat *pstat);
+int draw_delportian_area(progstat *pstat, uchar *id);
+int draw_labels(progstat *pstat, uchar *NOTUSEDYET);
+int draw_debug_info(progstat *pstat);
+int draw_foot(progstat *pstat);
 int close_file(progstat *pstat);
 
 #endif /* _PS_DRAW_H */
