@@ -30,6 +30,7 @@
 
 /* UTILS */
 #include "defs.h"
+#include "vmcodes.h"
 #include "mathx.h"
 #include "allstrings.h"     /* generated strings */
 #include "usio.h"
@@ -46,7 +47,6 @@
 
 /* VM ITEMS */
 #include "token.h"
-#include "valstack.h"
 #include "progstat.h"
 
 /* BINDING CODE */
@@ -83,34 +83,6 @@ int parse_first_map_format(char *fname) {
 
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
 
-#define VM_NULL                   0
-
-#define VM_CSTR                   1 /* up to VM_NULL */
-#define VM_USTR                   2 /* up to VM_NULL */
-#define VM_INT                    3 /* 1 int */
-#define VM_DBL                    4 /* 2 ints */
-
-#define VM_BEGIN                 10
-#define VM_END                   11
-#define VM_LOAD_STARS            12
-#define VM_LOAD_STAR_LINES       13
-#define VM_LOAD_CONST_BOUNDS     14
-#define VM_NEW_IMAGE             15
-#define VM_IMG_LAMBERT           16
-#define VM_OPEN_FILE             17
-#define VM_LOAD_LABELS           18
-#define VM_DRAW_DELPORTIAN_AREA  19
-#define VM_DRAW_LINES            20
-#define VM_DRAW_LABELS           21
-#define VM_DRAW_HEAD             22
-#define VM_DRAW_BACKGROUND       23
-#define VM_DRAW_BOUNDS           24
-#define VM_DRAW_GRID             25
-#define VM_DRAW_STARS            26
-#define VM_DRAW_DEBUG_INFO       27
-#define VM_DRAW_FOOT             28
-#define VM_CLOSE_FILE            29
-
 int VM_load_stars(progstat *prog) {
     /*char *opcode_name = "LOADSTARS";*/
     char *fname = PS_pop_cstr(prog);
@@ -134,16 +106,31 @@ int VM_load_const_bounds(progstat *prog) {
 
 int VM_new_image(progstat *prog) {
     /*char *opcode_name = "NEWIMG";*/
-    uchar *name; int width, height; double scale;
-    scale = PS_pop_dbl(prog);
-    height = PS_pop_int(prog);
-    width = PS_pop_int(prog);
-    name = PS_pop_ustr(prog);
-    PS_new_image(prog, name, width, height, scale);
+    PS_new_image(prog);
     return 1;
 }
 
-int VM_img_Lambert(progstat *prog) {
+int VM_img_set_name(progstat *prog) {
+    uchar *uname = PS_pop_ustr(prog);
+    PS_img_set_name(prog, uname);
+    return 1;
+}
+
+int VM_img_set_size(progstat *prog) {
+    int width, height;
+    height = PS_pop_int(prog);
+    width  = PS_pop_int(prog);
+    PS_img_set_size(prog, width, height);
+    return 1;
+}
+
+int VM_img_set_scale(progstat *prog) {
+    double scale = PS_pop_dbl(prog);
+    PS_img_set_scale(prog, scale);
+    return 1;
+}
+
+int VM_img_set_Lambert(progstat *prog) {
     /*char *opcode_name = "IMGLAMBERT";*/
     double l0, p0, p1, p2;
     p2 = PS_pop_dbl(prog);
@@ -199,8 +186,14 @@ int VM_exec(int op, progstat *prog) {
             return VM_load_const_bounds(prog);
         case VM_NEW_IMAGE:
             return VM_new_image(prog);
-        case VM_IMG_LAMBERT:
-            return VM_img_Lambert(prog);
+        case VM_IMG_SET_NAME:
+            return VM_img_set_name(prog);
+        case VM_IMG_SET_SIZE:
+            return VM_img_set_size(prog);
+        case VM_IMG_SET_SCALE:
+            return VM_img_set_scale(prog);
+        case VM_IMG_SET_LAMBERT:
+            return VM_img_set_Lambert(prog);
         case VM_OPEN_FILE:
             return VM_open_file(prog);
         case VM_LOAD_LABELS:
@@ -212,29 +205,21 @@ int VM_exec(int op, progstat *prog) {
         case VM_DRAW_LABELS:
             return VM_draw_labels(prog);
         case VM_DRAW_HEAD:
-            draw_head(prog);
-            return 1;
+            return draw_head(prog);
         case VM_DRAW_BACKGROUND:
-            draw_background(prog);
-            return 1;
+            return draw_background(prog);
         case VM_DRAW_BOUNDS:
-            draw_bounds(prog);
-            return 1;
+            return draw_bounds(prog);
         case VM_DRAW_GRID:
-            draw_grid(prog);
-            return 1;
+            return draw_grid(prog);
         case VM_DRAW_STARS:
-            draw_stars(prog);
-            return 1;
+            return draw_stars(prog);
         case VM_DRAW_DEBUG_INFO:
-            draw_debug_info(prog);
-            return 1;
+            return draw_debug_info(prog);
         case VM_DRAW_FOOT:
-            draw_foot(prog);
-            return 1;
+            return draw_foot(prog);
         case VM_CLOSE_FILE:
-            close_file(prog);
-            return 1;
+            return close_file(prog);
         default:
             fprintf(stderr, "ERROR: unknown op code '%i'\n", op);
             return 0;
@@ -251,7 +236,9 @@ double to_double(int L0, int L1) {
     return res.D;
 }
 
-int VM_do(int *op_list, progstat *pstat) {
+typedef long int optype;
+
+int VM_do(optype *op_list, progstat *pstat) {
     int PC = 0;
 
     for (PC = 0; op_list[PC] != 0; PC++) {
@@ -284,6 +271,11 @@ int VM_do(int *op_list, progstat *pstat) {
 }
 
 /* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
+
+typedef struct _image_program_S {
+    optype *setup;
+    optype **layer;
+} image_program;
 
 int main (int argc, char **argv) {
     /* dummy setup: */
@@ -352,56 +344,62 @@ int main (int argc, char **argv) {
         VM_exec(VM_LOAD_CONST_BOUNDS, pstat);
 
         { /* image orion */
-            int set_settings_code[] = {
-                /**set name = "Orion";*/
-                VM_USTR, (int)u"Orion",
-                /**set size = [500, 500];*/
-                VM_INT, 500,
-                VM_INT, 500,
-                /**set scale = 1.4;*/
-                VM_DBL, 0x3ff66666, 0x66666666, /* = 1.4 */
+            optype set_settings_code[] = {
                 VM_NEW_IMAGE,
+                /**set name = "Orion";*/
+                VM_USTR, (optype)u"Orion", VM_IMG_SET_NAME,
+                /**set size = [500, 500];*/
+                VM_INT, 500, VM_INT, 500, VM_IMG_SET_SIZE,
+                /**set scale = 1.4;*/
+                VM_DBL, 0x3ff66666, 0x66666666, VM_IMG_SET_SCALE,
                 /**set projection = [Lambert, 82.5, 5, 15, 25];*/
                 VM_DBL, 0x4054a000, 0x00000000, /* = 82.5 */
                 VM_DBL, 0x40140000, 0x00000000, /* = 5    */
                 VM_DBL, 0x402e0000, 0x00000000, /* = 15   */
                 VM_DBL, 0x40390000, 0x00000000, /* = 25   */
-                VM_IMG_LAMBERT, 0
+                VM_IMG_SET_LAMBERT, 0
             };
-            int image_setup_code[] = {
-                VM_CSTR, (int)"orion-labels.db", VM_LOAD_LABELS, 0
+            optype image_setup_code[] = {
+                VM_CSTR, (optype)"orion-labels.db", VM_LOAD_LABELS, 0
             };
-            int init_drawing_code[] = {
+            optype init_drawing_code[] = {
                 VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
             };
-            int support_drawing_code[] = {
+            optype support_drawing_code[] = {
                 VM_DRAW_BOUNDS,
-                VM_USTR, (int)u"Ori", VM_DRAW_DELPORTIAN_AREA,
+                VM_USTR, (optype)u"Ori", VM_DRAW_DELPORTIAN_AREA,
                 VM_DRAW_GRID,
-                VM_USTR, (int)u"Ori Bdy", VM_DRAW_LINES,
-                VM_USTR, (int)u"Ori Arm", VM_DRAW_LINES,
-                VM_USTR, (int)u"Ori Shd", VM_DRAW_LINES,
-                VM_USTR, (int)u"Ori", VM_DRAW_LABELS,
+                VM_USTR, (optype)u"Ori Bdy", VM_DRAW_LINES,
+                VM_USTR, (optype)u"Ori Arm", VM_DRAW_LINES,
+                VM_USTR, (optype)u"Ori Shd", VM_DRAW_LINES,
+                VM_USTR, (optype)u"Ori", VM_DRAW_LABELS,
                 0
             };
-            int real_objects_code[] = {
+            optype real_objects_code[] = {
                 VM_DRAW_STARS, 0
             };
-            int final_code[] = {
+            optype final_code[] = {
                 VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
             };
-
-            VM_do(set_settings_code, pstat);
+            int ix;
+            image_program orion_program; {
+                orion_program.setup = set_settings_code;
+                orion_program.layer = ALLOCN(optype *, 6);
+                orion_program.layer[0] = image_setup_code;
+                orion_program.layer[1] = init_drawing_code;
+                orion_program.layer[2] = support_drawing_code;
+                orion_program.layer[3] = real_objects_code;
+                orion_program.layer[4] = final_code;
+                orion_program.layer[5] = 0;
+            }
 
             /* generate one output map: */
             PS_push_cstr(pstat, "orion.svg");
             if (VM_open_file(pstat)) {
                 pstat = PS_push(pstat, stderr);
-                VM_do(image_setup_code, pstat);
-                VM_do(init_drawing_code, pstat);
-                VM_do(support_drawing_code, pstat);
-                VM_do(real_objects_code, pstat);
-                VM_do(final_code, pstat);
+                VM_do(orion_program.setup, pstat);
+                for (ix = 0; orion_program.layer[ix]; ix++)
+                    VM_do(orion_program.layer[ix], pstat);
                 pstat = PS_pop(pstat, stderr);
             }
             else {
@@ -410,53 +408,59 @@ int main (int argc, char **argv) {
         }
 
         {
-            int set_settings_code[] = {
-                /**set name = "Monoceros";*/
-                VM_USTR, (int)u"Monoceros",
-                /**set size = [500, 500];*/
-                VM_INT, 600,
-                VM_INT, 550,
-                /**set scale = 1.4;*/
-                VM_DBL, 0x3ff66666, 0x66666666, /* = 1.4 */
+            optype set_settings_code[] = {
                 VM_NEW_IMAGE,
+                /**set name = "Monoceros";*/
+                VM_USTR, (optype)u"Monoceros", VM_IMG_SET_NAME,
+                /**set size = [600, 550];*/
+                VM_INT, 600, VM_INT, 550, VM_IMG_SET_SIZE,
+                /**set scale = 1.4;*/
+                VM_DBL, 0x3ff66666, 0x66666666, VM_IMG_SET_SCALE,
                 /**set projection = [Lambert, 106, 0, 10, 20];*/
                 VM_DBL, 0x405a8000, 0x00000000, /* = 106  */
                 VM_DBL, 0x00000000, 0x00000000, /* = 0    */
                 VM_DBL, 0x40240000, 0x00000000, /* = 10   */
                 VM_DBL, 0x40340000, 0x00000000, /* = 20   */
-                VM_IMG_LAMBERT, 0
+                VM_IMG_SET_LAMBERT, 0
             };
-            int image_setup_code[] = {
-                VM_CSTR, (int)"monoceros-labels.db", VM_LOAD_LABELS, 0
+            optype image_setup_code[] = {
+                VM_CSTR, (optype)"monoceros-labels.db", VM_LOAD_LABELS, 0
             };
-            int init_drawing_code[] = {
+            optype init_drawing_code[] = {
                 VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
             };
-            int support_drawing_code[] = {
+            optype support_drawing_code[] = {
                 VM_DRAW_BOUNDS, 
-                VM_USTR, (int)u"Mon", VM_DRAW_DELPORTIAN_AREA,
+                VM_USTR, (optype)u"Mon", VM_DRAW_DELPORTIAN_AREA,
                 VM_DRAW_GRID,
-                VM_USTR, (int)u"Mon Bdy", VM_DRAW_LINES,
-                VM_USTR, (int)u"Mon", VM_DRAW_LABELS,
+                VM_USTR, (optype)u"Mon Bdy", VM_DRAW_LINES,
+                VM_USTR, (optype)u"Mon", VM_DRAW_LABELS,
                 0
             };
-            int real_objects_code[] = {
+            optype real_objects_code[] = {
                 VM_DRAW_STARS, 0
             };
-            int final_code[] = {
+            optype final_code[] = {
                 VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
             };
-
-            VM_do(set_settings_code, pstat);
+            int ix;
+            image_program monoceros_program; {
+                monoceros_program.setup = set_settings_code;
+                monoceros_program.layer = ALLOCN(optype *, 6);
+                monoceros_program.layer[0] = image_setup_code;
+                monoceros_program.layer[1] = init_drawing_code;
+                monoceros_program.layer[2] = support_drawing_code;
+                monoceros_program.layer[3] = real_objects_code;
+                monoceros_program.layer[4] = final_code;
+                monoceros_program.layer[5] = 0;
+            }
 
             PS_push_cstr(pstat, "monoceros.svg");
             if (VM_open_file(pstat)) {
                 pstat = PS_push(pstat, stderr);
-                VM_do(image_setup_code, pstat);
-                VM_do(init_drawing_code, pstat);
-                VM_do(support_drawing_code, pstat);
-                VM_do(real_objects_code, pstat);
-                VM_do(final_code, pstat);
+                VM_do(monoceros_program.setup, pstat);
+                for (ix = 0; monoceros_program.layer[ix]; ix++)
+                    VM_do(monoceros_program.layer[ix], pstat);
                 pstat = PS_pop(pstat, stderr);
             }
             else {
@@ -468,4 +472,3 @@ int main (int argc, char **argv) {
     return 0;
 }
 
-/* :mode=c: */

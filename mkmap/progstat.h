@@ -23,6 +23,8 @@
 #define BY_VMAG 0
 #define BY_HIP 1
 
+#include "valstack.h"
+
 typedef struct _progstat_S {
     /* hard-coded feature data */
         /* physical objects */
@@ -52,11 +54,12 @@ progstat *new_progstat(int debug, FILE *outerr);
 progstat *PS_push(progstat *PS, FILE *outerr);
 progstat *PS_pop(progstat *PS, FILE *outerr);
 image *PS_set_img(progstat *PS, image *img);
-image *PS_new_image
-    (progstat *PS, uchar *name, int width, int height, double scale);
+image *PS_new_image(progstat *PS);
+image *PS_img_set_name(progstat *PS, uchar *uname);
+image *PS_img_set_size(progstat *PS, int width, int height);
+image *PS_img_set_scale(progstat *PS, double scale);
 image *PS_img_set_Lambert
     (progstat *PS, double l0, double p0, double p1, double p2);
-void _PS_check_stack_empty(progstat *PS);
 
 #define PS_STACKDEFS(TYPE,CTYPE) \
     CTYPE PS_pop_ ## TYPE(progstat *PS); \

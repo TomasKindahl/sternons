@@ -29,6 +29,9 @@
 #include "image.h"
 #include "valstack.h"
 #include "progstat.h"
+#include "vmcodes.h"
+
+void _PS_check_stack_empty(progstat *PS);
 
 progstat *new_progstat(int debug, FILE *outerr) {
     progstat *res = ALLOC(progstat);
@@ -90,11 +93,21 @@ image *PS_set_img(progstat *PS, image *img) {
     return img;
 }
 
-image *PS_new_image
-    (progstat *PS, uchar *name, int width, int height, double scale)
-{
-    image *img = new_image(name, width, height, scale);
+image *PS_new_image(progstat *PS) {
+    image *img = new_image();
     return PS_set_img(PS, img);
+}
+
+image *PS_img_set_name(progstat *PS, uchar *uname) {
+    return IMG_set_name(PS->img, uname);
+}
+
+image *PS_img_set_size(progstat *PS, int width, int height) {
+    return IMG_set_size(PS->img, width, height);
+}
+
+image *PS_img_set_scale(progstat *PS, double scale) {
+    return IMG_set_scale(PS->img, scale);
 }
 
 image *PS_img_set_Lambert

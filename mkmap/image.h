@@ -29,7 +29,10 @@ typedef struct _image_S {
     proj *projection;
 } image;
 
-image *new_image(uchar *name, int width, int height, double scale);
+image *new_image();
+image *IMG_set_name(image *img, uchar *name);
+image *IMG_set_size(image *img, int width, int height);
+image *IMG_set_scale(image *img, double scale);
 image *IMG_set_projection(image *img, proj *LCCP);
 int IMG_relative_pos(double *x, double *y, double X, double Y, image *frame);
 

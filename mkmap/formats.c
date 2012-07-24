@@ -24,6 +24,7 @@ double to_double(long long LL) {
 
 int main(int argc, char **argv) {
 	printf("double = %ib\n", sizeof(double));
+	printf("int = %ib\n", sizeof(int));
 	printf("long int = %ib\n", sizeof(long int));
 	printf("long long int = %ib\n", sizeof(long long int));
 	printf("int* = %ib\n", sizeof(int*));
