@@ -62,6 +62,7 @@ image *PS_img_set_Lambert
     (progstat *PS, double l0, double p0, double p1, double p2);
 
 #define PS_STACKDEFS(TYPE,CTYPE) \
+    CTYPE PS_get_ ## TYPE(progstat *PS); \
     CTYPE PS_pop_ ## TYPE(progstat *PS); \
     void PS_push_ ## TYPE(progstat *PS, CTYPE int_val);
 PS_STACKDEFS(int,int)

@@ -30,7 +30,7 @@
 
 /* UTILS */
 #include "defs.h"
-#include "vmcodes.h"
+#include "vmcode.h"
 #include "mathx.h"
 #include "allstrings.h"     /* generated strings */
 #include "usio.h"
@@ -176,7 +176,7 @@ int VM_draw_labels(progstat *prog) {
     return 1;
 }
 
-int VM_exec(int op, progstat *prog) {
+int VM_exec(int op, progstat *prog, int code_num) {
     switch (op) {
         case VM_LOAD_STARS:
             return VM_load_stars(prog);
@@ -221,7 +221,8 @@ int VM_exec(int op, progstat *prog) {
         case VM_CLOSE_FILE:
             return close_file(prog);
         default:
-            fprintf(stderr, "ERROR: unknown op code '%i'\n", op);
+            fprintf(stderr, "VM_exec ERROR: unknown op code '%i' at "
+                    "position %i\n", op, code_num);
             return 0;
     }
     return 1;
@@ -236,12 +237,12 @@ double to_double(int L0, int L1) {
     return res.D;
 }
 
-typedef long int optype;
-
 int VM_do(optype *op_list, progstat *pstat) {
-    int PC = 0;
+    int PC = 0, PCend;
 
-    for (PC = 0; op_list[PC] != 0; PC++) {
+    if(!op_list) return 0;
+
+    for (PC = 1, PCend = op_list[0]; PC <= PCend; PC++) {
         if (op_list[PC] == VM_CSTR) {
             PC++;
             PS_push_cstr(pstat, (char *)op_list[PC]);
@@ -264,18 +265,28 @@ int VM_do(optype *op_list, progstat *pstat) {
             PS_push_dbl(pstat, R);
         }
         else {
-            VM_exec(op_list[PC], pstat);
+            VM_exec(op_list[PC], pstat, PC);
         }
     }
     return 1;
 }
 
-/* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
+int VM_draw_image(image_program *iprog, progstat *pstat) {
+    int ix;
+    char *fname = PS_get_cstr(pstat);
+    if (VM_open_file(pstat)) {
+        pstat = PS_push(pstat, stderr);
+        for (ix = 0; iprog->layer[ix]; ix++)
+            VM_do(iprog->layer[ix], pstat);
+        pstat = PS_pop(pstat, stderr);
+    }
+    else {
+        fprintf(stderr, "ERROR: couldn't write file '%s'\n", fname);
+    }
+    return 1;
+}
 
-typedef struct _image_program_S {
-    optype *setup;
-    optype **layer;
-} image_program;
+/* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
 
 int main (int argc, char **argv) {
     /* dummy setup: */
@@ -335,16 +346,17 @@ int main (int argc, char **argv) {
         /** ALL-SKY DATABASES LOAD **/
         /*load_stars(pstat, "star.db");*/
         PS_push_cstr(pstat, "star.db");
-        VM_exec(VM_LOAD_STARS, pstat);
+        VM_exec(VM_LOAD_STARS, pstat, -1);
         /*load_star_lines(pstat, "lines.db"); */ /* dependent on load_stars */
         PS_push_cstr(pstat, "lines.db");
-        VM_exec(VM_LOAD_STAR_LINES, pstat);
+        VM_exec(VM_LOAD_STAR_LINES, pstat, -1);
         /*load_constellation_bounds(pstat, "bounds.db");*/ /* dependent on nothing */
         PS_push_cstr(pstat, "bounds.db");
-        VM_exec(VM_LOAD_CONST_BOUNDS, pstat);
+        VM_exec(VM_LOAD_CONST_BOUNDS, pstat, -1);
 
         { /* image orion */
             optype set_settings_code[] = {
+                26,
                 VM_NEW_IMAGE,
                 /**set name = "Orion";*/
                 VM_USTR, (optype)u"Orion", VM_IMG_SET_NAME,
@@ -357,58 +369,57 @@ int main (int argc, char **argv) {
                 VM_DBL, 0x40140000, 0x00000000, /* = 5    */
                 VM_DBL, 0x402e0000, 0x00000000, /* = 15   */
                 VM_DBL, 0x40390000, 0x00000000, /* = 25   */
-                VM_IMG_SET_LAMBERT, 0
+                VM_IMG_SET_LAMBERT
             };
             optype image_setup_code[] = {
-                VM_CSTR, (optype)"orion-labels.db", VM_LOAD_LABELS, 0
+                3, 
+                VM_CSTR, (optype)"orion-labels.db", VM_LOAD_LABELS
             };
             optype init_drawing_code[] = {
-                VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
+                2, 
+                VM_DRAW_HEAD, VM_DRAW_BACKGROUND
             };
             optype support_drawing_code[] = {
+                17,
                 VM_DRAW_BOUNDS,
                 VM_USTR, (optype)u"Ori", VM_DRAW_DELPORTIAN_AREA,
                 VM_DRAW_GRID,
                 VM_USTR, (optype)u"Ori Bdy", VM_DRAW_LINES,
                 VM_USTR, (optype)u"Ori Arm", VM_DRAW_LINES,
                 VM_USTR, (optype)u"Ori Shd", VM_DRAW_LINES,
-                VM_USTR, (optype)u"Ori", VM_DRAW_LABELS,
-                0
+                VM_USTR, (optype)u"Ori", VM_DRAW_LABELS
             };
             optype real_objects_code[] = {
-                VM_DRAW_STARS, 0
+                1,
+                VM_DRAW_STARS
             };
             optype final_code[] = {
-                VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
+                3,
+                VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE
             };
             int ix;
             image_program orion_program; {
-                orion_program.setup = set_settings_code;
-                orion_program.layer = ALLOCN(optype *, 6);
-                orion_program.layer[0] = image_setup_code;
-                orion_program.layer[1] = init_drawing_code;
-                orion_program.layer[2] = support_drawing_code;
-                orion_program.layer[3] = real_objects_code;
-                orion_program.layer[4] = final_code;
-                orion_program.layer[5] = 0;
+                VM_init_image_program(&orion_program);
+                VM_add_code_layer(&orion_program, set_settings_code);
+                VM_add_code_layer(&orion_program, image_setup_code);
+                VM_add_code_layer(&orion_program, init_drawing_code);
+                VM_add_code_layer(&orion_program, support_drawing_code);
+                VM_add_code_layer(&orion_program, real_objects_code);
+                VM_add_code_layer(&orion_program, final_code);
             }
+
+            fprintf(stderr, "Orion ... "); fflush(stderr);
 
             /* generate one output map: */
             PS_push_cstr(pstat, "orion.svg");
-            if (VM_open_file(pstat)) {
-                pstat = PS_push(pstat, stderr);
-                VM_do(orion_program.setup, pstat);
-                for (ix = 0; orion_program.layer[ix]; ix++)
-                    VM_do(orion_program.layer[ix], pstat);
-                pstat = PS_pop(pstat, stderr);
-            }
-            else {
-                fprintf(stderr, "ERROR: couldn't write file 'orion.svg'\n");
-            }
+            VM_draw_image(&orion_program, pstat);
+
+            fprintf(stderr, "DONE\n");
         }
 
         {
             optype set_settings_code[] = {
+                26,
                 VM_NEW_IMAGE,
                 /**set name = "Monoceros";*/
                 VM_USTR, (optype)u"Monoceros", VM_IMG_SET_NAME,
@@ -421,54 +432,53 @@ int main (int argc, char **argv) {
                 VM_DBL, 0x00000000, 0x00000000, /* = 0    */
                 VM_DBL, 0x40240000, 0x00000000, /* = 10   */
                 VM_DBL, 0x40340000, 0x00000000, /* = 20   */
-                VM_IMG_SET_LAMBERT, 0
+                VM_IMG_SET_LAMBERT
             };
             optype image_setup_code[] = {
-                VM_CSTR, (optype)"monoceros-labels.db", VM_LOAD_LABELS, 0
+                3,
+                VM_CSTR, (optype)"monoceros-labels.db", VM_LOAD_LABELS
             };
             optype init_drawing_code[] = {
-                VM_DRAW_HEAD, VM_DRAW_BACKGROUND, 0
+                2,
+                VM_DRAW_HEAD, VM_DRAW_BACKGROUND
             };
             optype support_drawing_code[] = {
-                VM_DRAW_BOUNDS, 
+                11,
+                VM_DRAW_BOUNDS,
                 VM_USTR, (optype)u"Mon", VM_DRAW_DELPORTIAN_AREA,
                 VM_DRAW_GRID,
                 VM_USTR, (optype)u"Mon Bdy", VM_DRAW_LINES,
-                VM_USTR, (optype)u"Mon", VM_DRAW_LABELS,
-                0
+                VM_USTR, (optype)u"Mon", VM_DRAW_LABELS
             };
             optype real_objects_code[] = {
-                VM_DRAW_STARS, 0
+                1,
+                VM_DRAW_STARS
             };
             optype final_code[] = {
-                VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE, 0
+                3,
+                VM_DRAW_DEBUG_INFO, VM_DRAW_FOOT, VM_CLOSE_FILE
             };
             int ix;
             image_program monoceros_program; {
-                monoceros_program.setup = set_settings_code;
-                monoceros_program.layer = ALLOCN(optype *, 6);
-                monoceros_program.layer[0] = image_setup_code;
-                monoceros_program.layer[1] = init_drawing_code;
-                monoceros_program.layer[2] = support_drawing_code;
-                monoceros_program.layer[3] = real_objects_code;
-                monoceros_program.layer[4] = final_code;
-                monoceros_program.layer[5] = 0;
+                VM_init_image_program(&monoceros_program);
+                VM_add_code_layer(&monoceros_program, set_settings_code);
+                VM_add_code_layer(&monoceros_program, image_setup_code);
+                VM_add_code_layer(&monoceros_program, init_drawing_code);
+                VM_add_code_layer(&monoceros_program, support_drawing_code);
+                VM_add_code_layer(&monoceros_program, real_objects_code);
+                VM_add_code_layer(&monoceros_program, final_code);
             }
 
+            fprintf(stderr, "Monoceros ... "); fflush(stderr);
+
             PS_push_cstr(pstat, "monoceros.svg");
-            if (VM_open_file(pstat)) {
-                pstat = PS_push(pstat, stderr);
-                VM_do(monoceros_program.setup, pstat);
-                for (ix = 0; monoceros_program.layer[ix]; ix++)
-                    VM_do(monoceros_program.layer[ix], pstat);
-                pstat = PS_pop(pstat, stderr);
-            }
-            else {
-                fprintf(stderr, "ERROR: couldn't write file 'monoceros.svg'\n");
-            }
+            VM_draw_image(&monoceros_program, pstat);
+
+            fprintf(stderr, "DONE\n");
         }
     }
 
     return 0;
 }
 
+/* :mode=C: */
