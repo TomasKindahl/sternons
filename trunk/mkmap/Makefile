@@ -25,12 +25,12 @@ MAPS 	= star.db
 STROBJS	= token.o ucstr.o uctype.o usio.o
 OBJS 	= $(STROBJS) pointobj.o allstrings.o mathx.o projection.o \
 		  valstack.o image.o line.o polygon.o label.o progstat.o \
-		  fields.o ps_db.o ps_draw.o
+		  fields.o ps_db.o ps_draw.o vmcode.o
 OBJSP 	= $(OBJS) parse.o
 SWOBJS	= token.obj ucstr.obj uctype.obj usio.obj
 WOBJS 	= $(SWOBJS) pointobj.obj allstrings.obj mathx.obj projection.obj \
           valstack.obj image.obj line.obj polygon.obj label.obj progstat.obj \
-		  fields.obj ps_db.obj ps_draw.obj
+		  fields.obj ps_db.obj ps_draw.obj vmcode.obj
 WOBJSP 	= $(WOBJS) parse.obj
 
 all: img

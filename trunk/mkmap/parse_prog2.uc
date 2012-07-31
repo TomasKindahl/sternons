@@ -26,7 +26,7 @@
 #include "allstrings.h"
 #include "ucstr.h"
 #include "token.h"
-#include "vmcodes.h"
+#include "vmcode.h"
 
 /* LISPIAN TOKEN LISTSTREAM */                            
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
@@ -83,7 +83,7 @@ int expect(token_liststream **TLSP, token **tokfound, token_type type) {
     char buf[1024];
     printf("expect %s (%s)\n", tok_type_str(tok), tok_str(buf, tok, 1023));
     if(is_type(tok, type)) {
-		*tokfound = tok;
+        *tokfound = tok;
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
         return 1;
     }
@@ -235,7 +235,7 @@ int parse_version(token_liststream **TLSP) {
 
 int parse_load_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
-	token *dbname, *filename;
+    token *dbname, *filename;
 
     if(expect_str(&tlsp, u"load", TOK_ID)
     && expect(&tlsp, &dbname, TOK_ID) /* the database name */

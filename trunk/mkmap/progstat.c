@@ -29,7 +29,7 @@
 #include "image.h"
 #include "valstack.h"
 #include "progstat.h"
-#include "vmcodes.h"
+#include "vmcode.h"
 
 void _PS_check_stack_empty(progstat *PS);
 
@@ -125,6 +125,12 @@ void _PS_check_stack_empty(progstat *PS) {
 }
 
 #define _PS_STACKDEFS(TYPE,CTYPE) \
+    CTYPE PS_get_ ## TYPE(progstat *PS) { \
+        CTYPE res; \
+        _PS_check_stack_empty(PS); \
+        res = VS_ ## TYPE(PS->vstack); \
+        return res; \
+    } \
     CTYPE PS_pop_ ## TYPE(progstat *PS) { \
         CTYPE res; \
         _PS_check_stack_empty(PS); \
