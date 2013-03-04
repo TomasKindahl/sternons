@@ -36,5 +36,11 @@
         int next;            \
         ITEM **S;            \
     } VIEW(ITEM)
+#define DEFARR(TYPE,NAME)    \
+    struct {                \
+        int size;            \
+        int next;            \
+        TYPE *arr;          \
+    } NAME
 
 #endif /* _META_H */
