@@ -237,19 +237,29 @@ double to_double(int L0, int L1) {
     return res.D;
 }
 
-int VM_do(optype *op_list, progstat *pstat) {
+int VM_do(image_program *IP, int curr, progstat *pstat) {
     int PC = 0, PCend;
+    optype *op_list = IP->layer.arr[curr];
 
     if(!op_list) return 0;
 
     for (PC = 1, PCend = op_list[0]; PC <= PCend; PC++) {
+        int opval;
         if (op_list[PC] == VM_CSTR) {
             PC++;
-            PS_push_cstr(pstat, (char *)op_list[PC]);
+            opval = (int)op_list[PC];
+            if(opval < 32)
+                PS_push_cstr(pstat, IP->cstr.arr[opval]);
+            else
+                PS_push_cstr(pstat, (char *)op_list[PC]);
         }
         else if (op_list[PC] == VM_USTR) {
             PC++;
-            PS_push_ustr(pstat, (uchar *)op_list[PC]);
+            opval = (int)op_list[PC];
+            if(opval < 32)
+                PS_push_ustr(pstat, IP->ustr.arr[opval]);
+            else
+                PS_push_ustr(pstat, (uchar *)op_list[PC]);
         }
         else if (op_list[PC] == VM_INT) {
             PC++;
@@ -276,8 +286,8 @@ int VM_draw_image(image_program *iprog, progstat *pstat) {
     char *fname = PS_get_cstr(pstat);
     if (VM_open_file(pstat)) {
         pstat = PS_push(pstat, stderr);
-        for (ix = 0; iprog->layer[ix]; ix++)
-            VM_do(iprog->layer[ix], pstat);
+        for (ix = 0; iprog->layer.arr[ix]; ix++)
+            VM_do(iprog, ix, pstat);
         pstat = PS_pop(pstat, stderr);
     }
     else {
@@ -288,7 +298,7 @@ int VM_draw_image(image_program *iprog, progstat *pstat) {
 
 /* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv) {
     /* dummy setup: */
     progstat *pstat;
     uchar *star_data_tags[] = { u"RA", u"DE", u"V", u"HIP", 0 };
@@ -355,11 +365,18 @@ int main (int argc, char **argv) {
         VM_exec(VM_LOAD_CONST_BOUNDS, pstat, -1);
 
         { /* image orion */
+            uchar *ustr[] = {
+                u"Orion", u"Ori", u"Ori Bdy", u"Ori Arm",
+                u"Ori Shd", 0
+            };
+            char *cstr[] = {
+                "orion-labels.db", 0
+            };
             optype set_settings_code[] = {
                 26,
                 VM_NEW_IMAGE,
                 /**set name = "Orion";*/
-                VM_USTR, (optype)u"Orion", VM_IMG_SET_NAME,
+                VM_USTR, (optype)0, VM_IMG_SET_NAME,
                 /**set size = [500, 500];*/
                 VM_INT, 500, VM_INT, 500, VM_IMG_SET_SIZE,
                 /**set scale = 1.4;*/
@@ -373,7 +390,7 @@ int main (int argc, char **argv) {
             };
             optype image_setup_code[] = {
                 3, 
-                VM_CSTR, (optype)"orion-labels.db", VM_LOAD_LABELS
+                VM_CSTR, (optype)0, VM_LOAD_LABELS
             };
             optype init_drawing_code[] = {
                 2, 
@@ -382,12 +399,12 @@ int main (int argc, char **argv) {
             optype support_drawing_code[] = {
                 17,
                 VM_DRAW_BOUNDS,
-                VM_USTR, (optype)u"Ori", VM_DRAW_DELPORTIAN_AREA,
+                VM_USTR, (optype)1, VM_DRAW_DELPORTIAN_AREA,
                 VM_DRAW_GRID,
-                VM_USTR, (optype)u"Ori Bdy", VM_DRAW_LINES,
-                VM_USTR, (optype)u"Ori Arm", VM_DRAW_LINES,
-                VM_USTR, (optype)u"Ori Shd", VM_DRAW_LINES,
-                VM_USTR, (optype)u"Ori", VM_DRAW_LABELS
+                VM_USTR, (optype)2, VM_DRAW_LINES,
+                VM_USTR, (optype)3, VM_DRAW_LINES,
+                VM_USTR, (optype)4, VM_DRAW_LINES,
+                VM_USTR, (optype)1, VM_DRAW_LABELS
             };
             optype real_objects_code[] = {
                 1,
@@ -399,7 +416,14 @@ int main (int argc, char **argv) {
             };
             int ix;
             image_program orion_program; {
+                int ix;
                 VM_init_image_program(&orion_program);
+                for (ix = 0; ustr[ix]; ix++) {
+                    VM_add_ustring(&orion_program, ustr[ix]);
+                }
+                for (ix = 0; cstr[ix]; ix++) {
+                    VM_add_cstring(&orion_program, cstr[ix]);
+                }
                 VM_add_code_layer(&orion_program, set_settings_code);
                 VM_add_code_layer(&orion_program, image_setup_code);
                 VM_add_code_layer(&orion_program, init_drawing_code);
