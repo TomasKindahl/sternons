@@ -66,8 +66,8 @@
 typedef long int optype;
 
 typedef struct _image_program_S {
-    DEFARR(uchar *, ustr);
     DEFARR(char *, cstr);
+    DEFARR(uchar *, ustr);
     DEFARR(optype *, layer);
 } image_program;
 
@@ -75,5 +75,10 @@ int VM_init_image_program(image_program *iprog);
 int VM_add_code_layer(image_program *iprog, optype *ops);
 int VM_add_ustring(image_program *iprog, uchar *ustr);
 int VM_add_cstring(image_program *iprog, char *cstr);
+int VM_dump_image_program(image_program *iprog);
+
+int VM_add_ustring_length(image_program *iprog, int len, int *ustr);
+int VM_add_cstring_from_ustring(image_program *iprog, int len, int *ustr);
+int VM_add_code_layer_length(image_program *iprog, int len, int *ops);
 
 #endif /* _VMCODE_H */
