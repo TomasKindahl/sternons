@@ -1,0 +1,60 @@
+(%mkm 1.0%)
+
+main {
+    load star from 'star.db';
+    load line from 'lines.db';
+    load bound from 'bounds.db';
+
+    image orion is constellation_image {
+        set name = "Orion";
+        set size = [500, 500];
+        set scale = 1.4;
+        set projection = [Lambert, 82.5, 5, 15, 25];
+
+      image_data:
+        load labels from 'orion-labels.db';
+      init_drawing:
+        draw header;
+        draw background;
+      support_drawing:
+        draw all bound;
+        draw delportian_area labeled "Ori";
+        draw all grid;
+        draw lines labeled "Ori Bdy";
+        draw lines labeled "Ori Arm";
+        draw lines labeled "Ori Shd";
+        draw labels labeled "Ori";
+      real_objects:
+        draw stars;
+      final:
+        draw debug_info;
+        draw footer
+    }
+    draw image orion to "orion.svg";
+
+    image monoceros is constellation_image {
+        set name = "Monoceros";
+        set size = [500, 500];
+        set scale = 1.4;
+        set projection = [Lambert, 106, 0, 10, 20];
+
+      image_setup:
+        load labels from 'monoceros-labels.db';
+      init_drawing:
+        draw header;
+        draw background;
+      support_drawing:
+        draw all bound;
+        draw delportian_area labeled "Mon";
+        draw all grid;
+        draw lines labeled "Mon Bdy";
+        draw labels labeled "Mon";
+      real_objects:
+        draw stars;
+      final:
+        draw debug_info;
+        draw footer
+    }
+    draw image monoceros to "monoceros.svg";
+}
+

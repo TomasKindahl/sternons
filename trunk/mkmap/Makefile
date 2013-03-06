@@ -39,6 +39,9 @@ img: mkmap maps/orion.mkm $(MAPS)
 	./$<
 #	./$< maps/orion.mkm
 
+mbf: mkmap maps/ori2.mbf
+	./$< maps/ori2.mbf
+
 mkmap: mkmap.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
 
