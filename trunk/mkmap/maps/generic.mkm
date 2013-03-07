@@ -16,7 +16,7 @@ main {
     load bound from 'bounds.db',
 
     image constellation_image { (* PATTERN FOR CONSTELLATION DRAWING *)
-      image_setup:
+      image_data:
 		(* PLACEHOLDER *)
       init_drawing:
         draw header,

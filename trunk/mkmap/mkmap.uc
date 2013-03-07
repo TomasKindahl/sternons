@@ -303,6 +303,10 @@ int ishex(char ch) {
         || ('a' <= ch && ch <= 'f');
 }
 
+int isalusc(char ch) {
+    return (ch == '_') || ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z');
+}
+
 int gethex(char ch) {
     if ('0' <= ch && ch <= '9') return ch - '0';
     if ('A' <= ch && ch <= 'F') return ch - 'A' + 10;
@@ -322,9 +326,47 @@ void get_signature(FILE *inf, int num, char *store) {
     store[ix] = '\0';
 }
 
+int translate_label_to_VM(char *cstr) {
+    /* printf("translate_label_to_VM: '%s'\n", cstr); */
+    /** CODE LABELS: **/
+    if(0 == strcmp(cstr,"CSTR")) return VM_CSTR_STORE;
+    if(0 == strcmp(cstr,"USTR")) return VM_USTR_STORE;
+    if(0 == strcmp(cstr,"SETTINGS")) return VM_SETTINGS_LAYER;
+    if(0 == strcmp(cstr,"IMAGE_DATA")) return VM_IMAGE_DATA_LAYER;
+    if(0 == strcmp(cstr,"INIT_DRAWING")) return VM_INIT_DRAWING_LAYER;
+    if(0 == strcmp(cstr,"SUPPORT_DRAWING")) return VM_SUPPORT_DRAWING_LAYER;
+    if(0 == strcmp(cstr,"REAL_OBJECTS")) return VM_REAL_OBJECTS_LAYER;
+    if(0 == strcmp(cstr,"FINAL")) return VM_FINAL_LAYER;
+    /** CONSTANT LOADER OPERATORS: **/
+    if(0 == strcmp(cstr,"cstr")) return VM_CSTR;
+    if(0 == strcmp(cstr,"ustr")) return VM_USTR;
+    if(0 == strcmp(cstr,"int")) return VM_INT;
+    if(0 == strcmp(cstr,"dbl")) return VM_DBL;
+    /** OPERATORS: **/
+    if(0 == strcmp(cstr,"NewImage")) return VM_NEW_IMAGE;
+    if(0 == strcmp(cstr,"ImgSetName")) return VM_IMG_SET_NAME;
+    if(0 == strcmp(cstr,"ImgSetSize")) return VM_IMG_SET_SIZE;
+    if(0 == strcmp(cstr,"ImgSetScale")) return VM_IMG_SET_SCALE;
+    if(0 == strcmp(cstr,"ImgSetLambert")) return VM_IMG_SET_LAMBERT;
+    if(0 == strcmp(cstr,"LoadLabels")) return VM_LOAD_LABELS;
+    if(0 == strcmp(cstr,"DrawDelportianArea")) return VM_DRAW_DELPORTIAN_AREA;
+    if(0 == strcmp(cstr,"DrawLines")) return VM_DRAW_LINES;
+    if(0 == strcmp(cstr,"DrawLabels")) return VM_DRAW_LABELS;
+    if(0 == strcmp(cstr,"DrawHead")) return VM_DRAW_HEAD;
+    if(0 == strcmp(cstr,"DrawBackground")) return VM_DRAW_BACKGROUND;
+    if(0 == strcmp(cstr,"DrawBounds")) return VM_DRAW_BOUNDS;
+    if(0 == strcmp(cstr,"DrawGrid")) return VM_DRAW_GRID;
+    if(0 == strcmp(cstr,"DrawStars")) return VM_DRAW_STARS;
+    if(0 == strcmp(cstr,"DrawDebugInfo")) return VM_DRAW_DEBUG_INFO;
+    if(0 == strcmp(cstr,"DrawFoot")) return VM_DRAW_FOOT;
+    if(0 == strcmp(cstr,"CloseFile")) return VM_CLOSE_FILE;
+    return -1;
+}
+
 int read_mkmap_BF1(FILE *inf, image_program *iprog) {
-    int ch, nx, num, vec[128];
-    enum { NONUM, NUM, DELIM } scanstat = NONUM;
+    int ch, nx, num, vec[128], lbl_nx;
+    char lbl[32];
+    enum { NONUM, NUM, LABEL, DELIM } scanstat = NONUM;
 
     nx = 0;
     for(ch = fgetc(inf); !feof(inf); ch = fgetc(inf)) {
@@ -334,6 +376,10 @@ int read_mkmap_BF1(FILE *inf, image_program *iprog) {
                 if(ishex(ch)) {
                     scanstat = NUM;
                     num = gethex(ch);
+                }
+                else if (ch == ':') {
+                    scanstat = LABEL;
+                    lbl_nx = 0;
                 }
                 else if (ch == '-') {
                     int ix;
@@ -371,6 +417,16 @@ int read_mkmap_BF1(FILE *inf, image_program *iprog) {
                 }
                 else if(ishex(ch)) {
                     num = (num<<4) | gethex(ch);
+                }
+                break;
+            case LABEL:
+                if(isws(ch)) {
+                    scanstat = NONUM;
+                    lbl[lbl_nx] = '\0';
+                    vec[nx++] = translate_label_to_VM(lbl);
+                }
+                else if(isalusc(ch)) {
+                    lbl[lbl_nx++] = ch;
                 }
                 break;
             case DELIM: 
