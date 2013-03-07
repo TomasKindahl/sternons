@@ -1,0 +1,32 @@
+mbf1
+:CSTR 6F 72 69 6F 6E 2D 6C 61 62 65 6C 73 2E 64 62 -
+:USTR 4F 72 69 6F 6E -
+:USTR 4F 72 69 -
+:USTR 4F 72 69 20 42 64 79 -
+:USTR 4F 72 69 20 41 72 6D -
+:USTR 4F 72 69 20 53 68 64 -
+:SETTINGS
+   :NewImage
+   :ustr 00 :ImgSetName
+   :int 1F4 :int 1F4 :ImgSetSize
+   :dbl 3FF66666 66666666 :ImgSetScale
+   :dbl 4054A000 00000000
+   :dbl 40140000 00000000
+   :dbl 402E0000 00000000
+   :dbl 40390000 00000000 :ImgSetLambert -
+:IMAGE_DATA
+   :cstr 00 :LoadLabels -
+:INIT_DRAWING
+   :DrawHead :DrawBackground -
+:SUPPORT_DRAWING
+   :DrawBounds
+   :ustr 01 :DrawDelportianArea
+   :DrawGrid
+   :ustr 02 :DrawLines
+   :ustr 03 :DrawLines
+   :ustr 04 :DrawLines
+   :ustr 01 :DrawLabels -
+:REAL_OBJECTS
+   :DrawStars -
+:FINAL
+   :DrawDebugInfo :DrawFoot :CloseFile -
