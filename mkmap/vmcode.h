@@ -71,14 +71,37 @@ typedef struct _image_program_S {
     DEFARR(optype *, layer);
 } image_program;
 
+/** VM init **/
+/* diverse */
 int VM_init_image_program(image_program *iprog);
 int VM_add_code_layer(image_program *iprog, optype *ops);
 int VM_add_ustring(image_program *iprog, uchar *ustr);
 int VM_add_cstring(image_program *iprog, char *cstr);
 int VM_dump_image_program(image_program *iprog);
-
+/* MBF format */
 int VM_add_ustring_length(image_program *iprog, int len, int *ustr);
 int VM_add_cstring_from_ustring(image_program *iprog, int len, int *ustr);
 int VM_add_code_layer_length(image_program *iprog, int len, int *ops);
+
+/** VM calls **/
+int VM_load_stars(progstat *prog);
+int VM_load_star_lines(progstat *prog);
+int VM_load_const_bounds(progstat *prog);
+
+int VM_new_image(progstat *prog);
+int VM_img_set_name(progstat *prog);
+int VM_img_set_size(progstat *prog);
+int VM_img_set_scale(progstat *prog);
+int VM_img_set_Lambert(progstat *prog);
+int VM_open_file(progstat *prog);
+int VM_load_labels(progstat *prog);
+int VM_draw_delportian_area(progstat *prog);
+int VM_draw_lines(progstat *prog);
+int VM_draw_labels(progstat *prog);
+int VM_draw_image(image_program *iprog, progstat *pstat);
+
+int VM_exec(int op, progstat *prog, int code_num);
+int translate_label_to_VM(char *cstr);
+int VM_do(image_program *IP, int curr, progstat *pstat);
 
 #endif /* _VMCODE_H */

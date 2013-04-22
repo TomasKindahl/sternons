@@ -25,7 +25,16 @@
 #include "usio.h"
 #include "allstrings.h"
 #include "ucstr.h"
+
+#include "pointobj.h"
+#include "line.h"
+#include "polygon.h"
+#include "label.h"
+#include "projection.h"
+#include "image.h"
+
 #include "token.h"
+#include "progstat.h"
 #include "vmcode.h"
 
 /* LISPIAN TOKEN LISTSTREAM */                            

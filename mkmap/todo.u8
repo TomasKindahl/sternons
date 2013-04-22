@@ -1,7 +1,16 @@
 Things todo:
     [STARTING] todo list
     [STARTING] parser
-    [STARTING] VM
+        implement parse_prog2 into mkmap.uc
+        enhance parse_prog2 so that it can generate a MBF like maps/ori3.mbf
+    [ADVANCED] VM
+        [DONE] VM code defined (MBF)
+        [DONE] VM code loadable
+        [DONE] VM code runable
+        add image_programs as dynallockable entities in MBF
+        add VM_draw_image in MBF
+        enable literals of real, decimal ints, and strings in MBF
+        fully modularize VM calls
     generalized structures:
         [DONE] rip lambert_proj into proj.[ch]
         [DONE] rip image_struct into image.[ch]
@@ -15,7 +24,7 @@ Things todo:
             [??] add a pointer-to function in the lambert_proj type:
                 void (* Lambert)(
                     double *x, double *y,
-                    double phi, double lambda,
+                    double phi, double lambda,                                  
                     lambert_proj *LCCP
                 )
             [DONE] make a generalized struct proj, which has just a
