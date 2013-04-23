@@ -1,4 +1,4 @@
-(%mkm 2.0%)
+(%mkm 3.0%)
 
 main {
     declare star = {RA, DE, V, HIP},

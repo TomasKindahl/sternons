@@ -207,6 +207,21 @@ token *_scan(utf8_file *stream) {
         cstr[ix-1] = '\0';
         return _new_token_cstr(cstr, lno);
     }
+    else if (uch == L'‘') {
+        int slev = 1;
+
+        ix = 0;
+        while (slev > 0) {
+            uch = fgetuc(stream);
+            cstr[ix] = (char)uch;
+            ix ++;
+            if (uch == L'’') {
+                  slev++; break;
+            }
+        }
+        cstr[ix-1] = '\0';
+        return _new_token_cstr(cstr, lno);
+    }
     else if (isunum(uch)) {
         /* NUMBER WITH SCALE FACTOR AND UNIT */
         base_mode bmode;
@@ -227,7 +242,7 @@ token *_scan(utf8_file *stream) {
             if(!jx) ustr[ix] = 0;    /* cut number before unit substr */
         }
         uunit[jx] = L'\0';
-        /** Handle scale (ʰᵐˢ vs. °'") and number format (sex/hex/dec) **/
+        /** Handle scale (ʰᵐˢ vs. °′″) and number format (sex/hex/dec) **/
         bmode = scan_mode(ustr);
 
         return _new_token_num(TOK_NUM, ustr, uunit, bmode, lno);

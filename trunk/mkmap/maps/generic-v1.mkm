@@ -1,4 +1,4 @@
-(%mkm 1.0%)
+(%mkm 2.0%)
 
 main {
     load star from 'star.db';

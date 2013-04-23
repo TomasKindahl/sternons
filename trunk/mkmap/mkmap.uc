@@ -298,13 +298,13 @@ int main(int argc, char **argv) {
             optype set_settings_code[] = {
                 26,
                 VM_NEW_IMAGE,
-                /**set name = “Orion”;*/
+                /**name “Orion”;*/
                 VM_USTR, (optype)0, VM_IMG_SET_NAME,
-                /**set size = [500, 500];*/
+                /**size 500 500;*/
                 VM_INT, 500, VM_INT, 500, VM_IMG_SET_SIZE,
-                /**set scale = 1.4;*/
+                /**scale 1.4;*/
                 VM_DBL, 0x3ff66666, 0x66666666, VM_IMG_SET_SCALE,
-                /**set projection = [Lambert, 82.5, 5, 15, 25];*/
+                /**projection Lambert 82.5 5 15 25;*/
                 VM_DBL, 0x4054a000, 0x00000000, /* = 82.5 */
                 VM_DBL, 0x40140000, 0x00000000, /* = 5    */
                 VM_DBL, 0x402e0000, 0x00000000, /* = 15   */
@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
                 17,
                 /** draw bounds; */
                 VM_DRAW_BOUNDS,
-                /** draw delportian area select “Ori”; */
+                /** draw delportian select “Ori”; */       
                 VM_USTR, (optype)1, VM_DRAW_DELPORTIAN_AREA,
                 /** draw grid; */
                 VM_DRAW_GRID,

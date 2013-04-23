@@ -18,6 +18,11 @@
 #  <http://www.gnu.org/licenses/>.                                     #
 ########################################################################
 
+# NOTE: This file is kept just as a reminder of a rejected mkmap program
+#       concept – the following code is CODE in the programmer sense,
+#       and therefore presumably NOT suitable as an intuitive specifica-
+#       tion of an image that a non-programmer can read, copy and modify.
+
 orion() {
     ## procedure for the heavenly hunter 
     border += load “ori_b.db”;

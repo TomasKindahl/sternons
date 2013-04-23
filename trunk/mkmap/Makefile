@@ -54,19 +54,10 @@ mkmap.c: mkmap.uc $(UCCVT)
 pointobj.c: pointobj.uc $(UCCVT)
 	$(UCCVT) $<
 
-parse_prog2.c: parse_prog2.uc $(UCCVT)
+compile-mkm.c: compile-mkm.uc $(UCCVT)
 	$(UCCVT) $<
 
-parse_prog.c: parse_prog.uc $(UCCVT)
-	$(UCCVT) $<
-
-parse_program: parse_program.c $(OBJSP)
-	$(CC) -o $@ $< $(OBJSP) -lm
-
-parse_prog: parse_prog.c $(OBJS)
-	$(CC) -o $@ $< $(OBJS) -lm
-
-parse_prog2: parse_prog2.c $(OBJS)
+compile-mkm: compile-mkm.c $(OBJS)
 	$(CC) -o $@ $< $(OBJS) -lm
 
 .c.o:
@@ -88,7 +79,7 @@ clean:
 	rm -f \#*\#
 
 distclean: clean
-	rm -f cmap cmp dump mkmap
+	rm -f cmap cmp dump mkmap compile-mkm ucliterals
 	rm -f *.exe
 
 hard: clean

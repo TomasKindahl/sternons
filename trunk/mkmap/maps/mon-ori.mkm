@@ -1,4 +1,7 @@
 (* THIS FILE COUNTERPARTS mkmap.uc main() AS OF 2011-12-28 *)
+(* retained for ideas, only *)
+
+(%mkm 0.0%)
 
 main {
 	declare star = {RA, DE, V, HIP}, 
@@ -68,6 +71,5 @@ main {
 	}
 
 	draw monoceros to "monoceros.svg"
-
 }
 
