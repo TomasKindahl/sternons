@@ -18,18 +18,20 @@
 #  <http://www.gnu.org/licenses/>.                                     #
 ########################################################################
 
-load sky;                            # load data from sky.mkm: stars, nebulae, etc.
+(%mkm 2.0%)
 
-image {                              # create a main image
-    name = “monoceros”;              # set name to “orion”
-    width = 600px;                   # width parameter of image structure
-    height = 500px;                  # height parameter of image structure
-    scale = 1.6;                     # scale parameter of image structure
-    projection.type = Lambert_conic; # image to contain a LCC projection
-    projection.α = 7ʰ10ᵐ;            # centered at 7 hours 10 minutes
-    projection.δ = 10°;              # centered at 10 degrees north
-    projection.Δδ = 10°;             # with a width of plus-minus 10 degrees
+main {
+    load sky;                            # load data from sky.mkm: stars, nebulae, etc.
+
+    image {                              # create a main image
+        name = “Monoceros”;              # set web title name to “Monoceros”
+        width = 600px;                   # width parameter of image structure
+        height = 500px;                  # height parameter of image structure
+        scale = 1.6;                     # scale parameter of image structure
+        projection.type = Lambert_conic; # image to contain a LCC projection
+        projection.α = 7ʰ10ᵐ;            # centered at 7 hours 10 minutes
+        projection.δ = 10°;              # centered at 10 degrees north
+        projection.Δδ = 10°;             # with a width of plus-minus 10 degrees
+    }
+    draw image “monoceros” onto ‘monoceros.svg’;
 }
-
-draw image “monoceros”;
-

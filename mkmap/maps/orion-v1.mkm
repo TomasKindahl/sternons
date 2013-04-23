@@ -1,0 +1,26 @@
+(%mkm 1.0%)
+image {
+    name “Orion”;
+    size 500 500;
+    scale 1.4;
+    projection Lambert 82.5 5 15 25;
+image_data:
+    load labels ‘orion-labels.db’;
+init_drawing:
+    open file ‘orion.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Ori”;
+    draw grid;
+    draw lines select “Ori Bdy”;
+    draw lines select “Ori Arm”;
+    draw lines select “Ori Shd”;
+    draw labels select “Ori”;
+real_objects:
+    draw stars;
+final:
+    draw debug_info;
+    draw footer;
+    close file;
+}

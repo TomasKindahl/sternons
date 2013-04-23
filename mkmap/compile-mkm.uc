@@ -34,8 +34,8 @@
 #include "image.h"
 
 #include "token.h"
-#include "progstat.h"
-#include "vmcode.h"
+/*#include "progstat.h"*/
+/*#include "vmcode.h"*/
 
 /* LISPIAN TOKEN LISTSTREAM */                            
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
@@ -71,6 +71,42 @@ token_liststream *_advance_stream(token_liststream *TS) {
     return TS;
 }
 
+void _dump_token_liststream(token_liststream *TS) {
+    token *tok; char buf[1024];
+    if(!TS) {
+        printf(")\n"); fflush(stdout);
+        return;
+    }
+    if(TS->is_file) {
+        printf("file "); fflush(stdout);
+    }
+    else {
+        tok = TS->V.ref.tok;
+        printf("%s:",tok_type_str(tok));
+        switch(tok->type) {
+          case TOK_NONE:
+             printf("(none) "); fflush(stdout); break;
+          case TOK_ID:
+          case TOK_LPAR:
+          case TOK_NUM:
+          case TOK_OP:
+          case TOK_RPAR:
+          case TOK_USTR:
+          case TOK_VERSION:
+            printf("%s ", tok_str(buf, tok, 1024)); fflush(stdout); break;
+          case TOK_CSTR:
+            printf("%s ", tok_str(buf, tok, 1024)); fflush(stdout); break;
+          default:
+            printf("(fel) "); fflush(stdout); break;
+        }
+    }
+    _dump_token_liststream(TS->V.ref.next);
+}
+
+void dump_token_liststream(token_liststream *TS) {
+    printf("("); _dump_token_liststream(TS);
+}
+
 token *get_token(token_liststream *TS) {
     if(TS->is_file == 1) {
         if(!_advance_stream(TS)) return 0;
@@ -90,7 +126,6 @@ int expect(token_liststream **TLSP, token **tokfound, token_type type) {
     token_liststream *tlsp = *TLSP;
     token *tok = get_token(tlsp);
     char buf[1024];
-    printf("expect %s (%s)\n", tok_type_str(tok), tok_str(buf, tok, 1023));
     if(is_type(tok, type)) {
         *tokfound = tok;
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
@@ -103,7 +138,6 @@ int expect_str(token_liststream **TLSP, uchar *op, token_type type) {
     token_liststream *tlsp = *TLSP;
     token *tok = get_token(tlsp);
     char buf[1024];
-    printf("expect_str %s (%s)\n", tok_type_str(tok), tok_str(buf, tok, 1023));
     if(is_item(tok, op, type)) {
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
         return 1;
@@ -117,7 +151,6 @@ int expect_ch(token_liststream **TLSP, uchar op, token_type type) {
     uchar opstr[2] = {0, 0};
     char buf[1024];
     opstr[0] = op;
-    printf("expect_ch %s (%s)\n", tok_type_str(tok), tok_str(buf, tok, 1023));
     if(is_item(tok, opstr, type)) {
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
         return 1;
@@ -242,7 +275,7 @@ int parse_version(token_liststream **TLSP) {
     return 0;
 }
 
-int parse_load_stmt(token_liststream **TLSP) {
+int parse_load_stmt_old(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *dbname, *filename;
 
@@ -281,38 +314,243 @@ int parse_set_stmt(token_liststream **TLSP) {
     /** TO BECOME: ⟨set statement⟩ ::= ‘set’ ⟨ID⟩ ‘=’ ⟨expression⟩ */
 }
 
+int parse_name_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *ustring;
+
+    /* ⟨name statement⟩ ::= ‘name’ ⟨USTR⟩ */
+    if(expect_str(&tlsp, u"name", TOK_ID)
+    && expect(&tlsp, &ustring, TOK_USTR)) /* a string value */
+    {
+        /*char buf1[100], buf2[100];
+        printf("VM_USTR u\"%s\" VM_IMG_SET_%s\n",
+               ucstombs(buf1,tok_ustr(ustring),100),
+               ucstombs(buf2,tok_ustr(varname),100));*/
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int parse_size_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *num1, *num2;
+
+    /* ⟨size statement⟩ ::= ‘size’ ⟨NUM⟩ ⟨NUM⟩ */
+    if(expect_str(&tlsp, u"size", TOK_ID)
+    && expect(&tlsp, &num1, TOK_NUM)  /* a string value */
+    && expect(&tlsp, &num2, TOK_NUM)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int parse_scale_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *num;
+
+    /* ⟨scale statement⟩ ::= ‘scale’ ⟨NUM⟩ */
+    if(expect_str(&tlsp, u"scale", TOK_ID)
+    && expect(&tlsp, &num, TOK_NUM)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int parse_projection_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *num1, *num2, *num3, *num4;
+
+    /* ⟨size statement⟩ ::= ‘size’ ⟨NUM⟩ ⟨NUM⟩ */
+    if(expect_str(&tlsp, u"projection", TOK_ID)
+    && expect_str(&tlsp, u"Lambert", TOK_ID) /* QnD coding, for now */
+    && expect(&tlsp, &num1, TOK_NUM)  /* a string value */
+    && expect(&tlsp, &num2, TOK_NUM)  /* a string value */
+    && expect(&tlsp, &num3, TOK_NUM)  /* a string value */
+    && expect(&tlsp, &num4, TOK_NUM)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int parse_label_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    /* token *varname; */
+
+    /* ⟨label statement⟩ ::= ⟨KW⟩ ‘:’ */
+    if(expect_str(&tlsp, u"image_data", TOK_ID)
+    && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    else if(expect_str(&tlsp, u"init_drawing", TOK_ID)
+    && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    else if(expect_str(&tlsp, u"support_drawing", TOK_ID)
+    && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    else if(expect_str(&tlsp, u"real_objects", TOK_ID)
+    && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    else if(expect_str(&tlsp, u"final", TOK_ID)
+    && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int OK(char *trc) {
+    printf("OK: %s\n", trc);
+    return 1;
+}
+
+int parse_load_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *dbname, *filename;
+
+    if(expect_str(&tlsp, u"load", TOK_ID) && OK("load")
+    && expect(&tlsp, &dbname, TOK_ID) && OK("db") /* the database name */
+    && expect(&tlsp, &filename, TOK_CSTR) && OK("fnam") ) /* the file name */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int parse_open_file_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *filename;
+
+    if(expect_str(&tlsp, u"open", TOK_ID)
+    && expect_str(&tlsp, u"file", TOK_ID)   /* the database name */
+    && expect(&tlsp, &filename, TOK_CSTR))  /* the file name */
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
+int parse_draw_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+    token *dbname, *groupname;
+
+    if(expect_str(&tlsp, u"draw", TOK_ID)
+    && expect(&tlsp, &dbname, TOK_ID))  /* the file name */
+    {
+        *TLSP = tlsp;
+        /* select subclause is optional: */
+        if(expect_str(&tlsp, u"select", TOK_ID)
+        && expect(&tlsp, &groupname, TOK_USTR))
+        {
+            *TLSP = tlsp;
+            return 1;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int parse_close_stmt(token_liststream **TLSP) {
+    token_liststream *tlsp = *TLSP;
+
+    if(expect_str(&tlsp, u"close", TOK_ID)
+    && expect_str(&tlsp, u"file", TOK_ID))
+    {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
 int parse_image_stmt_seq(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
+    int label;
 
     /* ( ⟨set statement⟩ ) [ ‘;’ ⟨image sequence⟩ ] */
     /** add more image statement types!! */
     while(1) {
-        if(parse_set_stmt(&tlsp)) {
+        label = 0;
+        if(parse_name_stmt(&tlsp)) {
+            printf("name\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_size_stmt(&tlsp)) {
+            printf("size\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_scale_stmt(&tlsp)) {
+            printf("scale\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_projection_stmt(&tlsp)) {
+            printf("projection\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_label_stmt(&tlsp)) {
+            printf("label\n");
+            label = 1; /* QnD progm, not proper parsing!! */
+            *TLSP = tlsp;
+        }
+        else if(parse_load_stmt(&tlsp)) {
+            printf("load\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_open_file_stmt(&tlsp)) {
+            printf("open\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_draw_stmt(&tlsp)) {
+            printf("draw\n");
+            *TLSP = tlsp;
+        }
+        else if(parse_close_stmt(&tlsp)) {
+            printf("close\n");
             *TLSP = tlsp;
         }
         /* use 'else if' branches to detect alternative statements here */
 
-        if(expect_ch(&tlsp, L';', TOK_OP)) {
-            *TLSP = tlsp;
+        if(!label) { /* QnD prog, not proper parsing!! */
+            if(expect_ch(&tlsp, L';', TOK_OP)) {
+                *TLSP = tlsp;
+            }
+            else {
+                return 1;
+            }
         }
         else {
-            return 1;
+            *TLSP = tlsp;
         }
     }
     printf("Parse error: statement sequence\n");
     return 0;
 }
 
-int parse_image_defn(token_liststream **TLSP) {
+int parse_image(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
-    token *imgname, *momimgname;
 
     /* ‘image’ ⟨name⟩ ‘is’ ⟨name of inherited image⟩ ‘{’ ⟨image sequence⟩ ‘}’ */
     /** also allow a variant with no image inheritance */
     if(expect_str(&tlsp, u"image", TOK_ID)
-    && expect(&tlsp, &imgname, TOK_ID) /* the image name */
-    && expect_str(&tlsp, u"is", TOK_ID)
-    && expect(&tlsp, &momimgname, TOK_ID) /* inherited image name */
     && expect_ch(&tlsp, L'{', TOK_LPAR)
     && parse_image_stmt_seq(&tlsp)
     && expect_ch(&tlsp, L'}', TOK_RPAR))
@@ -321,69 +559,19 @@ int parse_image_defn(token_liststream **TLSP) {
         return 1;
     }
     printf("Parse error: malformed image definition\n");
-    return 0;
-}
+    dump_token_liststream(tlsp);
 
-int parse_statement_seq(token_liststream **TLSP) {
-    token_liststream *tlsp = *TLSP;
-
-    /* ( ⟨load statement⟩ | ⟨image definition⟩ ) [ ‘;’ ⟨statement sequence⟩ ] */
-    /** add more statement types!! */
-    while(1) {
-        if(parse_load_stmt(&tlsp)) {
-            *TLSP = tlsp;
-        }
-        else if(parse_image_defn(&tlsp)) {
-            *TLSP = tlsp;
-        }
-        /* using 'else if' branches insert other statement kinds here */
-
-        if(expect_ch(&tlsp, L';', TOK_OP)) {
-            *TLSP = tlsp;
-        }
-        else {
-            return 1;
-        }
-    }
-    printf("Parse error: statement sequence\n");
-    return 0;
-}
-
-int parse_main(token_liststream **TLSP) {
-    token_liststream *tlsp = *TLSP;
-
-    /* ‘main’ ‘{’ ⟨statement sequence⟩ ‘}’ */
-    if(expect_str(&tlsp, u"main", TOK_ID)
-    && expect_ch(&tlsp, L'{', TOK_LPAR)
-    && parse_statement_seq(&tlsp)
-    && expect_ch(&tlsp, L'}', TOK_RPAR)
-    ) {
-        *TLSP = tlsp;
-        return 1;
-    }
-    printf("Parse error: malformed main program\n");
     return 0;
 }
 
 int parse_program(token_file *TF) {
-    /*char buf[1024];*/
     token_liststream *TLS = new_token_liststream(TF), *tls;
 
-    /*for (tls = TLS; tls; tls = get_next(tls)) {
-        token *tok = get_token(tls);
-        uchar *ustr;
-    if(!tok || is_none(tok)) break;
-        for(ustr = tok_ustr(tok); *ustr; ustr++) {
-            printf("%02X ", *ustr);
-        }
-        printf("%s (%s)\n", tok_type_str(tok), tok_str(buf, tok, 1023));
-    }
-
-    printf("================================================================="
-           "===============\n");*/
-
     tls = TLS;
-    if(parse_version(&tls) && parse_main(&tls)) {
+
+    /* should 1. parse version, 2. depending on version
+       choose parser */
+    if(parse_version(&tls) && parse_image(&tls)) {
         return 1;
     }
     printf("Parse error: malformed program\n");
