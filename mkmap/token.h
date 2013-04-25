@@ -79,9 +79,11 @@ int is_rpar(token *tok, uchar *op);                   /* or a right?         */
     /* RENAME THESE: tok_get_X */
 char *tok_type_str(token *tok);                       /* get a string from the type of the token */
 uchar *tok_ustr(token *tok);                          /*  */
-char *tok_str(char *buf, token *tok, int size);       /*  */
-char *tok_unit(char *buf, token *tok, int size);      /*  */
+char *tok_str(char *buf, token *tok, int size);      /*  */
+char *tok_unit(char *buf, token *tok, int size);     /*  */
 char *tok_base_name(token *tok);                      /*  */
+int tok_int(token *tok);                              /*  */
+double tok_real(token *tok);                          /*  */
 void tok_free(token *tok);                            /*  */
 
 char *type_str(token_type type);
