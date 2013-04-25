@@ -1,0 +1,24 @@
+(%mkm 1.0%)
+image {
+    name “Monoceros”;
+    size 500 500;
+    scale 1.4;
+    projection Lambert 106 0 10 20;
+image_data:
+    load labels ‘monoceros-labels.db’;
+init_drawing:
+    open file ‘monoceros2.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Mon”;
+    draw grid;
+    draw lines select “Mon Bdy”;
+    draw labels select “Mon”;
+real_objects:
+    draw stars;
+final:
+    draw debug_info;
+    draw footer;
+    close file;
+}

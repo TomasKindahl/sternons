@@ -37,7 +37,7 @@
 /*#include "progstat.h"*/
 /*#include "vmcode.h"*/
 
-/* LISPIAN TOKEN LISTSTREAM */                            
+/* LISPIAN TOKEN LISTSTREAM */
 /* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
 typedef struct _token_liststream_S {
     int is_file;
@@ -125,7 +125,6 @@ token_liststream *get_next(token_liststream *TS) {
 int expect(token_liststream **TLSP, token **tokfound, token_type type) {
     token_liststream *tlsp = *TLSP;
     token *tok = get_token(tlsp);
-    char buf[1024];
     if(is_type(tok, type)) {
         *tokfound = tok;
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
@@ -137,7 +136,6 @@ int expect(token_liststream **TLSP, token **tokfound, token_type type) {
 int expect_str(token_liststream **TLSP, uchar *op, token_type type) {
     token_liststream *tlsp = *TLSP;
     token *tok = get_token(tlsp);
-    char buf[1024];
     if(is_item(tok, op, type)) {
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
         return 1;
@@ -149,7 +147,6 @@ int expect_ch(token_liststream **TLSP, uchar op, token_type type) {
     token_liststream *tlsp = *TLSP;
     token *tok = get_token(tlsp);
     uchar opstr[2] = {0, 0};
-    char buf[1024];
     opstr[0] = op;
     if(is_item(tok, opstr, type)) {
         *TLSP = get_next(tlsp); /* advance token liststream pointer */
@@ -263,6 +260,169 @@ value* get_value(uchar *var_name, def *def_list) {
 
 /* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
 
+/* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
+
+FILE *output_file;
+
+char *new_ext(char *infname, char *new_ext) {
+    char *res, *pos;
+    int len = strlen(infname);
+    pos = strrchr(infname, '.');
+    if(pos) len = pos-infname;
+    res = ALLOCN(char, len+1+strlen(new_ext)+1);
+    strncpy(res, infname, len);
+    res[len] = '.';
+    strcpy(&res[len+1], new_ext);
+    return res;
+}
+
+/* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
+
+/* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
+
+#define VM_SETTINGS_LAYER        0x00
+#define VM_IMAGE_DATA_LAYER      0x01
+#define VM_INIT_DRAWING_LAYER    0x02
+#define VM_SUPPORT_DRAWING_LAYER 0x03
+#define VM_REAL_OBJECTS_LAYER    0x04
+#define VM_FINAL_LAYER           0x05
+
+typedef struct _strlis_S {
+    char *str;
+    struct _strlis_S *next;
+} strlis;
+
+strlis *new_strlis(char *str, strlis *next) {
+    strlis *res = ALLOC(strlis);
+    res->str = str;
+    res->next = next;
+    return res;
+}
+
+void dump_strlis(strlis *SL) {
+    if(!SL) return;
+    dump_strlis(SL->next);
+    fprintf(output_file, " %s", SL->str);
+}
+
+typedef struct _code_S {
+    char **cstr;
+    int cstr_sz, cstr_nx;
+    uchar **ustr;
+    int ustr_sz, ustr_nx;
+    strlis *vm[6];
+    int vm_current;
+} code;
+
+code *the_code;
+
+code *new_code(void) {
+    const int size = 16;
+    int ix;
+    code *res = ALLOC(code);
+    res->cstr = ALLOCN(char *, size); res->cstr_sz = size; res->cstr_nx = 0;
+    res->ustr = ALLOCN(uchar *, size); res->ustr_sz = size; res->ustr_nx = 0;
+    for(ix = 0; ix < 6; ix++)
+       res->vm[ix] = 0;
+    res->vm_current = VM_SETTINGS_LAYER;
+    return res;
+}
+
+int add_ustr(code *the_code, uchar *ustr) {
+    int ix = the_code->ustr_nx;
+    the_code->ustr[the_code->ustr_nx++] = ucsdup(ustr);
+    return ix;
+}
+
+int add_cstr(code *the_code, char *cstr) {
+    int ix = the_code->cstr_nx;
+    the_code->cstr[the_code->cstr_nx++] = strdup(cstr);
+    return ix;
+}
+
+void add_code_str(code *the_code, char *str) {
+    strlis *SL = the_code->vm[the_code->vm_current];
+    SL = new_strlis(strdup(str), SL);
+    the_code->vm[the_code->vm_current] = SL;
+}
+
+void add_code_num(code *the_code, int num) {
+    strlis *SL = the_code->vm[the_code->vm_current];
+    char buf[128];
+    sprintf(buf, "%X", num);
+    SL = new_strlis(strdup(buf), SL);
+    the_code->vm[the_code->vm_current] = SL;
+}
+
+void add_code_int(code *the_code, token *numtok) {
+    add_code_str(the_code, ":int");
+    add_code_num(the_code, tok_int(numtok));
+}
+
+typedef struct _int2_S {
+   int I1, I2;
+} int2;
+
+int2 to_int2(double D) {
+	union {
+		double D;
+		int2 L;
+	} res;
+	res.D = D;
+	return res.L;
+}
+
+void add_code_real(code *the_code, token *numtok) {
+    int2 L = to_int2(tok_real(numtok));
+    add_code_str(the_code, ":dbl");
+    add_code_num(the_code, L.I2);
+    add_code_num(the_code, L.I1);
+}
+
+void add_code_cstr_ix(code *the_code, int index) {
+    add_code_str(the_code, ":cstr");
+    add_code_num(the_code, index);
+}
+
+void add_code_ustr_ix(code *the_code, int index) {
+    add_code_str(the_code, ":ustr");
+    add_code_num(the_code, index);
+}
+
+void add_code_NL(code *the_code) {
+    strlis *SL = the_code->vm[the_code->vm_current];
+    char buf[] = "\n  ";
+    SL = new_strlis(strdup(buf), SL);
+    the_code->vm[the_code->vm_current] = SL;
+}
+
+void dump_code(code *the_code) {
+    char *label[] = {
+      "SETTINGS", "IMAGE_DATA", "INIT_DRAWING", 
+      "SUPPORT_DRAWING", "REAL_OBJECTS", "FINAL"
+    };
+    int ix, jx;
+    fprintf(output_file, "mbf1\n");
+    for(ix = 0; ix < the_code->cstr_nx; ix++) {
+        fprintf(output_file, ":CSTR");
+        for(jx = 0; the_code->cstr[ix][jx] != 0; jx++)
+            fprintf(output_file, " %02X", the_code->cstr[ix][jx]);
+        fprintf(output_file, " -\n");
+    }
+    for(ix = 0; ix < the_code->ustr_nx; ix++) {
+        fprintf(output_file, ":USTR");
+        for(jx = 0; the_code->ustr[ix][jx] != 0; jx++)
+            fprintf(output_file, " %02X", the_code->ustr[ix][jx]);
+        fprintf(output_file, " -\n");
+    }
+    for(ix = 0; ix < 6; ix++) {
+        fprintf(output_file, ":%s\n  ", label[ix]);
+        dump_strlis(the_code->vm[ix]);
+        fprintf(output_file, " -\n");
+    }
+}
+/* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
+
 int parse_version(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *dum;
@@ -275,57 +435,19 @@ int parse_version(token_liststream **TLSP) {
     return 0;
 }
 
-int parse_load_stmt_old(token_liststream **TLSP) {
-    token_liststream *tlsp = *TLSP;
-    token *dbname, *filename;
-
-    if(expect_str(&tlsp, u"load", TOK_ID)
-    && expect(&tlsp, &dbname, TOK_ID) /* the database name */
-    && expect_str(&tlsp, u"from", TOK_ID)
-    && expect(&tlsp, &filename, TOK_CSTR)) /* the file name */
-    {
-        *TLSP = tlsp;
-        return 1;
-    }
-    printf("Parse error: malformed load statement\n");
-    return 0;
-}
-
-int parse_set_stmt(token_liststream **TLSP) {
-    token_liststream *tlsp = *TLSP;
-    token *varname, *ustring;
-
-    /* ⟨set statement⟩ ::= ‘set’ ⟨ID⟩ ‘=’ ⟨USTR⟩ */
-    if(expect_str(&tlsp, u"set", TOK_ID)
-    && expect(&tlsp, &varname, TOK_ID) /* the variable name */
-    && expect_ch(&tlsp, L'=', TOK_OP)
-    && expect(&tlsp, &ustring, TOK_USTR)) /* a string value */
-    {
-        char buf1[100], buf2[100];
-        printf("VM_USTR u\"%s\" VM_IMG_SET_%s\n",
-               ucstombs(buf1,tok_ustr(ustring),100),
-               ucstombs(buf2,tok_ustr(varname),100));
-        *TLSP = tlsp;
-        return 1;
-    }
-    printf("Parse error: malformed set statement\n");
-    return 0;
-
-    /** TO BECOME: ⟨set statement⟩ ::= ‘set’ ⟨ID⟩ ‘=’ ⟨expression⟩ */
-}
-
 int parse_name_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
-    token *ustring;
+    token *name;
+    int ix;
 
     /* ⟨name statement⟩ ::= ‘name’ ⟨USTR⟩ */
     if(expect_str(&tlsp, u"name", TOK_ID)
-    && expect(&tlsp, &ustring, TOK_USTR)) /* a string value */
+    && expect(&tlsp, &name, TOK_USTR)) /* a string value */
     {
-        /*char buf1[100], buf2[100];
-        printf("VM_USTR u\"%s\" VM_IMG_SET_%s\n",
-               ucstombs(buf1,tok_ustr(ustring),100),
-               ucstombs(buf2,tok_ustr(varname),100));*/
+        ix = add_ustr(the_code, tok_ustr(name));
+        add_code_ustr_ix(the_code, ix);
+        add_code_str(the_code, ":ImgSetName");
+        add_code_NL(the_code);
         *TLSP = tlsp;
         return 1;
     }
@@ -341,6 +463,10 @@ int parse_size_stmt(token_liststream **TLSP) {
     && expect(&tlsp, &num1, TOK_NUM)  /* a string value */
     && expect(&tlsp, &num2, TOK_NUM)) /* a string value */
     {
+        add_code_int(the_code, num1);
+        add_code_int(the_code, num2);
+        add_code_str(the_code, ":ImgSetSize");
+        add_code_NL(the_code);
         *TLSP = tlsp;
         return 1;
     }
@@ -355,6 +481,9 @@ int parse_scale_stmt(token_liststream **TLSP) {
     if(expect_str(&tlsp, u"scale", TOK_ID)
     && expect(&tlsp, &num, TOK_NUM)) /* a string value */
     {
+        add_code_real(the_code, num);
+        add_code_str(the_code, ":ImgSetScale");
+        add_code_NL(the_code);
         *TLSP = tlsp;
         return 1;
     }
@@ -373,6 +502,12 @@ int parse_projection_stmt(token_liststream **TLSP) {
     && expect(&tlsp, &num3, TOK_NUM)  /* a string value */
     && expect(&tlsp, &num4, TOK_NUM)) /* a string value */
     {
+        add_code_real(the_code, num1); add_code_NL(the_code);
+        add_code_real(the_code, num2); add_code_NL(the_code);
+        add_code_real(the_code, num3); add_code_NL(the_code);
+        add_code_real(the_code, num4); 
+        add_code_str(the_code, ":ImgSetLambert");
+        add_code_NL(the_code);
         *TLSP = tlsp;
         return 1;
     }
@@ -387,30 +522,35 @@ int parse_label_stmt(token_liststream **TLSP) {
     if(expect_str(&tlsp, u"image_data", TOK_ID)
     && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
     {
+        the_code->vm_current = VM_IMAGE_DATA_LAYER;
         *TLSP = tlsp;
         return 1;
     }
     else if(expect_str(&tlsp, u"init_drawing", TOK_ID)
     && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
     {
+        the_code->vm_current = VM_INIT_DRAWING_LAYER;
         *TLSP = tlsp;
         return 1;
     }
     else if(expect_str(&tlsp, u"support_drawing", TOK_ID)
     && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
     {
+        the_code->vm_current = VM_SUPPORT_DRAWING_LAYER;
         *TLSP = tlsp;
         return 1;
     }
     else if(expect_str(&tlsp, u"real_objects", TOK_ID)
     && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
     {
+        the_code->vm_current = VM_REAL_OBJECTS_LAYER;
         *TLSP = tlsp;
         return 1;
     }
     else if(expect_str(&tlsp, u"final", TOK_ID)
     && expect_ch(&tlsp, L':', TOK_OP)) /* a string value */
     {
+        the_code->vm_current = VM_FINAL_LAYER;
         *TLSP = tlsp;
         return 1;
     }
@@ -425,11 +565,24 @@ int OK(char *trc) {
 int parse_load_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *dbname, *filename;
+    int ix; uchar *db;
 
-    if(expect_str(&tlsp, u"load", TOK_ID) && OK("load")
-    && expect(&tlsp, &dbname, TOK_ID) && OK("db") /* the database name */
-    && expect(&tlsp, &filename, TOK_CSTR) && OK("fnam") ) /* the file name */
+    if(expect_str(&tlsp, u"load", TOK_ID)
+    && expect(&tlsp, &dbname, TOK_ID)      /* the database name */
+    && expect(&tlsp, &filename, TOK_CSTR)) /* the file name */
     {
+        ix = add_cstr(the_code, filename->V.cstr);
+        add_code_cstr_ix(the_code, ix);
+        db = tok_ustr(dbname);
+        if(0 == ucscmp(db, u"bounds"))
+            add_code_str(the_code, ":LoadBounds");
+        else if(0 == ucscmp(db, u"labels"))
+            add_code_str(the_code, ":LoadLabels");
+        else if(0 == ucscmp(db, u"lines"))
+            add_code_str(the_code, ":LoadLines");
+        else if(0 == ucscmp(db, u"stars"))
+            add_code_str(the_code, ":LoadStars");
+        add_code_NL(the_code);
         *TLSP = tlsp;
         return 1;
     }
@@ -439,11 +592,18 @@ int parse_load_stmt(token_liststream **TLSP) {
 int parse_open_file_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *filename;
+    int ix;
+    char *fname, buf[1024];
 
     if(expect_str(&tlsp, u"open", TOK_ID)
     && expect_str(&tlsp, u"file", TOK_ID)   /* the database name */
     && expect(&tlsp, &filename, TOK_CSTR))  /* the file name */
     {
+        ix = add_cstr(the_code, filename->V.cstr);
+        add_code_cstr_ix(the_code, ix);
+        fname = tok_str(buf, filename, 1024);
+        add_code_str(the_code, ":OpenFile");
+        add_code_NL(the_code);
         *TLSP = tlsp;
         return 1;
     }
@@ -453,18 +613,48 @@ int parse_open_file_stmt(token_liststream **TLSP) {
 int parse_draw_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *dbname, *groupname;
+    int ix; uchar *db, *group;
 
     if(expect_str(&tlsp, u"draw", TOK_ID)
     && expect(&tlsp, &dbname, TOK_ID))  /* the file name */
     {
         *TLSP = tlsp;
-        /* select subclause is optional: */
-        if(expect_str(&tlsp, u"select", TOK_ID)
-        && expect(&tlsp, &groupname, TOK_USTR))
-        {
-            *TLSP = tlsp;
-            return 1;
+        db = tok_ustr(dbname);
+        if(0 == ucscmp(db, u"background"))
+            add_code_str(the_code, ":DrawBackground");
+        else if(0 == ucscmp(db, u"bounds"))
+            add_code_str(the_code, ":DrawBounds");
+        else if(0 == ucscmp(db, u"debug_info"))
+            add_code_str(the_code, ":DrawDebugInfo");
+        else if(0 == ucscmp(db, u"footer"))
+            add_code_str(the_code, ":DrawFoot");
+        else if(0 == ucscmp(db, u"grid"))
+            add_code_str(the_code, ":DrawGrid");
+        else if(0 == ucscmp(db, u"head"))
+            add_code_str(the_code, ":DrawHead");
+        else if(0 == ucscmp(db, u"stars"))
+            add_code_str(the_code, ":DrawStars");
+        else {
+            /* select subclause is optional: */
+            if(expect_str(&tlsp, u"select", TOK_ID)
+            && expect(&tlsp, &groupname, TOK_USTR))
+            {
+                ix = add_ustr(the_code, tok_ustr(groupname));
+                group = tok_ustr(groupname);
+                add_code_ustr_ix(the_code, ix);
+                if(0 == ucscmp(db, u"delportian"))
+                    add_code_str(the_code, ":DrawDelportianArea");
+                else if(0 == ucscmp(db, u"labels"))
+                    add_code_str(the_code, ":DrawLabels");
+                else if(0 == ucscmp(db, u"lines"))
+                    add_code_str(the_code, ":DrawLines");
+                add_code_NL(the_code);
+                *TLSP = tlsp;
+                return 1;
+            }
+            return 0;
         }
+        add_code_NL(the_code);
         return 1;
     }
     return 0;
@@ -485,6 +675,9 @@ int parse_close_stmt(token_liststream **TLSP) {
 int parse_image_stmt_seq(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     int label;
+
+    add_code_str(the_code, ":NewImage");
+    add_code_NL(the_code);
 
     /* ( ⟨set statement⟩ ) [ ‘;’ ⟨image sequence⟩ ] */
     /** add more image statement types!! */
@@ -598,13 +791,17 @@ int main (int argc, char **argv) {
         fprintf(stderr, "ERROR: file not found %s\n", argv[1]);
         exit(-2);
     }
+    the_code = new_code();
+    output_file = fopen(new_ext(argv[1],"mbf"), "wt");
+    /*printf("INFO: output file '%s'\n", new_ext(argv[1],"mbf"));*/
 
     if (!parse_program(TF))
         printf("PARSE FAILED\n");
     else
-        dump_program();
+        dump_code(the_code);
 
     tokfclose(TF);
+    fclose(output_file);
 
     return 0;
 }

@@ -394,6 +394,20 @@ char *tok_base_name(token *tok) {
     return 0;
 }
 
+int tok_int(token *tok) {
+    char buf[1024];
+    /** INTE BRA KOD, LÄGG IN TESTER BASERADE PÅ token_type/base_mode */
+    tok_str(buf, tok, 1024);
+    return atoi(buf);
+}
+
+double tok_real(token *tok) {
+    char buf[1024];
+    /** INTE BRA KOD, LÄGG IN TESTER BASERADE PÅ token_type/base_mode */
+    tok_str(buf, tok, 1024);
+    return atof(buf);
+}
+
 void tok_free(token *tok) {
     if (tok->type == TOK_CSTR)
         free(tok->V.cstr);

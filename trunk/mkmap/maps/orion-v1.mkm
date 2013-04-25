@@ -7,7 +7,7 @@ image {
 image_data:
     load labels ‘orion-labels.db’;
 init_drawing:
-    open file ‘orion.svg’;
+    open file ‘orion4.svg’;
     draw head; draw background;
 support_drawing:
     draw bounds;
