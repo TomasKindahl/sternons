@@ -372,8 +372,12 @@ int2 to_int2(double D) {
 	return res.L;
 }
 
-void add_code_real(code *the_code, token *numtok) {
-    int2 L = to_int2(tok_real(numtok));
+void add_code_real(code *the_code, int sign, token *numtok) {
+    int2 L;
+    if(sign == -1)
+        L = to_int2(-tok_real(numtok));
+    else
+        L = to_int2(tok_real(numtok));
     add_code_str(the_code, ":dbl");
     add_code_num(the_code, L.I2);
     add_code_num(the_code, L.I1);
@@ -427,6 +431,7 @@ int parse_version(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *dum;
 
+    /** TODO: use version number for selecting correct parser */
     if(expect(&tlsp, &dum, TOK_VERSION)) {
         *TLSP = tlsp;
         return 1;
@@ -473,15 +478,29 @@ int parse_size_stmt(token_liststream **TLSP) {
     return 0;
 }
 
+int parse_constexpr(token_liststream **TLSP, int *numsign, token **num) {
+    token_liststream *tlsp = *TLSP;
+    *numsign = 0;
+    if(expect_str(&tlsp, u"-", TOK_OP))
+        *numsign = -1;
+    else if(expect_str(&tlsp, u"-", TOK_OP))
+        *numsign = +1;
+    if(expect(&tlsp, num, TOK_NUM)) {
+        *TLSP = tlsp;
+        return 1;
+    }
+    return 0;
+}
+
 int parse_scale_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
-    token *num;
+    token *num; int numsign;
 
     /* ⟨scale statement⟩ ::= ‘scale’ ⟨NUM⟩ */
     if(expect_str(&tlsp, u"scale", TOK_ID)
-    && expect(&tlsp, &num, TOK_NUM)) /* a string value */
+    && parse_constexpr(&tlsp, &numsign, &num)) /* a string value */
     {
-        add_code_real(the_code, num);
+        add_code_real(the_code, numsign, num);
         add_code_str(the_code, ":ImgSetScale");
         add_code_NL(the_code);
         *TLSP = tlsp;
@@ -493,19 +512,20 @@ int parse_scale_stmt(token_liststream **TLSP) {
 int parse_projection_stmt(token_liststream **TLSP) {
     token_liststream *tlsp = *TLSP;
     token *num1, *num2, *num3, *num4;
+    int sign1, sign2, sign3, sign4;
 
     /* ⟨size statement⟩ ::= ‘size’ ⟨NUM⟩ ⟨NUM⟩ */
     if(expect_str(&tlsp, u"projection", TOK_ID)
     && expect_str(&tlsp, u"Lambert", TOK_ID) /* QnD coding, for now */
-    && expect(&tlsp, &num1, TOK_NUM)  /* a string value */
-    && expect(&tlsp, &num2, TOK_NUM)  /* a string value */
-    && expect(&tlsp, &num3, TOK_NUM)  /* a string value */
-    && expect(&tlsp, &num4, TOK_NUM)) /* a string value */
+    && parse_constexpr(&tlsp, &sign1, &num1)  /* a string value */
+    && parse_constexpr(&tlsp, &sign2, &num2)  /* a string value */
+    && parse_constexpr(&tlsp, &sign3, &num3)  /* a string value */
+    && parse_constexpr(&tlsp, &sign4, &num4)) /* a string value */
     {
-        add_code_real(the_code, num1); add_code_NL(the_code);
-        add_code_real(the_code, num2); add_code_NL(the_code);
-        add_code_real(the_code, num3); add_code_NL(the_code);
-        add_code_real(the_code, num4); 
+        add_code_real(the_code, sign1, num1); add_code_NL(the_code);
+        add_code_real(the_code, sign2, num2); add_code_NL(the_code);
+        add_code_real(the_code, sign3, num3); add_code_NL(the_code);
+        add_code_real(the_code, sign4, num4); 
         add_code_str(the_code, ":ImgSetLambert");
         add_code_NL(the_code);
         *TLSP = tlsp;
