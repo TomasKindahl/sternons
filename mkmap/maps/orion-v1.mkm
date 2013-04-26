@@ -2,12 +2,12 @@
 image {
     name “Orion”;
     size 500 500;
-    scale 1.4;
-    projection Lambert 82.5 5 15 25;
+    scale 1.5;
+    projection Lambert 82.5 5 -5 15;
 image_data:
     load labels ‘orion-labels.db’;
 init_drawing:
-    open file ‘orion4.svg’;
+    open file ‘orion.svg’;
     draw head; draw background;
 support_drawing:
     draw bounds;
@@ -20,7 +20,7 @@ support_drawing:
 real_objects:
     draw stars;
 final:
-    draw debug_info;
+#    draw debug_info;
     draw footer;
     close file;
 }
