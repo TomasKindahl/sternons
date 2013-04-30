@@ -1,0 +1,30 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Andromeda”;
+    size 500 500;
+    scale 1.2;
+    projection Lambert 12 42 40 50;
+image_data:
+    load labels ‘db/andromeda-labels.db’;
+init_drawing:
+    open file ‘images/andromeda.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “And”;
+    draw grid;
+    draw lines select “And IAU1”;
+    draw lines select “And IAU2”;
+#    draw lines select “And Bdy”;
+#    draw lines select “And Arm”;
+#    draw lines select “And Chn”;
+#    draw lines select “HonFred”;
+    draw labels select “And”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

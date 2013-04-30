@@ -1,22 +1,4 @@
-########################################################################
-#  Copyright (C) 2010 Tomas Kindahl                                    #
-########################################################################
-#  This file is part of mkmap                                          #
-#                                                                      #
-#  mkmap is free software: you can redistribute it and/or modify it    #
-#  under the terms of the GNU Lesser General Public License as         #
-#  published by the Free Software Foundation, either version 3 of the  #
-#  License, or (at your option) any later version.                     #
-#                                                                      #
-#  mkmap is distributed in the hope that it will be useful,            #
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of      #
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       #
-#  GNU Lesser General Public License for more details.                 #
-#                                                                      #
-#  You should have received a copy of the GNU Lesser General Public    #
-#  License along with mkmap. If not, see                               #
-#  <http://www.gnu.org/licenses/>.                                     #
-########################################################################
+# Public Domain
 
 # NOTE: This file is kept just as a reminder of a rejected mkmap program
 #       concept – the following code is CODE in the programmer sense,
@@ -25,7 +7,7 @@
 
 orion() {
     ## procedure for the heavenly hunter 
-    border += load “ori_b.db”;
+    border += load “db/ori_b.db”;
     labels += [pos: [x: middle, y: bottom], 
                string: “Orion”,
                justify: middle];
@@ -34,7 +16,7 @@ orion() {
 }
 monoceros() {
     ## procedure for the heavenly unicorn
-    border += load “mon_b.db”;
+    border += load “db/mon_b.db”;
     labels += [pos: [x: middle, y: bottom], 
                string: “Monoceros”,
                justify: middle];
@@ -67,18 +49,18 @@ main() {
 
     background += infinite [color: [r: x00, g: x00, b: x40]];
     grid       += grid [α: 1ʰ, δ: 10°];
-    stars      += load “stars.db”;
-    labels     += align stars with “stardesg.db”;
-    nebulae    += load “nebulae.db”;
-    labels     += align nebulae with “nebdesg.db”;
+    stars      += load “db/stars.db”;
+    labels     += align stars with “db/stardesg.db”;
+    nebulae    += load “db/nebulae.db”;
+    labels     += align nebulae with “db/nebdesg.db”;
     { # a stacklike block for loading local data
         orion; # run procedure ‘orion’
-        out “orion.svg”;
+        out “images/orion.svg”;
       # dropped here.
     }
     {
         monoceros; # run procedure ‘monoceros’
-        out “monoceros.svg”;
+        out “images/monoceros.svg”;
     }
 }
 

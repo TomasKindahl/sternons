@@ -1,13 +1,14 @@
 (%mkm 1.0%)
+# Public Domain
 image {
     name “Orion”;
     size 500 500;
     scale 1.5;
     projection Lambert 82.5 5 -5 15;
 image_data:
-    load labels ‘orion-labels.db’;
+    load labels ‘db/orion-labels.db’;
 init_drawing:
-    open file ‘orion.svg’;
+    open file ‘images/orion.svg’;
     draw head; draw background;
 support_drawing:
     draw bounds;

@@ -1,5 +1,5 @@
 ########################################################################
-#  Copyright (C) 2010-2012 Tomas Kindahl                               #
+#  Copyright (C) 2010-2013 Tomas Kindahl                               #
 ########################################################################
 #  This file is part of mkmap                                          #
 #                                                                      #
@@ -21,7 +21,7 @@
 
 CC 		= gcc -g -Wall --pedantic-error
 UCCVT	= ./ucliterals
-MAPS 	= star.db
+MAPS 	= db/star.db
 STROBJS	= token.o ucstr.o uctype.o usio.o
 OBJS 	= $(STROBJS) pointobj.o allstrings.o mathx.o projection.o \
 		  valstack.o image.o line.o polygon.o label.o progstat.o \
@@ -33,11 +33,13 @@ WOBJS 	= $(SWOBJS) pointobj.obj allstrings.obj mathx.obj projection.obj \
 		  fields.obj ps_db.obj ps_draw.obj vmcode.obj
 WOBJSP 	= $(WOBJS) parse.obj
 
-all: img
+all: mkmap compile-mkm allimages
 
-img: mkmap maps/orion.mkm $(MAPS)
+allimages:
+	./allimages.sh
+
+img: mkmap $(MAPS)
 	./$<
-#	./$< maps/orion.mkm
 
 mbf: mkmap maps/ori2.mbf
 	./$< maps/ori2.mbf
@@ -62,15 +64,6 @@ compile-mkm: compile-mkm.c $(OBJS)
 
 .c.o:
 	$(CC) -c $<
-
-orion.svg: mkmap maps/orion.mkm $(MAPS)
-	./$< maps/orion.mkm
-
-monoceros.svg: mkmap maps/monoceros.mkm $(MAPS)
-	./$< maps/monoceros.mkm
-
-orion.png: orion.svg 
-	inkscape --export-png=$@ $<
 
 clean:
 	rm -f *.o

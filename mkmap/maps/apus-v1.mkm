@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Apus”;
+    size 500 500;
+    scale 1.9;
+    projection Lambert 240 -75 -85 -65;
+image_data:
+    load labels ‘db/apus-labels.db’;
+init_drawing:
+    open file ‘images/apus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Aps”;
+    draw grid;
+    draw lines select “Aps”;
+    draw labels select “Aps”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

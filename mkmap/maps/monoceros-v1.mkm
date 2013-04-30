@@ -1,13 +1,14 @@
 (%mkm 1.0%)
+#Public Domain
 image {
     name “Monoceros”;
     size 500 500;
     scale 1.4;
     projection Lambert 106 0 10 20;
 image_data:
-    load labels ‘monoceros-labels.db’;
+    load labels ‘db/monoceros-labels.db’;
 init_drawing:
-    open file ‘monoceros2.svg’;
+    open file ‘images/monoceros.svg’;
     draw head; draw background;
 support_drawing:
     draw bounds;
@@ -18,7 +19,7 @@ support_drawing:
 real_objects:
     draw stars;
 final:
-    draw debug_info;
+#    draw debug_info;
     draw footer;
     close file;
 }

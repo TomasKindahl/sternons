@@ -1,8 +1,9 @@
+(%mkm 0.0%)
+
 (* THIS FILE COUNTERPARTS mkmap.uc main() AS OF 2011-12-28 *)
 (* retained for ideas, only *)
 
-(%mkm 0.0%)
-
+#Public Domain
 main {
 	declare star = {RA, DE, V, HIP}, 
 	declare line = {boldness, asterism, RA₁, DE₁, RA₂, DE₂},
@@ -14,9 +15,9 @@ main {
 		set RA₂ = HIP₂.RA, set DE₂ = HIP₂.DE
 	}
 	declare bound = line;
-	load star from "star.db" {HIP, RA, DE, V, ...},
-	load line ← hline from "line.db",
-	load bound from "bounds.db",
+	load star from "db/star.db" {HIP, RA, DE, V, ...},
+	load line ← hline from "db/line.db",
+	load bound from "db/bounds.db",
 
 	image orion = {
 		set name = "Orion",
@@ -25,7 +26,7 @@ main {
 		set projection = {Lambert, 82.5, 5, 15, 25},
 
 	  initial:
-		load labels from "orion-labels.db",
+		load labels from "db/orion-labels.db",
 	  init_drawing:
 		draw header,
 		draw background,
@@ -44,7 +45,7 @@ main {
 		draw footer
 	}
 
-	draw orion to "orion.svg",
+	draw orion to "images/orion.svg",
 
 	image monoceros = {
 		set name = "Monoceros",
@@ -53,7 +54,7 @@ main {
 		set projection = {Lambert, 106, 0, 10, 20},
 
 	  initial:
-		load labels from "monoceros-labels.db",
+		load labels from "db/monoceros-labels.db",
 	  init_drawing:
 		draw header,
 		draw background,
@@ -70,6 +71,6 @@ main {
 		draw footer
 	}
 
-	draw monoceros to "monoceros.svg"
+	draw monoceros to "images/monoceros.svg"
 }
 
