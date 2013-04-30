@@ -1,6 +1,14 @@
-All files in the directory of this LICENSE file are covered by the GNU General
-Public License, except the files whose file extensions are ".db" (for database).
-The database files are public domain and not covered by any license.
+In short I peruse GNU GPL3 for program code, but data that I use to generate star
+maps is in Public Domain, as well as the generated star maps.
 
-The license conditions of GNU General Public License can be found in the
-accompanying file COPYING.
+All files in the directory of this LICENSE file are covered by the GNU General
+Public License version 3, except the database files in the subdirectory db/, the
+map files in maps/ and the image files in images/. All files in these three
+subdirectories are Public Domain and not covered by any license, because the
+data sets derives from free data available in http://vizier.u-strasbg.fr/.
+Because my intention is that the SVG:s shall be changed without any restriction
+whatsoever, it is suitable that also the map files are Public Domain.
+
+My code files adapt to GNU GPL3 in order to optimize the ease of integration of
+other OpenSource code. The license conditions of GNU General Public License
+version 3 can be found in the accompanying file COPYING.

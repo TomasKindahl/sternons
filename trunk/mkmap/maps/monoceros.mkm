@@ -1,25 +1,5 @@
-########################################################################
-#  Copyright (C) 2010 Tomas Kindahl                                    #
-########################################################################
-#  This file is part of mkmap                                          #
-#                                                                      #
-#  mkmap is free software: you can redistribute it and/or modify it    #
-#  under the terms of the GNU Lesser General Public License as         #
-#  published by the Free Software Foundation, either version 3 of the  #
-#  License, or (at your option) any later version.                     #
-#                                                                      #
-#  mkmap is distributed in the hope that it will be useful,            #
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of      #
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       #
-#  GNU Lesser General Public License for more details.                 #
-#                                                                      #
-#  You should have received a copy of the GNU Lesser General Public    #
-#  License along with mkmap. If not, see                               #
-#  <http://www.gnu.org/licenses/>.                                     #
-########################################################################
-
 (%mkm 2.0%)
-
+#Public Domain
 main {
     load sky;                            # load data from sky.mkm: stars, nebulae, etc.
 
@@ -33,5 +13,5 @@ main {
         projection.δ = 10°;              # centered at 10 degrees north
         projection.Δδ = 10°;             # with a width of plus-minus 10 degrees
     }
-    draw image “monoceros” onto ‘monoceros.svg’;
+    draw image “monoceros” onto ‘images/monoceros.svg’;
 }

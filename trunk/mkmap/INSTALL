@@ -1,65 +1,282 @@
-Installation instructions
-=========================
 
-(This file is currently stupid. GNU GPL v3 requires me to make installation
-instructions, and even though the following information is defective and
-incomplete, a programmer might actually save half an hour from reading it.
-Nominally now I fulfill the v3 installation instruction's requirement, although
-praxis show that all instructions are deficient outside of a clearly declared
-context, and by defining a context restrictive enough (f.ex. “the reader ought
-to be a mindreader and guess my intentions”) the installation instructions are
-implicitly provided in the Makefile).
+
+Welcome to the sternons project installation instructions file. I have currently
+no archive file for downloads - I think it might be meaningless before verifying
+the functionality on both Linux and Windows.
+
+The project
+===========
+
+Sternons, or rather 𐍃𐍄𐌴𐍂𐌽𐍉𐌽𐍃, is Gothic for "stars". I was a fan of the
+Gothic language till I realized that learning it won't give me access to a vast
+literature as f.ex. learning Chinese, Latin or Arabic would give. While I in a
+usual perplexed state searched for a suitable name for a project of
+indiscriminate tools with any vague astronomy connexion, I came up with no
+better name than 'sternons'. I could also recite Our Father on Gothic, but
+besides being too nerdy, it is off-topic, irrelevant and pretty weird. (It is
+beautiful though!)
+
+mkmap intro
+===========
+
+My current tools today are just:
+  1. mkmap
+  2. compile-mkm
+
+They are designed to make star maps in the following way:
+  1. first one designs a star map file, trims some parameters, and puts it into
+     any suitable place, preferrably with the conventional file extension .mkm
+  2. this star map file is then compiled with the command ./compile-mkm into
+     an .mbf file, it will automatically be generated in the same directory with
+     the almost same name as the mkm file, but with the extension changed to
+     .mbf, so that compiling
+        $ ./compile-mkm maps/andromeda-v1.mkm
+     gives a file maps/andromeda-v1.mbf -
+  3. this file contains a kind of virtual machine code, that the program ./mkmap
+     executes and translates into SVG code.
+
+My original intention was to let mkmap compile mkm files directly into SVG -
+this will probably be the situation in the not so far future, but currently I
+have finally achieved the goal to be able to generate SVG star maps from these
+mkm files, and currently I'm in a hurry to finally document the project
+according to my high software moral documentation standards.
 
 Requirements
 ============
 
-Linux:
-	* gcc
-	* gmake (GNU make)
-	* glibc (always installed when installing gcc)
-	* subversion
-Windows:
-	* cygwin
-	* gcc
-	* gmake (GNU make)
-	* subversion
+The requirements for various future tools to be added to sternons will vary
+according to tool – my intent is to experiment and test some few languages and
+some few other tools with 
 
-Download
-========
+Requirements for downloading, compiling and using mkmap/compile-mkm:
+
+   - A C-compiler, on Linux use your dist's central repository, on Windows 
+     Cygwin provides a gcc port that currently is the only compiler suite tested
+     for mkmap/compile-mkm
+         http://cygwin.com/
+     other compiler suites might work, but Cygwin provides the other needed
+     tools in the same manner as the Linux characteristic central repository
+
+   - Apache Subversion that can either be installed from your distribution's
+     Linux central repository, or be downloaded and installed from
+         http://subversion.apache.org/packages.html
+     However Cygwin also provides a ready-to-run port of subversion under the
+     devel branch
+
+   - GNU make. Other make programs may or may not work, but GNU make works for
+     sure. Wherever the above C-compilers can be found, GNU make is also
+     available. Perusing the Linux or Cygwin central repository GNU make must
+     explicitly be marked for installation.
+
+   - Bash. Comes by default in Linux or when Cygwin is installed. Not to worry.
+
+Currently Apache Subversion is needed to checkout the source. When downloads
+become available in the near future, Apache Subversion should become optional.
+
+Installation instructions
+=========================
+
+Getting the source
+------------------
+
+Subversion Checkout
+···················
 
 make a subversion checkout from sternons by:
 
 $ svn checkout http://sternons.googlecode.com/svn/trunk/ sternons-read-only
 
-In Windows all commands of course should occur in a cygwin shell window.
+In Windows all commands of course should preferably occur in a Cygwin shell
+window.
 
-mkmap
-=====
+mkmap and compile-mkm
+---------------------
 
-compile mkmap
---------------
+Doing it all in one call
+························
 
-Go to mkmap directory:
+On Linux or in Cygwin open a terminal window and go to the mkmap directory:
 
-$ cd sternons/svn/trunk/mkmap
+$ cd sternons-read-only/mkmap/
 
-In Windows make
+then call:
 
-$ make mkmap.exe
+$ make distclean
+$ make all
 
-then test images
+People who run dual Windows and Linux and copy files between the file systems
+should take care to make the distclean so that the compilation process is not
+messed up by trying to link together Linux object files with Windows executives,
+or the other way around. (Privately I'm perusing Linux as a host, VirtualBox as
+an emulator, and Windows 7 as a guest OS wherein to test the code).
 
-$ make winimg
+The layout of the sternons directory should now be:
 
-In Linux just
+O-- sternons-read-only/mkmap/ ;; the program files
+   |-- maps    ;; mkm and mbf map files
+   |-- db      ;; database files
+   `-- images  ;; generated images
 
-$ make
+And make all/winall will populate images with generated SVG star maps, which
+can be examined by any SVG capable image viewer (f.ex. Mozilla, eog, etc.), or
+opened with any SVG editor (f.ex. Inkscape).
 
-and test images
+Compiling compile-mkm
+·····················
 
-$ make img
+This you should do only if you're hacking your copy:
 
-cat
-===
+$ make compile-mkm
 
-See ../cat/INSTALL
+Compiling mkmap
+···············
+
+This you should do only if you're hacking your copy:
+
+$ make mkmap
+
+Hacking a map file
+··················
+
+Copy one of the files in maps/, f.ex.
+
+$ cd maps/
+$ cp antlia-v1.mkm vulpecula-v1.mkm
+$ gedit vulpecula-v1.mkm
+
+or your editor of choice, f.ex.
+
+$ jedit vulpecula-v1.mkm
+
+Don't use notepad or something such primitive, it is pretty likely that the
+mkm file is line terminated in the Unix way, which means that you will load just
+one long line instead of a structured program. Instead let your editor of choice
+be smart and load it in the Unix way by the proper option.
+
+When you rehack your mkm file copy you should first change the file generated
+by changing
+
+    open file ‘images/antlia.svg’;
+
+to 
+
+    open file ‘images/vulpecula.svg’;
+
+to not overwrite the already generated images/antlia.svg. Then change the line
+
+    draw delportian select “Ant”;
+
+to
+
+    draw delportian select “Vul”;
+
+To select the proper Delporte constellation border to be that of Vulpecula (with
+IAU abbreviation “Vul”). Also comment out
+
+    load labels ‘db/antlia-labels.db’;
+
+by inserting a ‘#’ before it, such as:
+
+#    load labels ‘db/antlia-labels.db’;
+
+Also comment out the following line. The mkmap parser *might* crash, if the load
+labels statement is missing:
+
+#    draw labels select “Ant”;
+
+Thereafter concentrate on the line:
+
+    projection Lambert 153 -35 -40 -30;
+
+in order to get the map point in the right direction. The number 153 is here
+representing the right ascension 153/15 = 10.2h given in degrees, currently
+hours/minutes/seconds representation not yet implemented. In order to get the
+right ascension of Vulpecula, change it to 20h12m hours giving
+
+    (20+12/60)*15 = 303.
+
+Then we change the declination of -35 to +25, the following numbers are
+declinations of equidistant declinations that can be set somewhat arbitrarily, a
+good rule for normal sized constellations would be 10 degrees below and 10
+degrees above, that is +15 and +35. The so changed projection line should so
+become:
+
+    projection Lambert 303 25 15 35;
+
+Now in order to generate the map, we peruse the shell script mkconst.sh,
+that currently calls compile-mkm, then mkmap with the proper arguments. The
+shell script is called so:
+
+$ ./mkconst.sh vulpecula
+
+And the new file images/vulpecula.svg is created. It can be viewed in an SVG
+capable viewer (f.ex. eog) or in any modern web browser, f.ex. Mozilla Firefox,
+where we now get a nice view upon Vulpecula where the constellation borders are
+drawn. However, there are no constellation lines.
+
+Adding constellation lines
+··························
+
+In order to add lines for Vulpecula, we change the mkm statement
+
+    draw lines select “Ant1”;
+
+to
+
+    draw lines select “Vul1”;
+
+Or chose any line category name of your choice. Then open the line database
+db/lines.db and add a line from star HIP 94703 to HIP 95771 through the line
+
+2|Vul1|94703|95771
+
+If you don't know the HIP numbers of the stars between which you wish to draw a
+line, peruse the web browser to view the SVG file. When you hover the mouse over
+a certain star, a small label “HIP /number/” will appear because the title tag
+in SVG is set to identify the Hipparcos star designation. The line
+
+2|Vul1|94703|95771
+
+says that a weak line (2) should be drawn from HIP 94703 to HIP 95771, if the
+lines of group “Vul1” are drawn. A strong line has number 1. Now continue
+drawing lines of your liking.
+
+Adding star labels
+··················
+
+In order to add star labels to the stars in Vulpecula, we need a database file
+db/vulpecula-labels.db, creating it by copying another file, or simply by
+
+$ touch db/vulpecula-labels.db
+
+First we need to insert a labels loading statement in maps/vulpecula-v1.mkm:
+
+    load labels ‘db/vulpecula-labels.db’;
+
+Then we need to uncomment the line drawing labels:
+
+    draw labels select “Vul”;
+
+Currently the ‘select “Vul”’ does nothing, but don't remove it! The parser
+expects it to be there – mkmap is just alpha code, so behaviors are expected to
+be stingy! Next we add a label for the star α to the file
+db/vulpecula-labels.db, so we add the line
+
+95771|α|1.0|280.0|2
+
+Meaning that HIP 95771 should have a label “α” at the measureless distance 1.0
+(just try different distances, and see what distance is best), in the direction
+280.0 degrees (which means down) the text origo counted from the center (2) in
+the string “α”. Left is around 0 degrees, up is around 90, right 180 and down
+270. The text origo is counted from the left of the string 1, the center 2, or
+the right 3.
+
+Now make a final mkconst.sh so that we can examine the final result:
+
+$ ./mkconst.sh vulpecula
+
+And don't forget to reload the SVG file that is viewed in your web browser.
+
+----
+
+that's it for now / Tomas Kindahl

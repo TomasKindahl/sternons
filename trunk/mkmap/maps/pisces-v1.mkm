@@ -1,0 +1,32 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Pisces”;
+    size 500 500;
+    scale 1.1;
+    projection Lambert 7 13 3 23;
+image_data:
+    load labels ‘db/pisces-labels.db’;
+#    load labels ‘db/andromeda-labels.db’;
+init_drawing:
+    open file ‘images/pisces.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Psc”;
+    draw grid;
+#    draw lines select “And Bdy”;
+#    draw lines select “And Arm”;
+    draw lines select “Psc Occ”;
+    draw lines select “Psc Bor”;
+    draw lines select “Psc Lin”;
+    draw lines select “Tes Smy”;
+#    draw labels select “And”;
+    draw labels select “Psc”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

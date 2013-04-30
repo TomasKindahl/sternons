@@ -1,9 +1,9 @@
 (%mkm 2.0%)
-
+#Public Domain
 main {
-    load star from 'star.db';
-    load line from 'lines.db';
-    load bound from 'bounds.db';
+    load star from 'db/star.db';
+    load line from 'db/lines.db';
+    load bound from 'db/bounds.db';
 
     image orion is constellation_image {
         set name = "Orion";
@@ -12,7 +12,7 @@ main {
         set projection = [Lambert, 82.5, 5, 15, 25];
 
       image_data:
-        load labels from 'orion-labels.db';
+        load labels from 'db/orion-labels.db';
       init_drawing:
         draw header;
         draw background;
@@ -30,7 +30,7 @@ main {
         draw debug_info;
         draw footer
     }
-    draw image orion to "orion.svg";
+    draw image orion to "images/orion.svg";
 
     image monoceros is constellation_image {
         set name = "Monoceros";
@@ -39,7 +39,7 @@ main {
         set projection = [Lambert, 106, 0, 10, 20];
 
       image_setup:
-        load labels from 'monoceros-labels.db';
+        load labels from 'db/monoceros-labels.db';
       init_drawing:
         draw header;
         draw background;
@@ -55,6 +55,6 @@ main {
         draw debug_info;
         draw footer
     }
-    draw image monoceros to "monoceros.svg";
+    draw image monoceros to "images/monoceros.svg";
 }
 

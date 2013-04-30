@@ -1,5 +1,5 @@
 /************************************************************************
- *  Copyright (C) 2010-2012 Tomas Kindahl                               *
+ *  Copyright (C) 2010-2013 Tomas Kindahl                               *
  ************************************************************************
  *  This file is part of mkmap                                          *
  *                                                                      *
@@ -23,7 +23,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>           /* For time stamping the imgs in debug mode */
-#include <values.h>
 
 #define NO_DEBUG 0
 #define DEBUG 1
@@ -232,13 +231,13 @@ int main(int argc, char **argv) {
 
         /** ALL-SKY DATABASES LOAD **/
         /*load_stars(pstat, "star.db");*/
-        PS_push_cstr(pstat, "star.db");
+        PS_push_cstr(pstat, "db/star.db");
         VM_exec(VM_LOAD_STARS, pstat, -1);
         /*load_star_lines(pstat, "lines.db"); */ /* dependent on load_stars */
-        PS_push_cstr(pstat, "lines.db");
+        PS_push_cstr(pstat, "db/lines.db");
         VM_exec(VM_LOAD_STAR_LINES, pstat, -1);
         /*load_constellation_bounds(pstat, "bounds.db");*/ /* dependent on nothing */
-        PS_push_cstr(pstat, "bounds.db");
+        PS_push_cstr(pstat, "db/bounds.db");
         VM_exec(VM_LOAD_CONST_BOUNDS, pstat, -1);
 
         for (aix = 1; aix < argc; aix++) {
@@ -278,13 +277,13 @@ int main(int argc, char **argv) {
 
         /** ALL-SKY DATABASES LOAD **/
         /*load_stars(pstat, "star.db");*/
-        PS_push_cstr(pstat, "star.db");
+        PS_push_cstr(pstat, "db/star.db");
         VM_exec(VM_LOAD_STARS, pstat, -1);
         /*load_star_lines(pstat, "lines.db"); */ /* dependent on load_stars */
-        PS_push_cstr(pstat, "lines.db");
+        PS_push_cstr(pstat, "db/lines.db");
         VM_exec(VM_LOAD_STAR_LINES, pstat, -1);
         /*load_constellation_bounds(pstat, "bounds.db");*/ /* dependent on nothing */
-        PS_push_cstr(pstat, "bounds.db");
+        PS_push_cstr(pstat, "db/bounds.db");
         VM_exec(VM_LOAD_CONST_BOUNDS, pstat, -1);
 
         { /* image orion */
@@ -293,7 +292,7 @@ int main(int argc, char **argv) {
                 u"Ori Shd", 0
             };
             char *cstr[] = {
-                "orion-labels.db", "orion.svg", 0
+                "db/orion-labels.db", "images/orion-default.svg", 0
             };
             optype set_settings_code[] = {
                 26,
@@ -392,7 +391,7 @@ int main(int argc, char **argv) {
                 u"Monoceros", u"Mon", u"Mon Bdy", 0
             };
             char *cstr[] = {
-                "monoceros-labels.db", "monoceros.svg", 0
+                "db/monoceros-labels.db", "images/monoceros-default.svg", 0
             };
             optype set_settings_code[] = {
                 26,

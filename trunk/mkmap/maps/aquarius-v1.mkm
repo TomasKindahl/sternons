@@ -1,0 +1,27 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Aquarius”;
+    size 500 500;
+    scale 1.1;
+    projection Lambert 334 -10 -20 0;
+image_data:
+    load labels ‘db/aquarius-labels.db’;
+init_drawing:
+    open file ‘images/aquarius.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Aqr”;
+    draw grid;
+    draw lines select “Aqr Bak”;
+    draw lines select “Aqr Leg”;
+    draw lines select “Aqr Flx”;
+    draw labels select “Aqr”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

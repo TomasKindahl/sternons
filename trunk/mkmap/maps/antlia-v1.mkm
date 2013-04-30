@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Antlia”;
+    size 500 500;
+    scale 1.5;
+    projection Lambert 153 -35 -40 -30;
+image_data:
+    load labels ‘db/antlia-labels.db’;
+init_drawing:
+    open file ‘images/antlia.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Ant”;
+    draw grid;
+    draw lines select “Ant1”;
+    draw labels select “Ant”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}
