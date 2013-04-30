@@ -1,8 +1,13 @@
+************************
+* THE STERNONS PROJECT *
+************************
 
+by Tomas Kindahl - tomas.s.kindahl@bredband.net
 
-Welcome to the sternons project installation instructions file. I have currently
-no archive file for downloads - I think it might be meaningless before verifying
-the functionality on both Linux and Windows.
+most files licensed GNU GPL3 (c) 2010-2013, some files Public Domain, see files
+LICENSE and COPYING!
+
+Welcome to the sternons project installation instructions file!
 
 The project
 ===========
@@ -82,12 +87,21 @@ Getting the source
 Subversion Checkout
 ···················
 
-make a subversion checkout from sternons by:
+Make a subversion checkout from sternons by:
 
 $ svn checkout http://sternons.googlecode.com/svn/trunk/ sternons-read-only
 
 In Windows all commands of course should preferably occur in a Cygwin shell
 window.
+
+Download and unpacking
+······················
+
+Enter http://code.google.com/p/sternons/downloads/list in a web browser and
+download the file sternons-0.0.1.0.tgz to a directory of your choice. At the
+command line (in the directory of your choice) unpack the file with the command
+
+$ tar xvfz sternons-0.0.1.0.tgz
 
 mkmap and compile-mkm
 ---------------------
@@ -99,10 +113,16 @@ On Linux or in Cygwin open a terminal window and go to the mkmap directory:
 
 $ cd sternons-read-only/mkmap/
 
+or when downloading the archived file
+
+$ cd sternons-0.0.1.0
+
 then call:
 
 $ make distclean
 $ make all
+
+For buggy reasons you most probably need to ‘make all’ twice!
 
 People who run dual Windows and Linux and copy files between the file systems
 should take care to make the distclean so that the compilation process is not
