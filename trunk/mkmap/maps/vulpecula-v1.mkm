@@ -1,0 +1,29 @@
+(%mkm 1.0%)
+# Public Domain
+image {
+    name “Antlia”;
+    size 500 500;
+    scale 1.5;
+    projection Lambert 303 25 15 35;
+image_data:
+    load labels ‘db/vulpecula-labels.db’;
+init_drawing:
+    open file ‘images/vulpecula.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Vul”;
+    draw grid;
+    draw lines select “Anser”;
+    draw lines select “Vul Bck”;
+#    draw lines select “Vul Leg1”;
+#    draw lines select “Vul Leg2”;
+#    draw lines select “Vul Leg3”;
+    draw labels select “Vul”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

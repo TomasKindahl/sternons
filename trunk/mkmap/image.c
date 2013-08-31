@@ -60,5 +60,3 @@ int IMG_relative_pos(double *x, double *y, double X, double Y, image *frame) {
     *y = frame->height/2-frame->dim*Y*frame->scale;
     return BETW(0,*x,frame->width) && BETW(0,*y,frame->height);
 }
-
-

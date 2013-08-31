@@ -20,7 +20,7 @@ support_drawing:
     draw lines select “Psc Occ”;
     draw lines select “Psc Bor”;
     draw lines select “Psc Lin”;
-    draw lines select “Tes Smy”;
+    draw lines select “Tes Hill”;
 #    draw labels select “And”;
     draw labels select “Psc”;
 real_objects:

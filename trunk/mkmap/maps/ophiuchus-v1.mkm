@@ -1,0 +1,27 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Ophiuchus”;
+    size 500 500;
+    scale 1.15;
+    projection Lambert 261 -7 -17 3;
+image_data:
+    load labels ‘db/ophiuchus-labels.db’;
+init_drawing:
+    open file ‘images/ophiuchus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Oph”;
+    draw grid;
+    draw lines select “Oph Bdy”;
+    draw lines select “Oph Fot”;
+    draw lines select “Tau Pon”;
+    draw labels select “Oph”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

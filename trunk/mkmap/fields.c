@@ -38,4 +38,3 @@ uchar *next_field_ustr(uchar **pos) {
     pos2 = ucschr(*pos,'|');
     return ucsndup(*pos,pos2-(*pos));
 }
-

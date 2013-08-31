@@ -40,6 +40,11 @@ int isualpha(uchar uch) {
     return 0;
 }
 
+int isuhex(uchar uch) {
+    return ('0' <= uch && uch <= '9') || ('A' <= uch && uch <= 'F')
+        || ('a' <= uch && uch <= 'f');
+}
+
     /* uchar is digit? (only Latin considered yet) */
 int isunum(uchar uch) {
     if (L'0' <= uch && uch <= L'9') return 1;
@@ -48,6 +53,10 @@ int isunum(uchar uch) {
 
 int isualnum(uchar uch) {
     return isualpha(uch) || isunum(uch);
+}
+
+int isualusc(uchar uch) {
+    return isualpha(uch) || (uch == '_');
 }
 
 /* uchar string functions (cygwin has a UTF-16 wchar_t, we assume UTF-32 - int) */

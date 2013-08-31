@@ -1,0 +1,26 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Camelopardalis”;
+    size 500 500;
+    scale 1.2;
+    projection Lambert 90 75 65 85;
+image_data:
+    load labels ‘db/camelopardalis-labels.db’;
+init_drawing:
+    open file ‘images/camelopardalis.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cam”;
+    draw grid;
+    draw lines select “Cam 1”;
+    draw lines select “Cam 2”;
+    draw labels select “Cam”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

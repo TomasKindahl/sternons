@@ -20,6 +20,13 @@
 #ifndef _DEFS_H
 #define _DEFS_H
 
+/** RATIONALE: type definitions that have some generic area of application,
+        but who are specific for sternons related programs **/
+
+/** DEF: uchar as a 4 byte character
+    RATIONALE: wchar of Windows is only 2 byte, making Unicode ≥ Plane 1
+        impossible.
+    OTHER: the libs ucstr, uctype and usio provides some functions **/
 typedef int uchar;
 
 #endif /* _DEFS_H */

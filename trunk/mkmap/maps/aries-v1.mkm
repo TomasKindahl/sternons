@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Aries”;
+    size 500 500;
+    scale 1.5;
+    projection Lambert 40 20 10 30;
+image_data:
+    load labels ‘db/aries-labels.db’;
+init_drawing:
+    open file ‘images/aries.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Ari”;
+    draw grid;
+    draw lines select “Ari Bac”;
+    draw labels select “Ari”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}
