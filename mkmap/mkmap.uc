@@ -31,6 +31,7 @@
 #include "defs.h"
 #include "mathx.h"
 #include "allstrings.h"     /* generated strings */
+#include "uctype.h"
 #include "usio.h"
 #include "ucstr.h"
 #include "fields.h"
@@ -88,24 +89,11 @@ void get_signature(FILE *inf, int num, char *store) {
     store[ix] = '\0';
 }
 
-int ishex(int ch) {
-    return ('0' <= ch && ch <= '9') || ('A' <= ch && ch <= 'F')
-        || ('a' <= ch && ch <= 'f');
-}
-
-int isalusc(int ch) {
-    return (ch == '_') || ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z');
-}
-
 int gethex(int ch) {
     if ('0' <= ch && ch <= '9') return ch - '0';
     if ('A' <= ch && ch <= 'F') return ch - 'A' + 10;
     if ('a' <= ch && ch <= 'f') return ch - 'a' + 10;
     return -1;
-}
-
-int isws(int ch) {
-    return ch == ' ' || ch == '\t' || ch == '\n';
 }
 
 int read_mkmap_BF1(FILE *inf, image_program *iprog) {
@@ -118,7 +106,7 @@ int read_mkmap_BF1(FILE *inf, image_program *iprog) {
         /* printf("%c", ch); */
         switch(scanstat) {
             case NONUM:
-                if(ishex(ch)) {
+                if(isuhex(ch)) {
                     scanstat = NUM;
                     num = gethex(ch);
                 }
@@ -156,21 +144,21 @@ int read_mkmap_BF1(FILE *inf, image_program *iprog) {
                 }
                 break;
             case NUM:
-                if(isws(ch)) {
+                if(isuws(ch)) {
                     scanstat = NONUM;
                     vec[nx++] = num;
                 }
-                else if(ishex(ch)) {
+                else if(isuhex(ch)) {
                     num = (num<<4) | gethex(ch);
                 }
                 break;
             case LABEL:
-                if(isws(ch)) {
+                if(isuws(ch)) {
                     scanstat = NONUM;
                     lbl[lbl_nx] = '\0';
                     vec[nx++] = translate_label_to_VM(lbl);
                 }
-                else if(isalusc(ch)) {
+                else if(isualusc(ch)) {
                     lbl[lbl_nx++] = ch;
                 }
                 break;

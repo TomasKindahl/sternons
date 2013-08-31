@@ -20,8 +20,19 @@
 #ifndef _FIELDS_H
 #define _FIELDS_H
 
+/** RATIONALE: specialized functions that extracts data from ‘|’ separated
+        data lines from a database dump file. **/
+
+/** DEF: functions of form next_field_TYPE, where TYPE is double, int or ustr
+    ARGS: pos - a pointer to a string tape representing a value of TYPE, the
+        value of TYPE is interpreted, then the pointer is pushed past to after
+        next ‘|’
+    RETURNS: the value of TYPE string tape pointer **/
+
 double next_field_double(uchar **pos);
 int next_field_int(uchar **pos);
+/** NOTE: ustr *copies* the value at the string tape, thereby allocating enough
+        memory on the heap for the copy returned. **/
 uchar *next_field_ustr(uchar **pos);
 
 #endif /* _FIELDS_H */

@@ -16,6 +16,8 @@ support_drawing:
     draw grid;
     draw lines select “And IAU1”;
     draw lines select “And IAU2”;
+    draw lines select “Cas W”;
+    draw lines select “Tri”;
 #    draw lines select “And Bdy”;
 #    draw lines select “And Arm”;
 #    draw lines select “And Chn”;

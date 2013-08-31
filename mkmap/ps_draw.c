@@ -101,7 +101,7 @@ int draw_background(progstat *pstat) {
 
 int draw_grid(progstat *pstat) {
     int ix, iy, H, W, H2, W2, dim;
-    double ra, ras[24], de, des[17];
+    double ra, ra_diff, ras[24], de, des[17];
     double X, Y;
     double x, y;
     image *img = pstat->img;
@@ -113,13 +113,23 @@ int draw_grid(progstat *pstat) {
     dim = img->dim;
     /* Declination lines: */
     #define NUM_DE 17
-
     fprintf(out, "    <!-- GRID -->\n");
     for (iy = 0; iy < NUM_DE; iy++) {
         des[iy] = deg2rad(iy*10-80);
     }
-    for (ra = 0; ra < 360; ra+=0.5) {
-        for (ix = 0; ix < NUM_DE; ix++) {
+    for (ix = 0; ix < NUM_DE; ix++) {
+        /* differential interval depending on declination: */
+        switch(ix) {
+            case 0: case 16: ra_diff = 2.5; break;  /* ±80° lines */
+            case 1: case 15: ra_diff = 1.25; break; /* ±70° lines */
+            case 2: case 14:  /* ±60° lines */
+                ra_diff = 1.00; break;
+            case 3: case 13:  /* ±50° lines */
+            case 4: case 12:  /* ±40° lines */
+                ra_diff = 0.75; break;
+            default: ra_diff = 0.5; break;
+        }
+        for (ra = 0; ra < 360; ra+=ra_diff) {
             project(&X, &Y, des[ix], deg2rad(ra), projection);
             if (IMG_relative_pos(&x, &y, X, Y, img)) {
                 fprintf(out, "    <circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\"\n", x, y);
@@ -133,8 +143,8 @@ int draw_grid(progstat *pstat) {
     for (ix = 0; ix < NUM_RA; ix++) {
         ras[ix] = deg2rad(ix*15);
     }
-    for (de = -80; de <= 80; de+=0.5) {
-        for (iy = 0; iy < NUM_RA; iy++) {
+    for (iy = 0; iy < NUM_RA; iy++) {
+        for (de = -80; de <= 80; de+=0.5) {
             project(&X, &Y, deg2rad(de), ras[iy], projection);
             if (IMG_relative_pos(&x, &y, X, Y, img)) {
                 fprintf(out, "    <circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\"\n", x, y);

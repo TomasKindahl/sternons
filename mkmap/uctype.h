@@ -23,7 +23,9 @@
 /* uchar is White Space? */
 int isuws(uchar uch);
 int isualpha(uchar uch);
+int isuhex(uchar uch);
 int isunum(uchar uch);
 int isualnum(uchar uch);
+int isualusc(uchar uch);
 
 #endif /* _UCTYPE_H */
