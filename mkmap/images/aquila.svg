@@ -3449,22 +3449,22 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 352.00,79.29 L 335.75,93.22"/>
     <!-- LINE FOR Sct -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 419.84,342.70 L 400.08,351.80"/>
     <!-- LINE FOR Sct -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 452.09,350.59 L 419.84,342.70"/>
     <!-- LINE FOR Sct -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 436.45,414.82 L 452.09,350.59"/>
     <!-- LINE FOR Sct -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 400.08,351.80 L 436.45,414.82"/>
     <!-- LINE FOR Sct -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 386.48,303.29 L 400.08,351.80"/>
     <!-- LINE FOR Sct -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 358.83,315.58 L 386.48,303.29"/>
     <!-- label "12" for HIP 93429 -->
     <text x="343.96" y="325.43" style="fill:#CC0000; text-anchor: end;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">12</text>

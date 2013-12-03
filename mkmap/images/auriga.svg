@@ -3322,28 +3322,28 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 333.99,199.95 L 250.93,217.06"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 166.94,268.70 L 170.03,285.45"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 169.18,239.87 L 166.94,268.70"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 164.37,216.37 L 169.18,239.87"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 204.33,166.71 L 250.79,111.70"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 155.70,225.90 L 204.33,166.71"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 144.66,244.58 L 155.70,225.90"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 96.12,263.71 L 144.66,244.58"/>
     <!-- LINE FOR THer Maj -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 67.37,286.53 L 96.12,263.71"/>
     <!-- label "κ" for HIP 29696 -->
     <text x="220.03" y="393.80" style="fill:#CC0000; text-anchor: middle;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">κ</text>

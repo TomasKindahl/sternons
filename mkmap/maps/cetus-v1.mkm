@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Cetus”;
+    size 500 500;
+    scale 1.08;
+    projection Lambert 25.5 -10 -20 0;
+image_data:
+    load labels ‘db/cetus-labels.db’;
+init_drawing:
+    open file ‘images/cetus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cet”;
+    draw grid;
+    draw lines select “Cet”;
+    draw labels select “Cet”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

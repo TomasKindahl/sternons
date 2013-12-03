@@ -6,33 +6,41 @@ Things todo:
         maps/ori3.mbf
     [STARTING] documentation
         [STARTING] code documentation
+        [VAPOR] modules list
+        [VAPOR] list and describe the *.h files
         [STARTING] README file
         [VAPOR] describe DB formats
         [VAPOR] describe VM/MBF format
         [VAPOR] describe MKM code
+    [VAPOR] prerelease check code in Makefile, with contents: 1. ?, 2. ??, 3. ...
     [VAPOR] code cleanup
-        [VAPOR] VM shortcircuit: put most functionality inside VM:
-            ps_db.c:load_stars                → vmcode.c:VM_load_stars
-            ps_db.c:load_star_lines           → vmcode.c:VM_load_star_lines
-            ps_db.c:load_constellation_bounds → vmcode.c:VM_load_constellation_bounds
-            progstat.c:PS_new_image           → vmcode.c:VM_new_image
-            progstat.c:PS_img_set_name        → vmcode.c:VM_img_set_name
-            progstat.c:PS_img_set_size        → vmcode.c:VM_img_set_size
-            progstat.c:PS_img_set_scale       → vmcode.c:VM_img_set_scale
-            progstat.c:PS_img_set_Lambert     → vmcode.c:VM_img_set_Lambert
-            progstat.c:PS_open_file           → vmcode.c:VM_open_file
-            ps_db.c:load_star_labels          → vmcode.c:VM_load_labels
-            ps_draw.c:draw_delportian_area    → vmcode.c:VM_draw_delportian_area
-            ps_draw.c:draw_lines              → vmcode.c:VM_draw_lines
-            ps_draw.c:draw_labels             → vmcode.c:VM_draw_labels
-            ps_draw.c:draw_head,
-            ps_draw.c:draw_background,
-            ps_draw.c:draw_bounds,
-            ps_draw.c:draw_grid,
-            ps_draw.c:draw_stars,
-            ps_draw.c:draw_debug_info,
-            ps_draw.c:draw_foot,
-            ps_draw.c:close_file              → vmcode.c:VM_exec
+        [VAPOR] VM shortcircuit, coding have made some functions occur in one
+         exemplar in a ps_XXX.c file, and another exemplar in vmcode.c, where
+         only the arguments differ, the vmcode-exemplar just being a VM-stack-
+         argument to C-argument wrapper, work away this difference so that all
+         functions use the VM-stack-argument model, and put ALL procs/funcs in
+         files INCLUDED FROM vmcode.c:
+            ps_db.c:load_stars                vs. VM_load_stars
+            ps_db.c:load_star_lines           vs. VM_load_star_lines
+            ps_db.c:load_constellation_bounds vs. VM_load_constellation_bounds
+            progstat.c:PS_new_image           vs. VM_new_image
+            progstat.c:PS_img_set_name        vs. VM_img_set_name
+            progstat.c:PS_img_set_size        vs. VM_img_set_size
+            progstat.c:PS_img_set_scale       vs. VM_img_set_scale
+            progstat.c:PS_img_set_Lambert     vs. VM_img_set_Lambert
+            progstat.c:PS_open_file           vs. VM_open_file
+            ps_db.c:load_star_labels          vs. VM_load_labels
+            ps_draw.c:draw_delportian_area    vs. VM_draw_delportian_area
+            ps_draw.c:draw_lines              vs. VM_draw_lines
+            ps_draw.c:draw_labels             vs. VM_draw_labels
+            ps_draw.c:draw_head,              vs. Ø
+            ps_draw.c:draw_background,        vs. Ø
+            ps_draw.c:draw_bounds,            vs. Ø
+            ps_draw.c:draw_grid,              vs. Ø
+            ps_draw.c:draw_stars,             vs. Ø
+            ps_draw.c:draw_debug_info,        vs. Ø
+            ps_draw.c:draw_foot,              vs. Ø
+            ps_draw.c:close_file              vs. Ø
     [ADVANCED] VM
         [DONE] VM code defined (MBF)
         [DONE] VM code loadable

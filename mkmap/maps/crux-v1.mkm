@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Crux”;
+    size 500 500;
+    scale 2.0;
+    projection Lambert 185 -60 -70 -50;
+image_data:
+    load labels ‘db/crux-labels.db’;
+init_drawing:
+    open file ‘images/crux.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cru”;
+    draw grid;
+    draw lines select “Cru”;
+    draw labels select “Cru”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

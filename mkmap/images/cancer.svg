@@ -2134,28 +2134,28 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 242.29,136.63 L 252.14,231.07"/>
     <!-- LINE FOR Cnc Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 284.10,244.02 L 252.14,231.07"/>
     <!-- LINE FOR Cnc Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 358.58,226.65 L 284.10,244.02"/>
     <!-- LINE FOR Cnc Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 347.68,278.00 L 358.58,226.65"/>
     <!-- LINE FOR Cnc Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 288.02,274.21 L 347.68,278.00"/>
     <!-- LINE FOR Cnc Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 247.90,273.79 L 288.02,274.21"/>
     <!-- LINE FOR Cnc BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 288.02,274.21 L 338.99,388.42"/>
     <!-- LINE FOR Cnc BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 284.10,244.02 L 288.02,274.21"/>
     <!-- LINE FOR Cnc BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 319.12,155.46 L 284.10,244.02"/>
     <!-- label "β" for HIP 40526 -->
     <text x="343.52" y="395.63" style="fill:#CC0000; text-anchor: start;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">β</text>

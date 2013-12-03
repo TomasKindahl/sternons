@@ -1,0 +1,29 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Delphinus et Equuleus”;
+    size 500 500;
+    scale 1.9;
+    projection Lambert 313 12 2 22;
+image_data:
+    load labels ‘db/delphinus-labels.db’;
+    load labels ‘db/equuleus-labels.db’;
+init_drawing:
+    open file ‘images/delphinus-et-equuleus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Del”;
+    draw delportian select “Equ”;
+    draw grid;
+    draw lines select “Del”;
+    draw lines select “Equ”;
+    draw labels select “Del”;
+    draw labels select “Equ”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

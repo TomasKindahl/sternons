@@ -2584,16 +2584,16 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 376.66,249.23 L 417.45,287.90"/>
     <!-- LINE FOR Vul Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 134.91,218.68 L 20.59,250.95"/>
     <!-- LINE FOR Vul Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 239.24,213.67 L 134.91,218.68"/>
     <!-- LINE FOR Vul Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 281.12,214.18 L 239.24,213.67"/>
     <!-- LINE FOR Vul Bck -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 376.66,249.23 L 281.12,214.18"/>
     <!-- label "31" for HIP 103004 -->
     <text x="131.66" y="232.44" style="fill:#CC0000; text-anchor: middle;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">31</text>

@@ -1,0 +1,29 @@
+(%mkm 1.0%)
+# Public Domain
+image {
+    name “Ursa Major”;
+    size 500 500;
+    scale 1.05;
+    projection Lambert 169 52 42 62;
+image_data:
+    load labels ‘db/ursamajor-labels.db’;
+init_drawing:
+    open file ‘images/ursamajor.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “UMa”;
+    draw grid;
+    draw lines select “Big Dip”;
+    draw lines select “UMa Hea”;
+    draw lines select “UMa FLg”;
+    draw lines select “UMa BLg”;
+#   draw lines select “Ori Shd”;
+    draw labels select “UMa”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

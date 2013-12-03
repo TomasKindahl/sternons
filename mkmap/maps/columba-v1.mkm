@@ -1,0 +1,26 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Columba”;
+    size 500 500;
+    scale 1.7;
+    projection Lambert 88 -35 -25 -45;
+image_data:
+    load labels ‘db/columba-labels.db’;
+init_drawing:
+    open file ‘images/columba.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Col”;
+    draw grid;
+    draw lines select “Col”;
+    draw lines select “Col Wand”;
+    draw labels select “Col”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

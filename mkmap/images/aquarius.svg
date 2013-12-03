@@ -3865,34 +3865,34 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 455.74,252.15 L 354.83,209.86"/>
     <!-- LINE FOR Aqr Leg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 248.05,229.04 L 271.99,286.69"/>
     <!-- LINE FOR Aqr Leg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 236.49,168.30 L 248.05,229.04"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 105.61,245.68 L 99.09,349.83"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 51.14,299.58 L 55.37,330.48"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 105.61,245.68 L 51.14,299.58"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 164.15,228.31 L 105.61,245.68"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 161.68,306.42 L 129.97,358.73"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 172.69,284.97 L 161.68,306.42"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 164.15,228.31 L 172.69,284.97"/>
     <!-- LINE FOR Aqr Flx -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 203.57,156.45 L 164.15,228.31"/>
     <!-- label "ω" for HIP 116971 -->
     <text x="45.80" y="300.92" style="fill:#CC0000; text-anchor: end;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">ω</text>

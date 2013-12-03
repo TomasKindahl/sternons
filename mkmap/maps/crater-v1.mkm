@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Crater”;
+    size 500 500;
+    scale 1.6;
+    projection Lambert 170 -18 -28 -8;
+image_data:
+    load labels ‘db/crater-labels.db’;
+init_drawing:
+    open file ‘images/crater.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Crt”;
+    draw grid;
+    draw lines select “Crt”;
+    draw labels select “Crt”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

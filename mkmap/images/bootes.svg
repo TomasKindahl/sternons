@@ -4200,31 +4200,31 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 368.68,388.64 L 371.93,371.97"/>
     <!-- LINE FOR Boo LArm -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 291.64,47.58 L 273.23,47.81"/>
     <!-- LINE FOR Boo LArm -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 290.12,104.61 L 291.64,47.58"/>
     <!-- LINE FOR Boo LArm -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 264.81,180.61 L 290.12,104.61"/>
     <!-- LINE FOR Boo Staff -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 157.78,151.29 L 144.76,154.31"/>
     <!-- LINE FOR Boo Staff -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 166.08,185.38 L 157.78,151.29"/>
     <!-- LINE FOR Boo Staff -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 179.91,225.30 L 166.08,185.38"/>
     <!-- LINE FOR Boo Staff -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 198.38,286.92 L 179.91,225.30"/>
     <!-- LINE FOR Boo Staff -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 202.40,305.56 L 198.38,286.92"/>
     <!-- LINE FOR Boo Staff -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 239.48,287.09 L 202.40,305.56"/>
     <!-- label "κ" for HIP 69483 -->
     <text x="295.32" y="49.44" style="fill:#CC0000; text-anchor: start;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">κ</text>
