@@ -5930,40 +5930,40 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 177.32,197.05 L 263.29,161.33"/>
     <!-- LINE FOR UMa Hea -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 347.93,171.85 L 267.72,209.99"/>
     <!-- LINE FOR UMa Hea -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 425.00,119.51 L 347.93,171.85"/>
     <!-- LINE FOR UMa Hea -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 356.49,130.15 L 425.00,119.51"/>
     <!-- LINE FOR UMa Hea -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 263.29,161.33 L 356.49,130.15"/>
     <!-- LINE FOR UMa FLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 446.83,247.94 L 449.25,237.75"/>
     <!-- LINE FOR UMa FLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 391.22,227.46 L 446.83,247.94"/>
     <!-- LINE FOR UMa FLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 347.93,171.85 L 391.22,227.46"/>
     <!-- LINE FOR UMa BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 204.39,285.76 L 245.07,423.64"/>
     <!-- LINE FOR UMa BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 341.69,336.78 L 347.89,322.35"/>
     <!-- LINE FOR UMa BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 260.29,317.79 L 341.69,336.78"/>
     <!-- LINE FOR UMa BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 204.39,285.76 L 260.29,317.79"/>
     <!-- LINE FOR UMa BLg -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 199.61,231.41 L 204.39,285.76"/>
     <!-- label "η" for HIP 67301 -->
     <text x="38.92" y="210.46" style="fill:#CC0000; text-anchor: middle;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">η</text>

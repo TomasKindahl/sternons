@@ -1,0 +1,28 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Cassiopeja”;
+    size 500 500;
+    scale 1.3;
+    projection Lambert 14 64 54 74;
+image_data:
+    load labels ‘db/cassiopeja-labels.db’;
+init_drawing:
+    open file ‘images/cassiopeja.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cas”;
+    draw grid;
+    draw lines select “Cas Pri”;
+    draw lines select “Cas Sec”;
+    draw lines select “Cas Plm”;
+    draw lines select “Cust”;
+    draw labels select “Cas”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

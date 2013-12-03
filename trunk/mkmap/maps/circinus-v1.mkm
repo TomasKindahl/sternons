@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Circinus”;
+    size 500 500;
+    scale 2.1;
+    projection Lambert 220 -62 -52 -72;
+image_data:
+    load labels ‘db/circinus-labels.db’;
+init_drawing:
+    open file ‘images/circinus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cir”;
+    draw grid;
+    draw lines select “Cir”;
+    draw labels select “Cir”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

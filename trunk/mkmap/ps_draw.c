@@ -213,8 +213,8 @@ int draw_line_set(progstat *pstat, uchar *id, line *line_set) {
             char *color;
             switch(L->boldness) {
                 case 1: color = "0000FF"; break;
-                case 2: color = "0000CC"; break;
-                case 3: color = "0000AA"; break;
+                case 2: color = "000088"; break;
+                case 3: color = "000044"; break;
                 case 4: color = "005577"; break; /* constellation borders */
                 default: color = "220000"; break;
             }

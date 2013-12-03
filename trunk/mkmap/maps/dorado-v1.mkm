@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Dorado”;
+    size 500 500;
+    scale 1.6;
+    projection Lambert 75 -60 -50 -70;
+image_data:
+    load labels ‘db/dorado-labels.db’;
+init_drawing:
+    open file ‘images/dorado.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Dor”;
+    draw grid;
+    draw lines select “Dor”;
+    draw labels select “Dor”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

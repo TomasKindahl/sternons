@@ -2503,31 +2503,31 @@
     <circle cx="88.99" cy="5.42" r="1"
             style="opacity:1;fill:#880088;fill-opacity:1;"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 364.31,337.94 L 409.08,325.88"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 300.25,219.33 L 364.31,337.94"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 225.19,256.10 L 127.59,370.90"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 300.25,219.33 L 225.19,256.10"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 300.59,149.82 L 300.25,219.33"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 319.27,126.65 L 300.59,149.82"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 344.66,157.27 L 319.27,126.65"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 373.99,189.89 L 344.66,157.27"/>
     <!-- LINE FOR Mon Bdy -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 319.27,126.65 L 346.13,105.68"/>
     <!-- label "α" for HIP 37447 -->
     <text x="127.02" y="384.28" style="fill:#CC0000; text-anchor: middle;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">α</text>

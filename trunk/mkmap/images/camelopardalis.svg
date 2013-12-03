@@ -8263,13 +8263,13 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 437.71,344.89 L 384.22,310.08"/>
     <!-- LINE FOR Cam 2 -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 215.51,225.21 L 219.58,167.55"/>
     <!-- LINE FOR Cam 2 -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 232.76,307.99 L 215.51,225.21"/>
     <!-- LINE FOR Cam 2 -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 318.15,330.06 L 232.76,307.99"/>
     <!-- label "VZ" for HIP 36547 -->
     <text x="216.62" y="171.66" style="fill:#CC0000; text-anchor: end;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">VZ</text>

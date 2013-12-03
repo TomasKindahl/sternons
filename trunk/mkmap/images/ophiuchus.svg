@@ -4302,28 +4302,28 @@
     <path style="stroke:#0000FF; stroke-width: 1px"
           d="M 421.99,220.51 L 411.84,230.03"/>
     <!-- LINE FOR Oph Fot -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 254.69,430.91 L 242.19,482.31"/>
     <!-- LINE FOR Oph Fot -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 257.12,390.91 L 254.69,430.91"/>
     <!-- LINE FOR Oph Fot -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 282.78,336.68 L 257.12,390.91"/>
     <!-- LINE FOR Tau Pon -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 155.76,168.58 L 146.26,156.80"/>
     <!-- LINE FOR Tau Pon -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 158.21,152.25 L 155.76,168.58"/>
     <!-- LINE FOR Tau Pon -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 158.88,137.78 L 158.21,152.25"/>
     <!-- LINE FOR Tau Pon -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 190.18,153.98 L 158.21,152.25"/>
     <!-- LINE FOR Tau Pon -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 201.05,135.15 L 190.18,153.98"/>
     <!-- label "Antares" for HIP 80763 -->
     <text x="371.90" y="450.07" style="fill:#CC0000; text-anchor: end;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">Antares</text>

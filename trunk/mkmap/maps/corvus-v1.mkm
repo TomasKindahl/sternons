@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Corvus”;
+    size 500 500;
+    scale 1.7;
+    projection Lambert 185 -18 -28 -8;
+image_data:
+    load labels ‘db/corvus-labels.db’;
+init_drawing:
+    open file ‘images/corvus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Crv”;
+    draw grid;
+    draw lines select “Crv”;
+    draw labels select “Crv”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

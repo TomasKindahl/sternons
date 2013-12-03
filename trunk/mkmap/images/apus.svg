@@ -3920,22 +3920,22 @@
     <circle cx="1.21" cy="487.94" r="1"
             style="opacity:1;fill:#880088;fill-opacity:1;"/>
     <!-- LINE FOR Aps -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 212.22,294.52 L 233.74,311.00"/>
     <!-- LINE FOR Aps -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 223.78,315.45 L 212.22,294.52"/>
     <!-- LINE FOR Aps -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 233.74,311.00 L 223.78,315.45"/>
     <!-- LINE FOR Aps -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 305.11,324.49 L 233.74,311.00"/>
     <!-- LINE FOR Aps -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 316.61,347.37 L 305.11,324.49"/>
     <!-- LINE FOR Aps -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 313.12,361.93 L 316.61,347.37"/>
     <!-- label "ζ" for HIP 84969 -->
     <text x="123.97" y="167.44" style="fill:#CC0000; text-anchor: end;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">ζ</text>

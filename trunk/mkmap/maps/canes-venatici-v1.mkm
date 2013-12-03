@@ -1,0 +1,26 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Canes Venatici”;
+    size 500 500;
+    scale 1.5;
+    projection Lambert 197 40 30 50;
+image_data:
+    load labels ‘db/canes-venatici-labels.db’;
+init_drawing:
+    open file ‘images/canes-venatici.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “CVn”;
+    draw grid;
+    draw lines select “Asterion”;
+    draw lines select “Chara”;
+    draw labels select “CVn”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

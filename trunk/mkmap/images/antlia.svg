@@ -2154,13 +2154,13 @@
     <circle cx="0.14" cy="415.10" r="1"
             style="opacity:1;fill:#880088;fill-opacity:1;"/>
     <!-- LINE FOR Ant1 -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 207.60,199.49 L 133.95,284.39"/>
     <!-- LINE FOR Ant1 -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 330.75,158.28 L 207.60,199.49"/>
     <!-- LINE FOR Ant1 -->
-    <path style="stroke:#0000CC; stroke-width: 1px"
+    <path style="stroke:#000088; stroke-width: 1px"
           d="M 362.63,268.45 L 330.75,158.28"/>
     <!-- label "ζ²" for HIP 46657 -->
     <text x="361.05" y="209.97" style="fill:#CC0000; text-anchor: start;font-size:13px;font-family: FreeSans, sans serif; font-weight: bold;">ζ²</text>

@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Capricornus”;
+    size 500 500;
+    scale 1.8;
+    projection Lambert 316 -20 -30 -10;
+image_data:
+    load labels ‘db/capricornus-labels.db’;
+init_drawing:
+    open file ‘images/capricornus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cap”;
+    draw grid;
+    draw lines select “Cap Tri”;
+    draw labels select “Cap”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

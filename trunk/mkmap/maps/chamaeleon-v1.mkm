@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Chamaeleon”;
+    size 500 500;
+    scale 1.8;
+    projection Lambert 161 -80 -75 -85;
+image_data:
+    load labels ‘db/chamaeleon-labels.db’;
+init_drawing:
+    open file ‘images/chamaeleon.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cha”;
+    draw grid;
+    draw lines select “Cha”;
+    draw labels select “Cha”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

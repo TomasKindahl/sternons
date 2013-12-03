@@ -1,0 +1,25 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Centaurus”;
+    size 500 500;
+    scale 1.1;
+    projection Lambert 197 -48 -38 -58;
+image_data:
+    load labels ‘db/centaurus-labels.db’;
+init_drawing:
+    open file ‘images/centaurus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cen”;
+    draw grid;
+    draw lines select “Cen”;
+    draw labels select “Cen”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}

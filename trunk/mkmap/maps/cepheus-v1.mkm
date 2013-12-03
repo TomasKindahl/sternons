@@ -1,0 +1,27 @@
+(%mkm 1.0%)
+#Public Domain
+image {
+    name “Cepheus”;
+    size 500 500;
+    scale 1.3;
+    projection Lambert 330 74 64 84;
+image_data:
+    load labels ‘db/cepheus-labels.db’;
+init_drawing:
+    open file ‘images/cepheus.svg’;
+    draw head; draw background;
+support_drawing:
+    draw bounds;
+    draw delportian select “Cep”;
+    draw grid;
+    draw lines select “Cep”;
+    draw lines select “Cep Bow1”;
+    draw lines select “Cep Bow2”;
+    draw labels select “Cep”;
+real_objects:
+    draw stars;
+final:
+#    draw debug_info;
+    draw footer;
+    close file;
+}
