@@ -1,0 +1,53 @@
+# Fast links #
+[WikiSyntax for Google code](http://code.google.com/p/support/wiki/WikiSyntax)
+
+# Introduction #
+
+Sternons aims at being a loose tool set for astronomy, such as scripts and
+programs interfacing each other according to the
+[Unix philosophy](http://en.wikipedia.org/wiki/Unix_philosophy). Sternons is
+decidedly jealous on [PP3](http://pp3.sourceforge.net/) for it's professionality
+and nice and beautiful documentation. Besides being very limited, such as only
+being capable of equatorial star maps, PP3 also has some unUnician dependencies:
+it requires LaTeX (?) and ghostscript. Also it generates PDF, PostScript or
+LaTeX — not easy, nor standard image data formats. A better one would be SVG,
+which is the standard vector format nowadays (in defence of PP3, it was
+developed before the consolidation of SVG, and LaTeX was _fairly_ standard, but
+not anywhere near as widely supported as SVG).
+
+Sternons aims at being composed of **very** losely knit tools, more like a Swiss
+army knife for generating this-or-that astronomy database, connection,
+interface, image or whatever. The reasoning for this is that if sternons doesn't
+build in its entirety in a certain environment, at least some parts of it should
+build, their execution being inspectable so that a hobby programmer should be
+able to either run the tools separately and hand-generate something workable, or
+be able to fix the bugs and make it run in his/her environment independently.
+
+In comparison to PP3, the counterparting mkmap will not try to call any external
+program like PP3 does. It will simply generate. An external program has to do
+the display the further conversion to PNG. This will make mkmap portable, while
+independent scripted applications have to do smart things that guide the user
+through the creation process of map specification to a PNG file.
+
+# Related info #
+[other projects](other.md)
+
+[licenses](licenses.md)
+
+# Tools #
+
+## Mkmap ##
+
+![http://sternons.googlecode.com/svn/wiki/img/Ori-small.png](http://sternons.googlecode.com/svn/wiki/img/Ori-small.png)
+
+_User manual:_ [User Manual](http://sternons.blogspot.com/p/mkmap.html)
+
+_Development:_ **[mkmap](mkmap.md)** generates a star map in SVG format
+
+**Purpose:** a script for generating [SVG](http://en.wikipedia.org/wiki/SVG)
+and [PostScript](http://en.wikipedia.org/wiki/PostScript) star maps from a
+mkmap program file.
+
+**Current state:** Prealpha code generating star maps such as for example the one
+above (the easily recognized
+[constellation of Orion](http://en.wikipedia.org/wiki/Orion_(constellation))).

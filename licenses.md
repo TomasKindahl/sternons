@@ -1,0 +1,10 @@
+# License compatibility #
+
+| |GPL2|GPL3|LGPL|nBSD|MIT|Apache2|
+|:|:---|:---|:---|:---|:--|:------|
+|GPL2|yes |↑   |?   |←   |←  |←      |
+|GPL3|←   |yes |←   |←   |←  |←      |
+|LGPL|?   |↑   |yes |←   |←  |←      |
+|nBSD|↑   |↑   |↑   |yes |yes|yes    |
+|MIT|↑   |↑   |↑   |yes |yes|yes    |
+|Apache2|↑   |↑   |↑   |yes |yes|yes    |

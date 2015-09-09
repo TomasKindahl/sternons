@@ -1,0 +1,27 @@
+aaplus				MIT		C#, .NET				Meeus
+afn					GPL2	C, IDL and Python		n-body simulations, plotting, data analisys
+aida-deconvolution	nBSD	Numerical Python		image deconvolution
+apes-nbody			GPL2	C						contains NASA/JPL LGPL code in svn/trunk/ephemeris/tools/nasa/
+asterope			GPL3	Java					planetarium
+astroalgo			GPL3	C, C#, !JavaScript		Meeus (to be replaced by own LGPL code)
+astrogui			GPL3	Python					FITS
+astronomex			GPL2	Python					datasets manipulation
+astronomyworks		nBSD	Python					data calibration and analysis
+casacore			GPL2	C++						?? - full of code
+computus			MIT		!ActionScript			digital horology
+delphimoon			LGPL	Delphi Pascal			Moon computations, oriented towards X ←
+gaostars			Apache2	PHP, Ruby				processing/analysing .proclog files
+hattrick-nbody		GPL3	C++						N-Body “integrator”
+javalens			GPL3	Java					grav microlesing
+multifit			GPL3	C++						grav microlesing
+nmod				GPL3	C++						n-Body Modelling Toolkit
+ntv					nBSD	python					visualize FITS files
+opencoeli			GPL2	Java					planetarium, most similar to my project - to assist??
+pygalkin			GPL3	Python					3D Data
+sdssidl				GPL2	IDL, C/C++, Postgres	general data analysis
+skua				Apache2	SOA						Semantic Knowledge Underpinning Astronomy
+skygazer			GPL3	Java					networked telescope control and observation
+spectclean			nBSD	Perl, C++				spectral analysis
+transformapplier	MIT		C++						amateur var obs transformer algorithm
+tops				MIT		Python					Telescope Operations Software
+wcs2kml				Apache2	C++, Python				FITS-to-PNG/JPEG converter ←
